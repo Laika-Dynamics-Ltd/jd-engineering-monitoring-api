@@ -2,7 +2,7 @@
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.responses import JSONResponse, RedirectResponse, Response
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone
@@ -556,29 +556,8 @@ async def get_session_issues(
             "generated_at": datetime.now(timezone.utc).isoformat()
         }
 
-# Dashboard proxy endpoints
-@app.get("/dashboard")
-@app.post("/dashboard")
-async def dashboard_root():
-    """Redirect to dashboard with trailing slash"""
-    return RedirectResponse(url="/dashboard/", status_code=307)
-
-@app.api_route("/dashboard/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"])
-async def dashboard_proxy(request: Request, path: str = ""):
-    """Proxy all requests to Streamlit dashboard"""
-    # For now, let's disable the proxy until we fix the main API
-    if os.getenv("RAILWAY_ENVIRONMENT"):
-        # Temporarily return a message while we fix the proxy
-        return JSONResponse(
-            status_code=200,
-            content={
-                "message": "Dashboard coming soon",
-                "note": "The dashboard is being configured"
-            }
-        )
-    else:
-        # In development, redirect to Streamlit directly
-        return RedirectResponse(url=f"http://localhost:8501/dashboard/{path}", status_code=307)
+# Note: Dashboard is now served by nginx proxy at /dashboard
+# No need for FastAPI routes as nginx handles the routing
 
 # Root endpoint with API information
 @app.get("/")

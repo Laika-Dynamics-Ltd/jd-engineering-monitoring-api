@@ -1,14 +1,16 @@
 #!/bin/bash
 
-# Start script for Railway deployment
-# For now, focus on getting API working first
+# Start script for Railway deployment with nginx
+echo "🚀 Starting JD Engineering Monitoring Services..."
 
-echo "🚀 Starting JD Engineering Monitoring API..."
+# Get the PORT from Railway or default to 8080
+PORT=${PORT:-8080}
 
-# Get the PORT from Railway or default to 8000
-PORT=${PORT:-8000}
+echo "📡 Configuring services to run on port $PORT..."
 
-echo "📡 Starting API server on port $PORT..."
+# Update nginx config with Railway's PORT
+sed -i "s/listen 8080;/listen $PORT;/" /etc/nginx/nginx.conf
 
-# Start FastAPI directly - streamlit can be added later
-exec uvicorn main:app --host 0.0.0.0 --port $PORT 
+# Start supervisord which will manage all services
+echo "🎛️ Starting supervisor to manage all services..."
+exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf 
