@@ -41,7 +41,7 @@ st.markdown("""
 
 # API Configuration
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
-API_TOKEN = os.getenv("API_TOKEN", "your-api-token")
+API_TOKEN = os.getenv("API_TOKEN", "ArFetiWcHH5bIbiiwuQupQalDJocJA436YMi00tCvmHZOI82Awp8qbceO681")
 
 # For Railway deployment, use internal URL
 if os.getenv("RAILWAY_ENVIRONMENT"):
