@@ -36,8 +36,9 @@ class TabletMonitor:
                     "battery_level": battery_data.get("percentage"),
                     "battery_temperature": battery_data.get("temperature"),
                 }
-        except Exception as e:
-            print(f"Battery info error: {e}")
+        except Exception:
+            # Silently return empty dict on any error
+            pass
         return {}
     
     def get_wifi_info(self):
@@ -56,11 +57,11 @@ class TabletMonitor:
                         "network_type": "WiFi",
                         "ip_address": wifi_info.get("ip")
                     }
-                except json.JSONDecodeError as e:
-                    print(f"WiFi info JSON parse error: {e} - using defaults")
+                except json.JSONDecodeError:
+                    # Silently use defaults on JSON parse error
                     wifi_data = {"network_type": "WiFi"}
             else:
-                print("WiFi info command returned empty/invalid data - using defaults")
+                # Silently use defaults when command fails
                 wifi_data = {"network_type": "WiFi"}
             
             # Test connectivity
@@ -69,8 +70,8 @@ class TabletMonitor:
             wifi_data["connectivity_status"] = "online" if connectivity_test.returncode == 0 else "offline"
             
             return wifi_data
-        except Exception as e:
-            print(f"WiFi info error: {e}")
+        except Exception:
+            # Silently return unknown status on any error
             return {"connectivity_status": "unknown"}
     
     def get_app_info(self):
@@ -101,8 +102,8 @@ class TabletMonitor:
                 "notification_count": notification_count,
                 "screen_timeout_setting": 300  # Default Android timeout
             }
-        except Exception as e:
-            print(f"App info error: {e}")
+        except Exception:
+            # Silently return unknown state on any error
             return {"screen_state": "unknown"}
     
     def collect_and_send_data(self):
