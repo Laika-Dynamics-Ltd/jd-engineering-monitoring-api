@@ -81,6 +81,11 @@ python3 -c "import secrets; print('API_TOKEN=' + secrets.token_urlsafe(24))"
    - Visit: `https://your-app-name.up.railway.app/docs`
    - Interactive API documentation should load
 
+4. **Access Dashboard**
+   - Visit: `https://your-app-name.up.railway.app/dashboard`
+   - The Streamlit monitoring dashboard loads automatically
+   - Real-time device monitoring and analytics
+
 ---
 
 ## 📱 Part 2: Android Tablet Setup

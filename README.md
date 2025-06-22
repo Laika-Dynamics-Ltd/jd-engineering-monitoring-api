@@ -40,6 +40,7 @@ A FastAPI-based monitoring system for tracking tablet device metrics in engineer
 | `/devices` | GET | List all monitored devices |
 | `/devices/{device_id}/metrics` | GET | Get device-specific metrics |
 | `/analytics/session-issues` | GET | Session analytics and issues |
+| `/dashboard` | GET | Interactive monitoring dashboard |
 
 ### Dashboard Features
 
