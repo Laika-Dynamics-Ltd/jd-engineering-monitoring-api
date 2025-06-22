@@ -2,7 +2,7 @@
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
 from pydantic import BaseModel, Field, field_validator
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone
@@ -13,6 +13,7 @@ import os
 import logging
 from contextlib import asynccontextmanager
 import uvicorn
+from pathlib import Path
 
 # Configure logging for Railway
 logging.basicConfig(
@@ -560,75 +561,82 @@ async def get_session_issues(
             "generated_at": datetime.now(timezone.utc).isoformat()
         }
 
-# Dashboard endpoint - for now just return a simple message
+# Dashboard endpoint - serve interactive dashboard
 @app.get("/dashboard")
 async def dashboard():
-    """Dashboard endpoint"""
-    html_content = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>JD Engineering Tablet Monitor - Dashboard</title>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                max-width: 800px;
-                margin: 0 auto;
-                padding: 20px;
-                background-color: #f5f5f5;
-            }
-            .container {
-                background: white;
-                padding: 30px;
-                border-radius: 10px;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            }
-            h1 { color: #333; }
-            .status { 
-                padding: 10px;
-                background: #e8f5e9;
-                border-radius: 5px;
-                margin: 20px 0;
-            }
-            .endpoints {
-                background: #f0f0f0;
-                padding: 15px;
-                border-radius: 5px;
-                margin-top: 20px;
-            }
-            code {
-                background: #f5f5f5;
-                padding: 2px 5px;
-                border-radius: 3px;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>📱 JD Engineering Tablet Monitor</h1>
-            <div class="status">
-                <strong>✅ API Status:</strong> Operational
-            </div>
-            <p>The monitoring system is successfully collecting data from your tablets.</p>
-            
-            <h2>📊 Available API Endpoints:</h2>
-            <div class="endpoints">
-                <p><strong>GET</strong> <code>/health</code> - Health check</p>
-                <p><strong>GET</strong> <code>/devices</code> - List all devices</p>
-                <p><strong>GET</strong> <code>/devices/{device_id}/metrics</code> - Device metrics</p>
-                <p><strong>GET</strong> <code>/analytics/session-issues</code> - Session analytics</p>
-                <p><strong>POST</strong> <code>/tablet-metrics</code> - Submit device data</p>
-                <p><strong>GET</strong> <code>/docs</code> - Interactive API documentation</p>
-            </div>
-            
-            <p style="margin-top: 30px; color: #666;">
-                Full dashboard interface coming soon. For now, use the API endpoints directly to access your monitoring data.
-            </p>
-        </div>
-    </body>
-    </html>
-    """
-    return HTMLResponse(content=html_content)
+    """Interactive dashboard endpoint"""
+    try:
+        # Try to serve the static dashboard file
+        static_path = Path("static/dashboard.html")
+        if static_path.exists():
+            return FileResponse(static_path, media_type="text/html")
+        else:
+            # Fallback HTML if static file doesn't exist
+            html_content = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>JD Engineering Tablet Monitor - Dashboard</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        max-width: 800px;
+                        margin: 0 auto;
+                        padding: 20px;
+                        background-color: #f5f5f5;
+                    }
+                    .container {
+                        background: white;
+                        padding: 30px;
+                        border-radius: 10px;
+                        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                    }
+                    h1 { color: #333; }
+                    .status { 
+                        padding: 10px;
+                        background: #ffebee;
+                        border-radius: 5px;
+                        margin: 20px 0;
+                        color: #c62828;
+                    }
+                    .endpoints {
+                        background: #f0f0f0;
+                        padding: 15px;
+                        border-radius: 5px;
+                        margin-top: 20px;
+                    }
+                    code {
+                        background: #f5f5f5;
+                        padding: 2px 5px;
+                        border-radius: 3px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>📱 JD Engineering Tablet Monitor</h1>
+                    <div class="status">
+                        <strong>⚠️ Dashboard Status:</strong> Interactive dashboard file not found at /static/dashboard.html
+                    </div>
+                    <p>The interactive dashboard file is not available. Please check the deployment.</p>
+                    
+                    <h2>📊 Available API Endpoints:</h2>
+                    <div class="endpoints">
+                        <p><strong>GET</strong> <code>/health</code> - Health check</p>
+                        <p><strong>GET</strong> <code>/devices</code> - List all devices</p>
+                        <p><strong>GET</strong> <code>/devices/{device_id}/metrics</code> - Device metrics</p>
+                        <p><strong>GET</strong> <code>/analytics/session-issues</code> - Session analytics</p>
+                        <p><strong>POST</strong> <code>/tablet-metrics</code> - Submit device data</p>
+                        <p><strong>GET</strong> <code>/docs</code> - Interactive API documentation</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+            return HTMLResponse(content=html_content)
+    except Exception as e:
+        logger.error(f"Error serving dashboard: {e}")
+        return HTMLResponse(content="<h1>Dashboard Error</h1><p>Could not load dashboard.</p>", status_code=500)
 
 # Root endpoint with API information
 @app.get("/")
