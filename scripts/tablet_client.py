@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/data/data/com.termux/files/usr/bin/python
 """
 Updated tablet monitoring script for Railway-deployed API
 This replaces the previous monitoring script with Railway endpoint
@@ -47,14 +47,21 @@ class TabletMonitor:
             result = subprocess.run(['termux-wifi-connectioninfo'], 
                                   capture_output=True, text=True, timeout=10)
             wifi_data = {}
-            if result.returncode == 0:
-                wifi_info = json.loads(result.stdout)
-                wifi_data = {
-                    "wifi_signal_strength": wifi_info.get("rssi"),
-                    "wifi_ssid": wifi_info.get("ssid", "").replace('"', ''),
-                    "network_type": "WiFi",
-                    "ip_address": wifi_info.get("ip")
-                }
+            if result.returncode == 0 and result.stdout.strip():
+                try:
+                    wifi_info = json.loads(result.stdout)
+                    wifi_data = {
+                        "wifi_signal_strength": wifi_info.get("rssi"),
+                        "wifi_ssid": wifi_info.get("ssid", "").replace('"', ''),
+                        "network_type": "WiFi",
+                        "ip_address": wifi_info.get("ip")
+                    }
+                except json.JSONDecodeError as e:
+                    print(f"WiFi info JSON parse error: {e} - using defaults")
+                    wifi_data = {"network_type": "WiFi"}
+            else:
+                print("WiFi info command returned empty/invalid data - using defaults")
+                wifi_data = {"network_type": "WiFi"}
             
             # Test connectivity
             connectivity_test = subprocess.run(['ping', '-c', '1', '8.8.8.8'], 
