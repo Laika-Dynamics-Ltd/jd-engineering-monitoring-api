@@ -12,9 +12,9 @@ import os
 from datetime import datetime, timezone
 
 # Railway API Configuration
-RAILWAY_API_URL = "https://your-app-name.railway.app"
-API_TOKEN = "your-railway-api-token"
-DEVICE_ID = "tablet_electrical_dept"  # or "tablet_test_001"
+RAILWAY_API_URL = "https://jd-engineering-monitoring-api-production.up.railway.app"
+API_TOKEN = "ArFetiWcHH5bIbiiwuQupQalDJocJA436YMi00tCvmHZOI82Awp8qbceO681"
+DEVICE_ID = "tablet_electrical_dept"  # or "tablet_test_001" / "tablet_electrical_dept"
 
 class TabletMonitor:
     def __init__(self):
