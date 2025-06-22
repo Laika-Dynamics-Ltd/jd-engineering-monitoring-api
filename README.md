@@ -5,6 +5,7 @@ A FastAPI-based monitoring system for tracking tablet device metrics in engineer
 ## 🏗️ Architecture
 
 - **Backend**: FastAPI with async PostgreSQL support
+- **Frontend**: Streamlit dashboard for real-time monitoring
 - **Database**: PostgreSQL (via asyncpg)
 - **Authentication**: JWT tokens with python-jose
 - **Deployment**: Railway with Docker containerization
@@ -39,6 +40,17 @@ A FastAPI-based monitoring system for tracking tablet device metrics in engineer
 | `/devices` | GET | List all monitored devices |
 | `/devices/{device_id}/metrics` | GET | Get device-specific metrics |
 | `/analytics/session-issues` | GET | Session analytics and issues |
+
+### Dashboard Features
+
+The integrated Streamlit dashboard provides:
+
+- **📊 Real-time Overview**: Live device status, online/offline counts
+- **📱 Device Details**: Battery levels, CPU usage, network strength
+- **📈 Analytics**: Session timeouts, success rates, error tracking
+- **🔍 Issue Detection**: Automatic problem identification
+- **🔄 Auto-refresh**: Configurable refresh intervals
+- **📉 Interactive Charts**: Plotly-powered visualizations
 
 ## 🚀 Quick Start
 
@@ -217,11 +229,14 @@ Update `scripts/tablet_client.py`:
 ## 🛠️ Tech Stack
 
 - **FastAPI**: Modern, fast web framework for building APIs
+- **Streamlit**: Interactive dashboard UI framework
 - **asyncpg**: Async PostgreSQL driver for high performance
 - **Pydantic**: Data validation using Python type annotations
 - **python-jose**: JWT token handling
 - **Uvicorn**: ASGI server implementation
 - **Gunicorn**: WSGI HTTP server for production
+- **Plotly**: Interactive data visualizations
+- **Pandas**: Data manipulation and analysis
 
 ## 🚨 Troubleshooting
 
