@@ -13,7 +13,6 @@ import os
 import logging
 from contextlib import asynccontextmanager
 import uvicorn
-import httpx
 
 # Configure logging for Railway
 logging.basicConfig(
@@ -61,11 +60,6 @@ async def lifespan(app: FastAPI):
     if db_pool:
         await db_pool.close()
         logger.info("Database connection pool closed")
-    
-    # Close Streamlit proxy client
-    if streamlit_client:
-        await streamlit_client.aclose()
-        logger.info("Streamlit proxy client closed")
 
 # FastAPI app with Railway-optimized configuration
 app = FastAPI(
@@ -562,16 +556,6 @@ async def get_session_issues(
             "generated_at": datetime.now(timezone.utc).isoformat()
         }
 
-# Proxy client for Streamlit
-streamlit_client = None
-
-def get_streamlit_client():
-    global streamlit_client
-    if streamlit_client is None:
-        streamlit_url = os.getenv("STREAMLIT_INTERNAL_URL", "http://localhost:8501")
-        streamlit_client = httpx.AsyncClient(base_url=streamlit_url, timeout=30.0)
-    return streamlit_client
-
 # Dashboard proxy endpoints
 @app.get("/dashboard")
 @app.post("/dashboard")
@@ -582,38 +566,19 @@ async def dashboard_root():
 @app.api_route("/dashboard/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"])
 async def dashboard_proxy(request: Request, path: str = ""):
     """Proxy all requests to Streamlit dashboard"""
-    client = get_streamlit_client()
-    
-    # Build the target URL
-    target_path = f"/dashboard/{path}" if path else "/dashboard/"
-    
-    try:
-        # Forward the request to Streamlit
-        response = await client.request(
-            method=request.method,
-            url=target_path,
-            headers={k: v for k, v in request.headers.items() if k.lower() not in ['host', 'connection']},
-            content=await request.body() if request.method in ["POST", "PUT", "PATCH"] else None,
-            params=dict(request.query_params)
+    # For now, let's disable the proxy until we fix the main API
+    if os.getenv("RAILWAY_ENVIRONMENT"):
+        # Temporarily return a message while we fix the proxy
+        return JSONResponse(
+            status_code=200,
+            content={
+                "message": "Dashboard coming soon",
+                "note": "The dashboard is being configured"
+            }
         )
-        
-        # Return the response
-        return Response(
-            content=response.content,
-            status_code=response.status_code,
-            headers={k: v for k, v in response.headers.items() if k.lower() not in ['connection', 'transfer-encoding']},
-            media_type=response.headers.get("content-type", "text/html")
-        )
-    except Exception as e:
-        logger.error(f"Dashboard proxy error: {str(e)}")
-        if os.getenv("RAILWAY_ENVIRONMENT"):
-            return JSONResponse(
-                status_code=503,
-                content={"error": "Dashboard temporarily unavailable", "detail": str(e)}
-            )
-        else:
-            # In development, redirect to Streamlit directly
-            return RedirectResponse(url=f"http://localhost:8501/dashboard/{path}", status_code=307)
+    else:
+        # In development, redirect to Streamlit directly
+        return RedirectResponse(url=f"http://localhost:8501/dashboard/{path}", status_code=307)
 
 # Root endpoint with API information
 @app.get("/")
