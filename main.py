@@ -512,53 +512,70 @@ async def get_session_issues(
     token: str = Depends(verify_token)
 ):
     """Advanced session timeout and connectivity analysis"""
-    async with db_pool.acquire() as conn:
-        interval_str = f"{hours} hours"
-        params = [interval_str]
-        where_clause = "WHERE se.timestamp > NOW() - INTERVAL $1"
-        if device_id:
-            where_clause += " AND se.device_id = $2"
-            params.append(device_id)
+    try:
+        async with db_pool.acquire() as conn:
+            # Build base query for tablet metrics
+            params = [hours]
+            where_clause = "WHERE tm.timestamp >= NOW() - INTERVAL '%s hours'"
             
-        # Comprehensive session analysis
-        analysis = await conn.fetch(f'''
-            SELECT 
-                se.device_id,
-                dr.device_name,
-                dr.location,
-                COUNT(*) FILTER (WHERE se.event_type = 'timeout') as timeout_count,
-                COUNT(*) FILTER (WHERE se.event_type IN ('login', 'session_start')) as login_count,
-                COUNT(*) FILTER (WHERE se.event_type IN ('logout', 'session_end')) as logout_count,
-                COUNT(*) FILTER (WHERE se.event_type = 'error') as error_count,
-                AVG(se.duration) FILTER (WHERE se.duration IS NOT NULL) as avg_session_duration,
-                MAX(se.timestamp) as last_activity,
-                COUNT(DISTINCT DATE(se.timestamp)) as active_days
-            FROM session_events se
-            JOIN device_registry dr ON se.device_id = dr.device_id
-            {where_clause}
-            GROUP BY se.device_id, dr.device_name, dr.location
-            ORDER BY timeout_count DESC, login_count DESC
-        ''', *params)
-        
-        # Network correlation analysis
-        network_where = where_clause.replace('se.', 'nm.')
-        network_analysis = await conn.fetch(f'''
-            SELECT 
-                nm.device_id,
-                COUNT(*) FILTER (WHERE nm.connectivity_status = 'offline') as offline_count,
-                COUNT(*) FILTER (WHERE nm.connectivity_status = 'limited') as limited_count,
-                AVG(nm.wifi_signal_strength) as avg_signal_strength,
-                AVG(nm.dns_response_time) as avg_dns_time
-            FROM network_metrics nm
-            {network_where}
-            GROUP BY nm.device_id
-        ''', *params)
-        
+            if device_id:
+                where_clause += " AND tm.device_id = $2"
+                params.append(device_id)
+            
+            # Get session analysis from tablet_metrics
+            analysis_query = f"""
+                SELECT 
+                    tm.device_id,
+                    tm.device_name,
+                    tm.location,
+                    COUNT(*) as total_records,
+                    COUNT(*) FILTER (WHERE tm.session_id IS NOT NULL) as session_count,
+                    COUNT(DISTINCT tm.session_id) as unique_sessions,
+                    COUNT(*) FILTER (WHERE tm.app_state = 'timeout') as timeout_count,
+                    COUNT(*) FILTER (WHERE tm.app_state IN ('active', 'foreground')) as active_count,
+                    AVG(tm.battery_percentage) as avg_battery,
+                    AVG(tm.wifi_signal_strength) as avg_wifi_signal,
+                    MAX(tm.timestamp) as last_activity,
+                    COUNT(DISTINCT DATE(tm.timestamp)) as active_days
+                FROM tablet_metrics tm
+                {where_clause}
+                GROUP BY tm.device_id, tm.device_name, tm.location
+                ORDER BY session_count DESC, timeout_count DESC
+            """
+            
+            analysis = await conn.fetch(analysis_query, *params)
+            
+            # Network correlation analysis from tablet_metrics
+            network_query = f"""
+                SELECT 
+                    tm.device_id,
+                    COUNT(*) FILTER (WHERE tm.wifi_connected = false) as offline_count,
+                    COUNT(*) FILTER (WHERE tm.wifi_signal_strength < -70) as weak_signal_count,
+                    AVG(tm.wifi_signal_strength) as avg_signal_strength,
+                    COUNT(DISTINCT tm.wifi_ssid) as network_count
+                FROM tablet_metrics tm
+                {where_clause}
+                GROUP BY tm.device_id
+            """
+            
+            network_analysis = await conn.fetch(network_query, *params)
+            
+            return {
+                "session_analysis": [dict(row) for row in analysis],
+                "network_correlation": [dict(row) for row in network_analysis],
+                "analysis_period_hours": hours,
+                "generated_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+    except Exception as e:
+        logger.error(f"Analytics error: {str(e)}")
+        # Return empty data instead of error to prevent dashboard crashes
         return {
-            "session_analysis": [dict(row) for row in analysis],
-            "network_correlation": [dict(row) for row in network_analysis],
+            "session_analysis": [],
+            "network_correlation": [],
             "analysis_period_hours": hours,
-            "generated_at": datetime.now(timezone.utc).isoformat()
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "error": "Analytics temporarily unavailable"
         }
 
 # Dashboard endpoint - serve interactive dashboard

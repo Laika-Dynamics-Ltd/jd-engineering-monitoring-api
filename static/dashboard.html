@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JD Engineering Tablet Monitor - Live Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -826,22 +825,59 @@
         
         // Update session chart
         function updateSessionChart(analytics) {
-            if (!analytics.session_analysis || analytics.session_analysis.length === 0) return;
-            
             const ctx = document.getElementById('sessionChart').getContext('2d');
+            
+            // Handle missing or empty analytics data
+            if (!analytics || !analytics.session_analysis || analytics.session_analysis.length === 0) {
+                if (sessionChart) {
+                    sessionChart.data.labels = ['No Data'];
+                    sessionChart.data.datasets[0].data = [0];
+                    sessionChart.data.datasets[1].data = [0];
+                    sessionChart.update();
+                } else {
+                    sessionChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['No Data Available'],
+                            datasets: [
+                                {
+                                    label: 'Sessions',
+                                    data: [0],
+                                    backgroundColor: '#4caf50'
+                                },
+                                {
+                                    label: 'Timeouts',
+                                    data: [0],
+                                    backgroundColor: '#f44336'
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                }
+                return;
+            }
             
             // Get top 5 devices by activity
             const topDevices = analytics.session_analysis
-                .sort((a, b) => (b.login_count + b.timeout_count) - (a.login_count + a.timeout_count))
+                .sort((a, b) => (b.session_count + b.timeout_count) - (a.session_count + a.timeout_count))
                 .slice(0, 5);
             
             const labels = topDevices.map(d => d.device_name || d.device_id);
-            const logins = topDevices.map(d => d.login_count || 0);
+            const sessions = topDevices.map(d => d.session_count || 0);
             const timeouts = topDevices.map(d => d.timeout_count || 0);
             
             if (sessionChart) {
                 sessionChart.data.labels = labels;
-                sessionChart.data.datasets[0].data = logins;
+                sessionChart.data.datasets[0].data = sessions;
                 sessionChart.data.datasets[1].data = timeouts;
                 sessionChart.update();
             } else {
@@ -851,8 +887,8 @@
                         labels: labels,
                         datasets: [
                             {
-                                label: 'Logins',
-                                data: logins,
+                                label: 'Sessions',
+                                data: sessions,
                                 backgroundColor: '#4caf50'
                             },
                             {
