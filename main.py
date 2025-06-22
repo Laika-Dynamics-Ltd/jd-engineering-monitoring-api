@@ -2,7 +2,7 @@
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from pydantic import BaseModel, Field, field_validator
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone
@@ -13,6 +13,7 @@ import os
 import logging
 from contextlib import asynccontextmanager
 import uvicorn
+import httpx
 
 # Configure logging for Railway
 logging.basicConfig(
@@ -556,8 +557,49 @@ async def get_session_issues(
             "generated_at": datetime.now(timezone.utc).isoformat()
         }
 
-# Note: Dashboard is now served by nginx proxy at /dashboard
-# No need for FastAPI routes as nginx handles the routing
+# Simple proxy client for Streamlit
+async def proxy_to_streamlit(request: Request, path: str = ""):
+    """Proxy requests to Streamlit running on port 8501"""
+    async with httpx.AsyncClient() as client:
+        # Build target URL
+        streamlit_url = f"http://localhost:8501/{path}"
+        
+        # Get request body if present
+        body = await request.body() if request.method in ["POST", "PUT", "PATCH"] else None
+        
+        # Forward the request
+        response = await client.request(
+            method=request.method,
+            url=streamlit_url,
+            headers={k: v for k, v in request.headers.items() if k.lower() not in ['host', 'connection']},
+            content=body,
+            params=dict(request.query_params)
+        )
+        
+        # Return the response
+        return HTMLResponse(
+            content=response.content,
+            status_code=response.status_code,
+            headers={k: v for k, v in response.headers.items() if k.lower() not in ['connection', 'transfer-encoding']}
+        )
+
+# Dashboard routes
+@app.get("/dashboard")
+async def dashboard_redirect():
+    """Redirect to dashboard with trailing slash"""
+    return RedirectResponse(url="/dashboard/", status_code=307)
+
+@app.get("/dashboard/{path:path}")
+async def dashboard_proxy(request: Request, path: str = ""):
+    """Proxy all dashboard requests to Streamlit"""
+    try:
+        return await proxy_to_streamlit(request, path)
+    except Exception as e:
+        logger.error(f"Dashboard proxy error: {str(e)}")
+        return JSONResponse(
+            status_code=503,
+            content={"error": "Dashboard temporarily unavailable", "detail": str(e)}
+        )
 
 # Root endpoint with API information
 @app.get("/")
