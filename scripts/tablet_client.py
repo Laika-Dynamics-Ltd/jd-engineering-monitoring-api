@@ -30,12 +30,16 @@ class TabletMonitor:
         try:
             result = subprocess.run(['termux-battery-status'], 
                                   capture_output=True, text=True, timeout=10)
-            if result.returncode == 0:
-                battery_data = json.loads(result.stdout)
-                return {
-                    "battery_level": battery_data.get("percentage"),
-                    "battery_temperature": battery_data.get("temperature"),
-                }
+            if result.returncode == 0 and result.stdout.strip():
+                try:
+                    battery_data = json.loads(result.stdout)
+                    return {
+                        "battery_level": battery_data.get("percentage"),
+                        "battery_temperature": battery_data.get("temperature"),
+                    }
+                except:
+                    # Silently return empty dict on JSON parse error
+                    pass
         except Exception:
             # Silently return empty dict on any error
             pass
@@ -43,36 +47,41 @@ class TabletMonitor:
     
     def get_wifi_info(self):
         """Get WiFi information via Termux API"""
+        # Default WiFi data
+        wifi_data = {"network_type": "WiFi", "connectivity_status": "unknown"}
+        
         try:
-            # WiFi connection info
+            # Try to get WiFi connection info
             result = subprocess.run(['termux-wifi-connectioninfo'], 
                                   capture_output=True, text=True, timeout=10)
-            wifi_data = {}
+            
             if result.returncode == 0 and result.stdout.strip():
                 try:
                     wifi_info = json.loads(result.stdout)
-                    wifi_data = {
-                        "wifi_signal_strength": wifi_info.get("rssi"),
-                        "wifi_ssid": wifi_info.get("ssid", "").replace('"', ''),
-                        "network_type": "WiFi",
-                        "ip_address": wifi_info.get("ip")
-                    }
-                except json.JSONDecodeError:
-                    # Silently use defaults on JSON parse error
-                    wifi_data = {"network_type": "WiFi"}
-            else:
-                # Silently use defaults when command fails
-                wifi_data = {"network_type": "WiFi"}
-            
-            # Test connectivity
+                    if isinstance(wifi_info, dict):
+                        wifi_data.update({
+                            "wifi_signal_strength": wifi_info.get("rssi"),
+                            "wifi_ssid": wifi_info.get("ssid", "").replace('"', ''),
+                            "network_type": "WiFi",
+                            "ip_address": wifi_info.get("ip")
+                        })
+                except:
+                    # Keep defaults on any JSON error
+                    pass
+        except:
+            # Keep defaults on any error
+            pass
+        
+        try:
+            # Test connectivity with ping
             connectivity_test = subprocess.run(['ping', '-c', '1', '8.8.8.8'], 
                                              capture_output=True, timeout=5)
             wifi_data["connectivity_status"] = "online" if connectivity_test.returncode == 0 else "offline"
-            
-            return wifi_data
-        except Exception:
-            # Silently return unknown status on any error
-            return {"connectivity_status": "unknown"}
+        except:
+            # Keep default unknown status on ping error
+            pass
+        
+        return wifi_data
     
     def get_app_info(self):
         """Get application and screen state information"""
@@ -90,11 +99,12 @@ class TabletMonitor:
             notif_result = subprocess.run(['termux-notification-list'], 
                                         capture_output=True, text=True, timeout=5)
             notification_count = 0
-            if notif_result.returncode == 0:
+            if notif_result.returncode == 0 and notif_result.stdout.strip():
                 try:
                     notifications = json.loads(notif_result.stdout)
                     notification_count = len(notifications) if isinstance(notifications, list) else 0
                 except:
+                    # Silently default to 0 on any JSON error
                     notification_count = 0
             
             return {
