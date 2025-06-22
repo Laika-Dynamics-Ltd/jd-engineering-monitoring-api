@@ -447,58 +447,62 @@ async def get_devices(token: str = Depends(verify_token)):
         return [dict(device) for device in devices]
 
 @app.get("/devices/{device_id}/metrics")
-async def get_device_metrics(
-    device_id: str,
-    hours: int = 24,
-    token: str = Depends(verify_token)
-):
-    """Get comprehensive metrics for a specific device"""
-    async with db_pool.acquire() as conn:
-        # Get recent metrics with time range
-        interval_str = f"{hours} hours"
+async def get_device_metrics(device_id: str, hours: int = 24):
+    """Get detailed metrics for a specific device"""
+    try:
+        # Get the latest metrics for the device
+        query = """
+        SELECT 
+            device_id,
+            device_name,
+            location,
+            battery_percentage,
+            battery_charging,
+            battery_temperature,
+            wifi_connected,
+            wifi_ssid,
+            wifi_signal_strength,
+            app_state,
+            storage_free,
+            timestamp,
+            session_id
+        FROM tablet_metrics 
+        WHERE device_id = $1
+        AND timestamp >= NOW() - INTERVAL '%s hours'
+        ORDER BY timestamp DESC
+        LIMIT 100
+        """
         
-        device_data = await conn.fetch('''
-            SELECT * FROM device_metrics 
-            WHERE device_id = $1 AND timestamp > NOW() - INTERVAL $2
-            ORDER BY timestamp DESC
-            LIMIT 1000
-        ''', device_id, interval_str)
+        results = await db_pool.fetch(query, device_id, hours)
         
-        network_data = await conn.fetch('''
-            SELECT * FROM network_metrics 
-            WHERE device_id = $1 AND timestamp > NOW() - INTERVAL $2
-            ORDER BY timestamp DESC
-            LIMIT 1000
-        ''', device_id, interval_str)
-        
-        app_data = await conn.fetch('''
-            SELECT * FROM app_metrics 
-            WHERE device_id = $1 AND timestamp > NOW() - INTERVAL $2
-            ORDER BY timestamp DESC
-            LIMIT 1000
-        ''', device_id, interval_str)
-        
-        session_data = await conn.fetch('''
-            SELECT * FROM session_events 
-            WHERE device_id = $1 AND timestamp > NOW() - INTERVAL $2
-            ORDER BY timestamp DESC
-            LIMIT 500
-        ''', device_id, interval_str)
+        metrics = []
+        for row in results:
+            metrics.append({
+                "device_id": row["device_id"],
+                "device_name": row["device_name"],
+                "location": row["location"],
+                "battery_percentage": row["battery_percentage"],
+                "battery_charging": row["battery_charging"],
+                "battery_temperature": row["battery_temperature"],
+                "wifi_connected": row["wifi_connected"],
+                "wifi_ssid": row["wifi_ssid"],
+                "wifi_signal_strength": row["wifi_signal_strength"],
+                "app_state": row["app_state"],
+                "storage_free": row["storage_free"],
+                "timestamp": row["timestamp"],
+                "session_id": row["session_id"]
+            })
         
         return {
             "device_id": device_id,
-            "time_range_hours": hours,
-            "device_metrics": [dict(row) for row in device_data],
-            "network_metrics": [dict(row) for row in network_data],
-            "app_metrics": [dict(row) for row in app_data],
-            "session_events": [dict(row) for row in session_data],
-            "summary": {
-                "total_device_records": len(device_data),
-                "total_network_records": len(network_data),
-                "total_app_records": len(app_data),
-                "total_session_events": len(session_data)
-            }
+            "metrics": metrics,
+            "count": len(metrics),
+            "hours": hours
         }
+        
+    except Exception as e:
+        logger.error(f"Error fetching device metrics: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.get("/analytics/session-issues")
 async def get_session_issues(
