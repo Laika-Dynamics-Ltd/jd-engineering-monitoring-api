@@ -20,8 +20,18 @@ case "$1" in
       fi
     fi
     
+    # Check if Python script exists
+    if [ ! -f $SCRIPT_NAME ]; then
+      echo "❌ Error: $SCRIPT_NAME not found in current directory"
+      echo "💡 Make sure you're in the same directory as tablet_client.py"
+      exit 1
+    fi
+    
     echo "🚀 Starting tablet monitoring..."
-    python $SCRIPT_NAME > $LOG_FILE 2>&1 &
+    echo "📝 Logging to: $LOG_FILE"
+    
+    # Use unbuffered output for Python to ensure logs are written immediately
+    python -u $SCRIPT_NAME > $LOG_FILE 2>&1 &
     echo $! > $PID_FILE
     
     # Wait a moment to check if it started successfully
@@ -162,11 +172,37 @@ case "$1" in
     echo "✅ Cleanup complete"
     ;;
     
+  test)
+    echo "🧪 Testing monitoring script..."
+    
+    # Check if Python script exists
+    if [ ! -f $SCRIPT_NAME ]; then
+      echo "❌ Error: $SCRIPT_NAME not found"
+      echo "Current directory: $(pwd)"
+      echo "Files in directory:"
+      ls -la *.py 2>/dev/null || echo "No .py files found"
+      exit 1
+    fi
+    
+    echo "✅ Found $SCRIPT_NAME"
+    echo "🔍 Testing Python execution..."
+    
+    # Test Python directly
+    python -c "print('✅ Python is working')" || echo "❌ Python test failed"
+    
+    echo "🔍 Running monitoring script for 10 seconds..."
+    echo "Output will be shown below:"
+    echo "----------------------------------------"
+    
+    # Run directly without backgrounding to see output
+    timeout 10 python -u $SCRIPT_NAME || echo -e "\n----------------------------------------\n⏱️  Test completed (10 second timeout)"
+    ;;
+    
   *)
     echo "🚀 Tablet Monitoring Service Controller"
     echo "======================================"
     echo ""
-    echo "Usage: $0 {start|stop|status|restart|logs|info|clean}"
+    echo "Usage: $0 {start|stop|status|restart|logs|info|clean|test}"
     echo ""
     echo "Commands:"
     echo "  start    - Start the monitoring service"
@@ -176,6 +212,7 @@ case "$1" in
     echo "  logs     - Follow real-time logs (Ctrl+C to exit)"
     echo "  info     - Show detailed system and service information"
     echo "  clean    - Stop service and clean up old files"
+    echo "  test     - Test the monitoring script (runs for 10 seconds)"
     echo ""
     echo "Examples:"
     echo "  $0 start           # Start monitoring"
