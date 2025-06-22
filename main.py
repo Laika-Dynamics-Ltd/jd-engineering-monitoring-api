@@ -560,6 +560,7 @@ async def get_session_issues(
 @app.get("/")
 async def root():
     """API information and status"""
+    streamlit_url = os.getenv("RAILWAY_STATIC_URL", "http://localhost:8501")
     return {
         "name": "Tablet Session Monitoring API",
         "version": "1.0.0",
@@ -567,6 +568,7 @@ async def root():
         "environment": os.getenv("RAILWAY_ENVIRONMENT", "development"),
         "documentation": "/docs",
         "health_check": "/health",
+        "dashboard": streamlit_url,
         "endpoints": {
             "submit_data": "POST /tablet-metrics",
             "get_devices": "GET /devices",
