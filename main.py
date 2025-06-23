@@ -1469,6 +1469,7 @@ def generate_ai_insights(data_points, focus="timeout"):
     return insights
 
 # Railway deployment configuration
+# Updated with business intelligence endpoints
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run(
