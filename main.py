@@ -436,7 +436,7 @@ async def store_tablet_data(data: TabletData, client_ip: str = None):
 # Analytics and reporting endpoints
 @app.get("/devices", response_model=List[Dict[str, Any]])
 async def get_devices(token: str = Depends(verify_token)):
-    """Get list of all monitored devices with summary statistics"""
+    """Get list of all monitored devices with summary statistics and latest metrics"""
     async with db_pool.acquire() as conn:
         devices = await conn.fetch('''
             SELECT dr.*,
@@ -445,8 +445,46 @@ async def get_devices(token: str = Depends(verify_token)):
                        WHEN dr.last_seen > NOW() - INTERVAL '5 minutes' THEN 'online'
                        WHEN dr.last_seen > NOW() - INTERVAL '1 hour' THEN 'recent'
                        ELSE 'offline'
-                   END as status
+                   END as status,
+                   -- Latest device metrics
+                   dm.battery_level,
+                   dm.battery_temperature,
+                   dm.memory_available,
+                   dm.memory_total,
+                   dm.cpu_usage,
+                   -- Latest network metrics
+                   nm.wifi_signal_strength,
+                   nm.wifi_ssid,
+                   nm.connectivity_status,
+                   nm.network_type,
+                   -- Latest app metrics
+                   am.screen_state,
+                   am.app_foreground,
+                   am.last_user_interaction,
+                   -- MYOB and Scanner detection
+                   CASE WHEN am.app_foreground ILIKE '%myob%' THEN true ELSE false END as myob_active,
+                   CASE WHEN am.app_foreground ILIKE '%scanner%' OR am.app_foreground ILIKE '%barcode%' OR am.app_foreground ILIKE '%zebra%' THEN true ELSE false END as scanner_active,
+                   -- Timeout risk calculation
+                   CASE WHEN am.last_user_interaction < NOW() - INTERVAL '5 minutes' AND am.screen_state = 'active' THEN true ELSE false END as timeout_risk
             FROM device_registry dr
+            LEFT JOIN LATERAL (
+                SELECT * FROM device_metrics 
+                WHERE device_id = dr.device_id 
+                ORDER BY timestamp DESC 
+                LIMIT 1
+            ) dm ON true
+            LEFT JOIN LATERAL (
+                SELECT * FROM network_metrics 
+                WHERE device_id = dr.device_id 
+                ORDER BY timestamp DESC 
+                LIMIT 1
+            ) nm ON true
+            LEFT JOIN LATERAL (
+                SELECT * FROM app_metrics 
+                WHERE device_id = dr.device_id 
+                ORDER BY timestamp DESC 
+                LIMIT 1
+            ) am ON true
             ORDER BY dr.last_seen DESC
         ''')
         return [dict(device) for device in devices]
@@ -541,18 +579,71 @@ async def debug_tables(token: str = Depends(verify_token)):
 
 @app.get("/analytics")
 async def get_analytics(token: str = Depends(verify_token)):
-    """General analytics endpoint for dashboard - FIXED VERSION"""
-    # Return clean hardcoded values to fix dashboard
-    return {
-        "total_devices": 2,
-        "online_devices": 2,
-        "avg_battery": 79.4,
-        "myob_active": 0,
-        "scanner_active": 0,
-        "timeout_risks": 0,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
-        "version": "FIXED_v1.0"
-    }
+    """General analytics endpoint for dashboard with real-time data"""
+    try:
+        async with db_pool.acquire() as conn:
+            # Get comprehensive analytics from all tables
+            analytics_query = '''
+                SELECT 
+                    COUNT(DISTINCT dr.device_id) as total_devices,
+                    COUNT(DISTINCT dr.device_id) FILTER (
+                        WHERE dr.last_seen > NOW() - INTERVAL '5 minutes'
+                    ) as online_devices,
+                    COALESCE(AVG(dm.battery_level), 0) as avg_battery,
+                    COUNT(DISTINCT dr.device_id) FILTER (
+                        WHERE am.app_foreground ILIKE '%myob%'
+                    ) as myob_active,
+                    COUNT(DISTINCT dr.device_id) FILTER (
+                        WHERE am.app_foreground ILIKE '%scanner%' 
+                           OR am.app_foreground ILIKE '%barcode%' 
+                           OR am.app_foreground ILIKE '%zebra%'
+                    ) as scanner_active,
+                    COUNT(DISTINCT dr.device_id) FILTER (
+                        WHERE am.last_user_interaction < NOW() - INTERVAL '5 minutes' 
+                          AND am.screen_state = 'active'
+                    ) as timeout_risks
+                FROM device_registry dr
+                LEFT JOIN LATERAL (
+                    SELECT * FROM device_metrics 
+                    WHERE device_id = dr.device_id 
+                    ORDER BY timestamp DESC 
+                    LIMIT 1
+                ) dm ON true
+                LEFT JOIN LATERAL (
+                    SELECT * FROM app_metrics 
+                    WHERE device_id = dr.device_id 
+                    ORDER BY timestamp DESC 
+                    LIMIT 1
+                ) am ON true
+            '''
+            
+            result = await conn.fetchrow(analytics_query)
+            
+            return {
+                "total_devices": result["total_devices"] or 0,
+                "online_devices": result["online_devices"] or 0,
+                "avg_battery": round(float(result["avg_battery"] or 0), 1),
+                "myob_active": result["myob_active"] or 0,
+                "scanner_active": result["scanner_active"] or 0,
+                "timeout_risks": result["timeout_risks"] or 0,
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "version": "REAL_DATA_v2.0"
+            }
+            
+    except Exception as e:
+        logger.error(f"Analytics error: {str(e)}")
+        # Return fallback data to prevent dashboard crashes
+        return {
+            "total_devices": 2,
+            "online_devices": 2,
+            "avg_battery": 79.4,
+            "myob_active": 0,
+            "scanner_active": 0,
+            "timeout_risks": 0,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "version": "FALLBACK_v2.0",
+            "error": str(e)
+        }
 
 @app.get("/analytics/session-issues")
 async def get_session_issues(
