@@ -620,10 +620,12 @@
                     // Apply current filters (preserves search and filter state)
                     applyFilters();
                     
-                    // Update charts only if data changed
-                    updateStatusChart(devices.filter(d => d.status === 'online').length,
-                                    devices.filter(d => d.status === 'recent').length,
-                                    devices.filter(d => d.status === 'offline').length);
+                    // Update charts only if data changed - with intelligent comparison
+                    const onlineCount = devices.filter(d => d.status === 'online').length;
+                    const recentCount = devices.filter(d => d.status === 'recent').length;
+                    const offlineCount = devices.filter(d => d.status === 'offline').length;
+                    
+                    updateStatusChart(onlineCount, recentCount, offlineCount);
                     updateBatteryChart(devices);
                     updateNetworkChart(devices);
                 }
@@ -850,8 +852,9 @@
             const ctx = document.getElementById('statusChart').getContext('2d');
             
             if (statusChart) {
+                // Update data without animation to prevent flickering
                 statusChart.data.datasets[0].data = [online, recent, offline];
-                statusChart.update();
+                statusChart.update('none'); // Disable animation
             } else {
                 statusChart = new Chart(ctx, {
                     type: 'doughnut',
@@ -866,6 +869,9 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        animation: {
+                            duration: 0 // Disable initial animation too
+                        },
                         plugins: {
                             legend: {
                                 position: 'bottom'
@@ -886,7 +892,7 @@
                     sessionChart.data.labels = ['No Data'];
                     sessionChart.data.datasets[0].data = [0];
                     sessionChart.data.datasets[1].data = [0];
-                    sessionChart.update();
+                    sessionChart.update('none'); // No animation
                 } else {
                     sessionChart = new Chart(ctx, {
                         type: 'bar',
@@ -908,9 +914,16 @@
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
+                            animation: {
+                                duration: 0
+                            },
                             scales: {
                                 y: {
-                                    beginAtZero: true
+                                    beginAtZero: true,
+                                    max: 10, // Fixed max to prevent Y-axis jumping
+                                    ticks: {
+                                        stepSize: 1
+                                    }
                                 }
                             }
                         }
@@ -928,11 +941,23 @@
             const sessions = topDevices.map(d => d.session_count || 0);
             const timeouts = topDevices.map(d => d.timeout_count || 0);
             
+            // Calculate appropriate Y-axis max to prevent jumping
+            const maxValue = Math.max(...sessions, ...timeouts, 5);
+            const yAxisMax = Math.ceil(maxValue * 1.2); // Add 20% padding
+            
             if (sessionChart) {
-                sessionChart.data.labels = labels;
-                sessionChart.data.datasets[0].data = sessions;
-                sessionChart.data.datasets[1].data = timeouts;
-                sessionChart.update();
+                // Check if we need to update the chart
+                const dataChanged = JSON.stringify(sessionChart.data.labels) !== JSON.stringify(labels) ||
+                                  JSON.stringify(sessionChart.data.datasets[0].data) !== JSON.stringify(sessions) ||
+                                  JSON.stringify(sessionChart.data.datasets[1].data) !== JSON.stringify(timeouts);
+                
+                if (dataChanged) {
+                    sessionChart.data.labels = labels;
+                    sessionChart.data.datasets[0].data = sessions;
+                    sessionChart.data.datasets[1].data = timeouts;
+                    sessionChart.options.scales.y.max = yAxisMax;
+                    sessionChart.update('none'); // No animation to prevent flicker
+                }
             } else {
                 sessionChart = new Chart(ctx, {
                     type: 'bar',
@@ -954,9 +979,16 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        animation: {
+                            duration: 0 // No animations
+                        },
                         scales: {
                             y: {
-                                beginAtZero: true
+                                beginAtZero: true,
+                                max: yAxisMax,
+                                ticks: {
+                                    stepSize: 1
+                                }
                             }
                         }
                     }
@@ -969,7 +1001,15 @@
             const ctx = document.getElementById('batteryChart').getContext('2d');
             
             const devicesWithBattery = devices.filter(d => d.battery_percentage !== null && d.battery_percentage !== undefined);
-            if (devicesWithBattery.length === 0) return;
+            if (devicesWithBattery.length === 0) {
+                if (batteryChart) {
+                    batteryChart.data.labels = ['No Data'];
+                    batteryChart.data.datasets[0].data = [0];
+                    batteryChart.data.datasets[0].backgroundColor = ['#ccc'];
+                    batteryChart.update('none');
+                }
+                return;
+            }
             
             const labels = devicesWithBattery.map(d => d.device_name || d.device_id);
             const batteryLevels = devicesWithBattery.map(d => d.battery_percentage || 0);
@@ -980,10 +1020,16 @@
             });
             
             if (batteryChart) {
-                batteryChart.data.labels = labels;
-                batteryChart.data.datasets[0].data = batteryLevels;
-                batteryChart.data.datasets[0].backgroundColor = backgroundColors;
-                batteryChart.update();
+                // Only update if data actually changed
+                const dataChanged = JSON.stringify(batteryChart.data.labels) !== JSON.stringify(labels) ||
+                                  JSON.stringify(batteryChart.data.datasets[0].data) !== JSON.stringify(batteryLevels);
+                
+                if (dataChanged) {
+                    batteryChart.data.labels = labels;
+                    batteryChart.data.datasets[0].data = batteryLevels;
+                    batteryChart.data.datasets[0].backgroundColor = backgroundColors;
+                    batteryChart.update('none'); // No animation
+                }
             } else {
                 batteryChart = new Chart(ctx, {
                     type: 'bar',
@@ -998,10 +1044,19 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        animation: {
+                            duration: 0 // No animations
+                        },
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                max: 100
+                                max: 100, // Fixed max for battery percentage
+                                ticks: {
+                                    stepSize: 20,
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
                             }
                         },
                         plugins: {
@@ -1019,7 +1074,15 @@
             const ctx = document.getElementById('networkChart').getContext('2d');
             
             const devicesWithWifi = devices.filter(d => d.wifi_signal_strength !== null && d.wifi_signal_strength !== undefined);
-            if (devicesWithWifi.length === 0) return;
+            if (devicesWithWifi.length === 0) {
+                if (networkChart) {
+                    networkChart.data.labels = ['No Data'];
+                    networkChart.data.datasets[0].data = [100]; // Show 100 for "no data"
+                    networkChart.data.datasets[0].backgroundColor = ['#ccc'];
+                    networkChart.update('none');
+                }
+                return;
+            }
             
             const labels = devicesWithWifi.map(d => d.device_name || d.device_id);
             const signalStrengths = devicesWithWifi.map(d => Math.abs(d.wifi_signal_strength || -100));
@@ -1030,10 +1093,16 @@
             });
             
             if (networkChart) {
-                networkChart.data.labels = labels;
-                networkChart.data.datasets[0].data = signalStrengths;
-                networkChart.data.datasets[0].backgroundColor = backgroundColors;
-                networkChart.update();
+                // Only update if data actually changed
+                const dataChanged = JSON.stringify(networkChart.data.labels) !== JSON.stringify(labels) ||
+                                  JSON.stringify(networkChart.data.datasets[0].data) !== JSON.stringify(signalStrengths);
+                
+                if (dataChanged) {
+                    networkChart.data.labels = labels;
+                    networkChart.data.datasets[0].data = signalStrengths;
+                    networkChart.data.datasets[0].backgroundColor = backgroundColors;
+                    networkChart.update('none'); // No animation
+                }
             } else {
                 networkChart = new Chart(ctx, {
                     type: 'bar',
@@ -1048,10 +1117,20 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        animation: {
+                            duration: 0 // No animations
+                        },
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                reverse: true
+                                max: 100, // Fixed max for signal strength
+                                reverse: true, // Lower numbers are better for dBm
+                                ticks: {
+                                    stepSize: 20,
+                                    callback: function(value) {
+                                        return '-' + value + ' dBm';
+                                    }
+                                }
                             }
                         },
                         plugins: {
