@@ -730,6 +730,373 @@
             .device-grid { grid-template-columns: 1fr; gap: 15px; }
             .device-metrics { grid-template-columns: repeat(2, 1fr); gap: 10px; }
         }
+        
+        /* Business Intelligence Styles */
+        .bi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .bi-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .bi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .bi-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        
+        .bi-card-header h3 {
+            margin: 0;
+            color: #1e293b;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .bi-card-header i {
+            margin-right: 8px;
+            color: #3b82f6;
+        }
+        
+        /* Risk Indicator */
+        .risk-indicator {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .risk-indicator.low { background: #dcfce7; color: #166534; }
+        .risk-indicator.medium { background: #fef3c7; color: #92400e; }
+        .risk-indicator.high { background: #fecaca; color: #991b1b; }
+        .risk-indicator.critical { background: #fde2e8; color: #be185d; }
+        
+        /* Impact Metrics */
+        .impact-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .impact-metric {
+            text-align: center;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .impact-metric .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+        
+        .impact-metric .metric-label {
+            font-size: 12px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Cost Analysis */
+        .cost-analysis {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .cost-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .cost-value {
+            font-weight: bold;
+            color: #92400e;
+        }
+        
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 200px;
+            margin-bottom: 15px;
+        }
+        
+        /* Pattern Insights */
+        .pattern-insights {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .insight-item {
+            margin-bottom: 10px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .insight-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        /* AI Insights */
+        .ai-confidence {
+            padding: 4px 8px;
+            background: #e0e7ff;
+            color: #3730a3;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .ai-insights {
+            space-y: 15px;
+        }
+        
+        .insight-section {
+            margin-bottom: 20px;
+        }
+        
+        .insight-section h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #374151;
+            font-weight: 600;
+        }
+        
+        .insight-section i {
+            margin-right: 6px;
+            color: #6366f1;
+        }
+        
+        .insight-content {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.4;
+            color: #475569;
+        }
+        
+        /* Recommendations */
+        .recommendations {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .recommendation-item {
+            background: #f8fafc;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .recommendation-item.critical {
+            border-left-color: #dc2626;
+            background: #fef2f2;
+        }
+        
+        .recommendation-item.high {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+        }
+        
+        .recommendation-item.medium {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+        }
+        
+        .recommendation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .recommendation-priority {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .recommendation-priority.critical {
+            background: #fecaca;
+            color: #991b1b;
+        }
+        
+        .recommendation-priority.high {
+            background: #fed7aa;
+            color: #9a3412;
+        }
+        
+        .recommendation-priority.medium {
+            background: #bbf7d0;
+            color: #166534;
+        }
+        
+        .recommendation-category {
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+        
+        .recommendation-text {
+            font-size: 13px;
+            color: #4b5563;
+            margin-bottom: 8px;
+        }
+        
+        .recommendation-impact {
+            font-size: 12px;
+            color: #059669;
+            font-style: italic;
+        }
+        
+        /* Performance Matrix */
+        .matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        
+        .matrix-table th {
+            background: #f1f5f9;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .matrix-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .matrix-table tr:hover {
+            background: #f8fafc;
+        }
+        
+        .risk-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .risk-badge.low { background: #dcfce7; color: #166534; }
+        .risk-badge.medium { background: #fef3c7; color: #92400e; }
+        .risk-badge.high { background: #fecaca; color: #991b1b; }
+        
+        .action-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            background: #3b82f6;
+            color: white;
+            transition: background 0.2s;
+        }
+        
+        .action-btn:hover {
+            background: #2563eb;
+        }
+        
+        /* Anomalies */
+        .anomaly-item {
+            background: #fef2f2;
+            border-left: 4px solid #dc2626;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .anomaly-type {
+            font-weight: 600;
+            color: #991b1b;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+        
+        .anomaly-description {
+            font-size: 12px;
+            color: #4b5563;
+            margin-bottom: 5px;
+        }
+        
+        .anomaly-recommendation {
+            font-size: 12px;
+            color: #059669;
+            font-style: italic;
+        }
+        
+        .no-anomalies {
+            text-align: center;
+            padding: 20px;
+            color: #059669;
+            font-size: 14px;
+        }
+        
+        .no-anomalies i {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+        
+        /* Loading States */
+        .loading-recommendations {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+        
+        .loading-cell {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .bi-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .impact-metrics {
+                grid-template-columns: 1fr;
+            }
+            
+            .bi-card {
+                padding: 15px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1020,6 +1387,156 @@
 
             <div class="last-updated" id="lastUpdated">
                 Last updated: Never
+            </div>
+
+            <!-- Business Intelligence Section -->
+            <div class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-brain"></i> Business Intelligence & AI Insights</h2>
+                    <div class="section-controls">
+                        <select id="analysisTimeframe" onchange="loadBusinessIntelligence()">
+                            <option value="24">Last 24 Hours</option>
+                            <option value="168" selected>Last Week</option>
+                            <option value="720">Last Month</option>
+                        </select>
+                        <button onclick="loadBusinessIntelligence()" class="refresh-btn">
+                            <i class="fas fa-sync-alt"></i> Refresh Analysis
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- MYOB Timeout KPI Dashboard -->
+                <div class="bi-grid">
+                    <!-- Business Impact Metrics -->
+                    <div class="bi-card impact-card">
+                        <div class="bi-card-header">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Business Impact</h3>
+                            <div class="risk-indicator" id="riskIndicator">LOADING</div>
+                        </div>
+                        <div class="impact-metrics" id="impactMetrics">
+                            <div class="impact-metric">
+                                <div class="metric-value" id="productivityLoss">--</div>
+                                <div class="metric-label">Hours Lost/Week</div>
+                            </div>
+                            <div class="impact-metric">
+                                <div class="metric-value" id="affectedEmployees">--</div>
+                                <div class="metric-label">Affected Employees</div>
+                            </div>
+                            <div class="impact-metric">
+                                <div class="metric-value" id="dailyIncidents">--</div>
+                                <div class="metric-label">Daily Incidents</div>
+                            </div>
+                            <div class="impact-metric">
+                                <div class="metric-value" id="efficiencyScore">--</div>
+                                <div class="metric-label">Efficiency Score</div>
+                            </div>
+                        </div>
+                        <div class="cost-analysis" id="costAnalysis">
+                            <div class="cost-item">
+                                <span>Weekly Productivity Cost:</span>
+                                <span class="cost-value" id="weeklyCost">$--</span>
+                            </div>
+                            <div class="cost-item">
+                                <span>Annual Impact Estimate:</span>
+                                <span class="cost-value" id="annualCost">$--</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Timeout Pattern Analysis -->
+                    <div class="bi-card pattern-card">
+                        <div class="bi-card-header">
+                            <h3><i class="fas fa-chart-line"></i> Timeout Patterns</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="timeoutPatternChart" width="400" height="200"></canvas>
+                        </div>
+                        <div class="pattern-insights" id="patternInsights">
+                            <div class="insight-item">
+                                <strong>Peak Problem Hours:</strong>
+                                <span id="peakHours">Analyzing...</span>
+                            </div>
+                            <div class="insight-item">
+                                <strong>Worst Performing Devices:</strong>
+                                <span id="problemDevices">Analyzing...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- AI Insights Panel -->
+                    <div class="bi-card ai-card">
+                        <div class="bi-card-header">
+                            <h3><i class="fas fa-robot"></i> AI Insights & Predictions</h3>
+                            <div class="ai-confidence" id="aiConfidence">Confidence: --</div>
+                        </div>
+                        <div class="ai-insights" id="aiInsights">
+                            <div class="insight-section">
+                                <h4><i class="fas fa-search"></i> Pattern Analysis</h4>
+                                <div id="patternAnalysis" class="insight-content">Analyzing patterns...</div>
+                            </div>
+                            <div class="insight-section">
+                                <h4><i class="fas fa-crystal-ball"></i> Predictions</h4>
+                                <div id="predictions" class="insight-content">Generating predictions...</div>
+                            </div>
+                            <div class="insight-section">
+                                <h4><i class="fas fa-link"></i> Correlations</h4>
+                                <div id="correlations" class="insight-content">Finding correlations...</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recommendations Panel -->
+                    <div class="bi-card recommendations-card">
+                        <div class="bi-card-header">
+                            <h3><i class="fas fa-lightbulb"></i> Actionable Recommendations</h3>
+                        </div>
+                        <div class="recommendations" id="recommendations">
+                            <div class="loading-recommendations">
+                                <i class="fas fa-spinner fa-spin"></i> Generating recommendations...
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Device Performance Matrix -->
+                    <div class="bi-card matrix-card">
+                        <div class="bi-card-header">
+                            <h3><i class="fas fa-table"></i> Device Performance Matrix</h3>
+                        </div>
+                        <div class="performance-matrix" id="performanceMatrix">
+                            <table class="matrix-table">
+                                <thead>
+                                    <tr>
+                                        <th>Device</th>
+                                        <th>MYOB Sessions</th>
+                                        <th>Timeout Rate</th>
+                                        <th>Risk Level</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="matrixTableBody">
+                                    <tr>
+                                        <td colspan="5" class="loading-cell">
+                                            <i class="fas fa-spinner fa-spin"></i> Loading device data...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Anomaly Detection -->
+                    <div class="bi-card anomaly-card">
+                        <div class="bi-card-header">
+                            <h3><i class="fas fa-exclamation-circle"></i> Anomaly Detection</h3>
+                        </div>
+                        <div class="anomalies" id="anomalies">
+                            <div class="no-anomalies">
+                                <i class="fas fa-check-circle"></i>
+                                <span>No critical anomalies detected</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -2323,6 +2840,343 @@
                 updateChart(scannerChart, mockData);
             }
         }
+
+        // Business Intelligence Functions
+        let timeoutPatternChart = null;
+        
+        async function loadBusinessIntelligence() {
+            const hours = document.getElementById('analysisTimeframe').value;
+            
+            try {
+                // Load MYOB timeout analysis and AI insights in parallel
+                const [timeoutAnalysis, aiInsights] = await Promise.all([
+                    fetch(`${API_BASE}/analytics/business/myob-timeout-analysis?hours=${hours}`, {
+                        headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+                    }),
+                    fetch(`${API_BASE}/analytics/ai/insights?focus=timeout&hours=${hours}`, {
+                        headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+                    })
+                ]);
+                
+                if (timeoutAnalysis.ok) {
+                    const analysisData = await timeoutAnalysis.json();
+                    updateBusinessImpact(analysisData);
+                    updateRecommendations(analysisData.recommendations || []);
+                    updateDeviceMatrix(analysisData.detailed_analysis?.device_impact || []);
+                    updateTimeoutPatternChart(analysisData.detailed_analysis?.hourly_patterns || []);
+                }
+                
+                if (aiInsights.ok) {
+                    const insightsData = await aiInsights.json();
+                    updateAIInsights(insightsData.ai_insights || {});
+                    updateAnomalies(insightsData.ai_insights?.anomalies || []);
+                }
+                
+            } catch (error) {
+                console.error('Business intelligence loading error:', error);
+                showBIError('Failed to load business intelligence data');
+            }
+        }
+        
+        function updateBusinessImpact(analysisData) {
+            const businessImpact = analysisData.business_impact || {};
+            
+            // Update risk indicator
+            const riskIndicator = document.getElementById('riskIndicator');
+            const riskLevel = businessImpact.risk_level || 'UNKNOWN';
+            riskIndicator.textContent = riskLevel;
+            riskIndicator.className = `risk-indicator ${riskLevel.toLowerCase()}`;
+            
+            // Update impact metrics
+            document.getElementById('productivityLoss').textContent = businessImpact.productivity_loss_hours || '--';
+            document.getElementById('affectedEmployees').textContent = businessImpact.affected_employees || '--';
+            document.getElementById('dailyIncidents').textContent = businessImpact.daily_timeout_incidents || '--';
+            document.getElementById('efficiencyScore').textContent = (businessImpact.efficiency_score || 0) + '%';
+            
+            // Calculate and display cost estimates
+            const hourlyRate = 25; // Average hourly rate estimate
+            const weeklyCost = (businessImpact.productivity_loss_hours || 0) * hourlyRate;
+            const annualCost = weeklyCost * 52;
+            
+            document.getElementById('weeklyCost').textContent = `$${weeklyCost.toFixed(0)}`;
+            document.getElementById('annualCost').textContent = `$${annualCost.toFixed(0)}`;
+        }
+        
+        function updateTimeoutPatternChart(hourlyPatterns) {
+            const ctx = document.getElementById('timeoutPatternChart').getContext('2d');
+            
+            if (timeoutPatternChart) {
+                timeoutPatternChart.destroy();
+            }
+            
+            const hours = hourlyPatterns.map(p => `${p.hour_of_day}:00`);
+            const timeoutRates = hourlyPatterns.map(p => p.hourly_timeout_rate || 0);
+            const myobSessions = hourlyPatterns.map(p => p.myob_sessions || 0);
+            
+            timeoutPatternChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: hours,
+                    datasets: [
+                        {
+                            label: 'Timeout Rate (%)',
+                            data: timeoutRates,
+                            borderColor: '#dc2626',
+                            backgroundColor: '#dc262620',
+                            yAxisID: 'y',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'MYOB Sessions',
+                            data: myobSessions,
+                            borderColor: '#3b82f6',
+                            backgroundColor: '#3b82f620',
+                            yAxisID: 'y1',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 0 },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Timeout Rate (%)' },
+                            beginAtZero: true
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: 'MYOB Sessions' },
+                            beginAtZero: true,
+                            grid: { drawOnChartArea: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true, position: 'top' }
+                    }
+                }
+            });
+            
+            // Update pattern insights
+            const peakHours = hourlyPatterns
+                .filter(p => (p.hourly_timeout_rate || 0) > 10)
+                .map(p => `${p.hour_of_day}:00`)
+                .slice(0, 3);
+            
+            document.getElementById('peakHours').textContent = 
+                peakHours.length > 0 ? peakHours.join(', ') : 'No significant peaks detected';
+        }
+        
+        function updateAIInsights(insights) {
+            // Update AI confidence
+            const predictions = insights.predictions || {};
+            const confidence = predictions.timeout_trend?.confidence || 'UNKNOWN';
+            document.getElementById('aiConfidence').textContent = `Confidence: ${confidence}`;
+            
+            // Pattern Analysis
+            const patternAnalysis = insights.pattern_analysis || {};
+            const timePatterns = patternAnalysis.time_patterns || {};
+            const problemHours = timePatterns.problem_hours || [];
+            
+            let patternText = '';
+            if (problemHours.length > 0) {
+                const topHours = problemHours.slice(0, 3);
+                patternText = `Identified ${topHours.length} peak problem hours: `;
+                patternText += topHours.map(h => `${h.hour}:00 (${h.timeout_rate}% rate)`).join(', ');
+                patternText += `. ${timePatterns.recommendation || ''}`;
+            } else {
+                patternText = 'No significant time-based patterns detected in timeout occurrences.';
+            }
+            document.getElementById('patternAnalysis').textContent = patternText;
+            
+            // Predictions
+            const timeoutTrend = predictions.timeout_trend || {};
+            let predictionText = '';
+            if (timeoutTrend.current_rate !== undefined) {
+                predictionText = `Current timeout rate: ${timeoutTrend.current_rate}%. `;
+                predictionText += `Risk level: ${timeoutTrend.risk_level}. `;
+                predictionText += `Prediction: ${timeoutTrend.prediction}`;
+            } else {
+                predictionText = 'Insufficient data for reliable predictions. Continue monitoring to build prediction models.';
+            }
+            document.getElementById('predictions').textContent = predictionText;
+            
+            // Correlations
+            const correlations = insights.correlations || {};
+            let correlationText = '';
+            
+            if (correlations.battery_myob) {
+                const batteryCorr = correlations.battery_myob;
+                correlationText += `Battery correlation: MYOB sessions occur at ${batteryCorr.average_battery_during_myob}% average battery (${batteryCorr.correlation_strength} correlation). `;
+            }
+            
+            if (correlations.timeout_factors) {
+                const timeoutFactors = correlations.timeout_factors;
+                correlationText += `Timeout factors: Primary factor identified as ${timeoutFactors.primary_factor}. `;
+                correlationText += `Average battery at timeout: ${timeoutFactors.battery_at_timeout}%, `;
+                correlationText += `WiFi signal: ${timeoutFactors.wifi_signal_at_timeout} dBm.`;
+            }
+            
+            if (!correlationText) {
+                correlationText = 'Analyzing correlations between device metrics and timeout occurrences...';
+            }
+            
+            document.getElementById('correlations').textContent = correlationText;
+        }
+        
+        function updateRecommendations(recommendations) {
+            const container = document.getElementById('recommendations');
+            
+            if (!recommendations || recommendations.length === 0) {
+                container.innerHTML = `
+                    <div class="loading-recommendations">
+                        <i class="fas fa-check-circle"></i>
+                        <p>No specific recommendations at this time. System is operating within normal parameters.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const recommendationsHtml = recommendations.map(rec => `
+                <div class="recommendation-item ${rec.priority.toLowerCase()}">
+                    <div class="recommendation-header">
+                        <div class="recommendation-category">${rec.category}</div>
+                        <div class="recommendation-priority ${rec.priority.toLowerCase()}">${rec.priority}</div>
+                    </div>
+                    <div class="recommendation-text">
+                        <strong>Issue:</strong> ${rec.issue}<br>
+                        <strong>Recommendation:</strong> ${rec.recommendation}
+                    </div>
+                    <div class="recommendation-impact">
+                        Expected Impact: ${rec.expected_impact}
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = recommendationsHtml;
+        }
+        
+        function updateDeviceMatrix(deviceImpact) {
+            const tbody = document.getElementById('matrixTableBody');
+            
+            if (!deviceImpact || deviceImpact.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="loading-cell">No device performance data available</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            const deviceRows = deviceImpact.map(device => {
+                const timeoutRate = device.device_timeout_rate || 0;
+                const riskLevel = timeoutRate > 20 ? 'high' : timeoutRate > 10 ? 'medium' : 'low';
+                const riskText = timeoutRate > 20 ? 'HIGH' : timeoutRate > 10 ? 'MEDIUM' : 'LOW';
+                
+                return `
+                    <tr>
+                        <td>${device.device_name || device.device_id}</td>
+                        <td>${device.myob_sessions || 0}</td>
+                        <td>${timeoutRate.toFixed(1)}%</td>
+                        <td><span class="risk-badge ${riskLevel}">${riskText}</span></td>
+                        <td>
+                            <button class="action-btn" onclick="viewDeviceDetails('${device.device_id}')">
+                                View Details
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            tbody.innerHTML = deviceRows;
+            
+            // Update problem devices insight
+            const problemDevices = deviceImpact.filter(d => (d.device_timeout_rate || 0) > 15);
+            const problemDeviceNames = problemDevices.map(d => d.device_name || d.device_id).slice(0, 3);
+            
+            document.getElementById('problemDevices').textContent = 
+                problemDeviceNames.length > 0 
+                    ? problemDeviceNames.join(', ') 
+                    : 'No devices showing concerning timeout patterns';
+        }
+        
+        function updateAnomalies(anomalies) {
+            const container = document.getElementById('anomalies');
+            
+            if (!anomalies || anomalies.length === 0) {
+                container.innerHTML = `
+                    <div class="no-anomalies">
+                        <i class="fas fa-check-circle"></i>
+                        <span>No critical anomalies detected</span>
+                    </div>
+                `;
+                return;
+            }
+            
+            const anomaliesHtml = anomalies.map(anomaly => `
+                <div class="anomaly-item">
+                    <div class="anomaly-type">${anomaly.type.replace(/_/g, ' ')}</div>
+                    <div class="anomaly-description">
+                        Device: ${anomaly.device_id} - ${anomaly.severity} severity
+                        ${anomaly.average_battery ? `(Avg Battery: ${anomaly.average_battery}%)` : ''}
+                    </div>
+                    <div class="anomaly-recommendation">
+                        Recommendation: ${anomaly.recommendation}
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = anomaliesHtml;
+        }
+        
+        function viewDeviceDetails(deviceId) {
+            // Expand the device card if it exists
+            toggleDeviceExpand(deviceId);
+            
+            // Scroll to the device card
+            const deviceCard = document.getElementById(`device-${deviceId}`);
+            if (deviceCard) {
+                deviceCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                deviceCard.style.border = '2px solid #3b82f6';
+                setTimeout(() => {
+                    deviceCard.style.border = '';
+                }, 3000);
+            }
+        }
+        
+        function showBIError(message) {
+            const riskIndicator = document.getElementById('riskIndicator');
+            riskIndicator.textContent = 'ERROR';
+            riskIndicator.className = 'risk-indicator critical';
+            
+            console.error('BI Error:', message);
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboard();
+            loadBusinessIntelligence(); // Load BI data on startup
+            
+            // Set up auto-refresh for main dashboard (every 60 seconds)
+            setInterval(() => {
+                if (!userInteracting) {
+                    loadDashboard();
+                }
+            }, 60000);
+            
+            // Set up auto-refresh for business intelligence (every 5 minutes)
+            setInterval(() => {
+                if (!userInteracting) {
+                    loadBusinessIntelligence();
+                }
+            }, 300000);
+        });
     </script>
 </body>
 </html> 
