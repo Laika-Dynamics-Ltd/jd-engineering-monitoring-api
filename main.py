@@ -469,14 +469,12 @@ async def get_device_metrics(device_id: str, hours: int = 24):
             session_id
         FROM tablet_metrics 
         WHERE device_id = $1
-        AND timestamp >= NOW() - INTERVAL $2
+        AND timestamp >= NOW() - ($2 || ' hours')::interval
         ORDER BY timestamp DESC
         LIMIT 100
         """
         
-        # Create the interval string
-        interval_str = f"{hours} hours"
-        results = await db_pool.fetch(query, device_id, interval_str)
+        results = await db_pool.fetch(query, device_id, str(hours))
         
         metrics = []
         for row in results:
@@ -517,9 +515,8 @@ async def get_session_issues(
     try:
         async with db_pool.acquire() as conn:
             # Build base query for tablet metrics
-            interval_str = f"{hours} hours"
-            params = [interval_str]
-            where_clause = "WHERE tm.timestamp >= NOW() - INTERVAL $1"
+            params = [str(hours)]
+            where_clause = "WHERE tm.timestamp >= NOW() - ($1 || ' hours')::interval"
             
             if device_id:
                 where_clause += " AND tm.device_id = $2"
