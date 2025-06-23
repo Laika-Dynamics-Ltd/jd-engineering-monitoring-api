@@ -79,10 +79,6 @@ class AdvancedTabletMonitor:
         except Exception as e:
             print(f"⚠️ Command error: {e}")
             return None
-
-if __name__ == "__main__":
-    monitor = AdvancedTabletMonitor()
-    print("Advanced monitoring script loaded!")
     
     def get_comprehensive_battery_info(self):
         """Enhanced battery monitoring with health and charging details"""
