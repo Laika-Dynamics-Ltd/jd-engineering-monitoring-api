@@ -451,26 +451,33 @@ async def get_devices(token: str = Depends(verify_token)):
 async def get_device_metrics(device_id: str, hours: int = 24):
     """Get detailed metrics for a specific device"""
     try:
-        # Get the latest metrics for the device
+        # Get comprehensive metrics by joining all relevant tables
         query = """
         SELECT 
-            device_id,
-            device_name,
-            location,
-            battery_percentage,
-            battery_charging,
-            battery_temperature,
-            wifi_connected,
-            wifi_ssid,
-            wifi_signal_strength,
-            app_state,
-            storage_free,
-            timestamp,
-            session_id
-        FROM tablet_metrics 
-        WHERE device_id = $1
-        AND timestamp >= NOW() - ($2 || ' hours')::interval
-        ORDER BY timestamp DESC
+            dr.device_id,
+            dr.device_name,
+            dr.location,
+            dm.battery_level as battery_percentage,
+            dm.battery_temperature,
+            dm.memory_available,
+            dm.memory_total,
+            dm.storage_available,
+            dm.cpu_usage,
+            nm.wifi_signal_strength,
+            nm.wifi_ssid,
+            nm.connectivity_status,
+            am.screen_state as app_state,
+            am.app_foreground,
+            COALESCE(dm.timestamp, nm.timestamp, am.timestamp) as timestamp
+        FROM device_registry dr
+        LEFT JOIN device_metrics dm ON dr.device_id = dm.device_id 
+            AND dm.timestamp >= NOW() - ($2 || ' hours')::interval
+        LEFT JOIN network_metrics nm ON dr.device_id = nm.device_id 
+            AND nm.timestamp >= NOW() - ($2 || ' hours')::interval
+        LEFT JOIN app_metrics am ON dr.device_id = am.device_id 
+            AND am.timestamp >= NOW() - ($2 || ' hours')::interval
+        WHERE dr.device_id = $1
+        ORDER BY COALESCE(dm.timestamp, nm.timestamp, am.timestamp) DESC
         LIMIT 100
         """
         
@@ -483,15 +490,20 @@ async def get_device_metrics(device_id: str, hours: int = 24):
                 "device_name": row["device_name"],
                 "location": row["location"],
                 "battery_percentage": row["battery_percentage"],
-                "battery_charging": row["battery_charging"],
+                "battery_charging": None,  # Not available in current schema
                 "battery_temperature": row["battery_temperature"],
-                "wifi_connected": row["wifi_connected"],
+                "wifi_connected": row["connectivity_status"] == 'online' if row["connectivity_status"] else None,
                 "wifi_ssid": row["wifi_ssid"],
                 "wifi_signal_strength": row["wifi_signal_strength"],
                 "app_state": row["app_state"],
-                "storage_free": row["storage_free"],
+                "storage_free": row["storage_available"],
                 "timestamp": row["timestamp"],
-                "session_id": row["session_id"]
+                "session_id": None,  # Could join session_events if needed
+                # Additional metrics
+                "memory_available": row["memory_available"],
+                "memory_total": row["memory_total"],
+                "cpu_usage": row["cpu_usage"],
+                "app_foreground": row["app_foreground"]
             })
         
         return {
@@ -514,48 +526,59 @@ async def get_session_issues(
     """Advanced session timeout and connectivity analysis"""
     try:
         async with db_pool.acquire() as conn:
-            # Build base query for tablet metrics
+            # Build base query for device registry and related tables
             params = [str(hours)]
-            where_clause = "WHERE tm.timestamp >= NOW() - ($1 || ' hours')::interval"
+            where_clause = "WHERE dm.timestamp >= NOW() - ($1 || ' hours')::interval"
             
             if device_id:
-                where_clause += " AND tm.device_id = $2"
+                where_clause += " AND dr.device_id = $2"
                 params.append(device_id)
             
-            # Get session analysis from tablet_metrics
+            # Get session analysis from session_events and device_registry
             analysis_query = f"""
                 SELECT 
-                    tm.device_id,
-                    tm.device_name,
-                    tm.location,
-                    COUNT(*) as total_records,
-                    COUNT(*) FILTER (WHERE tm.session_id IS NOT NULL) as session_count,
-                    COUNT(DISTINCT tm.session_id) as unique_sessions,
-                    COUNT(*) FILTER (WHERE tm.app_state = 'timeout') as timeout_count,
-                    COUNT(*) FILTER (WHERE tm.app_state IN ('active', 'foreground')) as active_count,
-                    AVG(tm.battery_percentage) as avg_battery,
-                    AVG(tm.wifi_signal_strength) as avg_wifi_signal,
-                    MAX(tm.timestamp) as last_activity,
-                    COUNT(DISTINCT DATE(tm.timestamp)) as active_days
-                FROM tablet_metrics tm
-                {where_clause}
-                GROUP BY tm.device_id, tm.device_name, tm.location
+                    dr.device_id,
+                    dr.device_name,
+                    dr.location,
+                    COUNT(se.id) as total_records,
+                    COUNT(*) FILTER (WHERE se.session_id IS NOT NULL) as session_count,
+                    COUNT(DISTINCT se.session_id) as unique_sessions,
+                    COUNT(*) FILTER (WHERE se.event_type = 'timeout') as timeout_count,
+                    COUNT(*) FILTER (WHERE se.event_type IN ('login', 'session_start')) as active_count,
+                    AVG(dm.battery_level) as avg_battery,
+                    AVG(nm.wifi_signal_strength) as avg_wifi_signal,
+                    MAX(GREATEST(COALESCE(se.timestamp, '1970-01-01'::timestamptz), 
+                                COALESCE(dm.timestamp, '1970-01-01'::timestamptz), 
+                                COALESCE(nm.timestamp, '1970-01-01'::timestamptz))) as last_activity,
+                    COUNT(DISTINCT DATE(se.timestamp)) as active_days
+                FROM device_registry dr
+                LEFT JOIN session_events se ON dr.device_id = se.device_id 
+                    AND se.timestamp >= NOW() - ($1 || ' hours')::interval
+                LEFT JOIN device_metrics dm ON dr.device_id = dm.device_id 
+                    AND dm.timestamp >= NOW() - ($1 || ' hours')::interval
+                LEFT JOIN network_metrics nm ON dr.device_id = nm.device_id 
+                    AND nm.timestamp >= NOW() - ($1 || ' hours')::interval
+                {where_clause.replace('dm.timestamp', 'COALESCE(se.timestamp, dm.timestamp, nm.timestamp)')}
+                GROUP BY dr.device_id, dr.device_name, dr.location
                 ORDER BY session_count DESC, timeout_count DESC
             """
             
             analysis = await conn.fetch(analysis_query, *params)
             
-            # Network correlation analysis from tablet_metrics
+            # Network correlation analysis from network_metrics
             network_query = f"""
                 SELECT 
-                    tm.device_id,
-                    COUNT(*) FILTER (WHERE tm.wifi_connected = false) as offline_count,
-                    COUNT(*) FILTER (WHERE tm.wifi_signal_strength < -70) as weak_signal_count,
-                    AVG(tm.wifi_signal_strength) as avg_signal_strength,
-                    COUNT(DISTINCT tm.wifi_ssid) as network_count
-                FROM tablet_metrics tm
-                {where_clause}
-                GROUP BY tm.device_id
+                    dr.device_id,
+                    COUNT(*) FILTER (WHERE nm.connectivity_status = 'offline') as offline_count,
+                    COUNT(*) FILTER (WHERE nm.wifi_signal_strength < -70) as weak_signal_count,
+                    AVG(nm.wifi_signal_strength) as avg_signal_strength,
+                    COUNT(DISTINCT nm.wifi_ssid) as network_count
+                FROM device_registry dr
+                LEFT JOIN network_metrics nm ON dr.device_id = nm.device_id 
+                    AND nm.timestamp >= NOW() - ($1 || ' hours')::interval
+                WHERE dr.device_id IS NOT NULL
+                {('AND dr.device_id = $2' if device_id else '')}
+                GROUP BY dr.device_id
             """
             
             network_analysis = await conn.fetch(network_query, *params)
