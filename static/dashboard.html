@@ -529,10 +529,10 @@
     </div>
     
     <script>
-        // Configuration
+        // Configuration - less aggressive refresh
         const API_BASE = '';
         const API_TOKEN = 'ArFetiWcHH5bIbiiwuQupQalDJocJA436YMi00tCvmHZOI82Awp8qbceO681';
-        const REFRESH_INTERVAL = 30000; // 30 seconds
+        const REFRESH_INTERVAL = 60000; // Changed to 60 seconds instead of 30
         
         // Global variables
         let statusChart = null;
@@ -545,6 +545,9 @@
         let currentFilter = 'all';
         let currentSearchTerm = '';
         let currentTimeRange = 24;
+        let isUpdating = false;
+        let expandedDevices = new Set();
+        let lastUpdateTime = 0;
         
         // API helper
         async function fetchAPI(endpoint) {
@@ -582,44 +585,75 @@
         
         // Update dashboard
         async function updateDashboard() {
+            // Prevent overlapping updates
+            if (isUpdating) {
+                console.log('Update already in progress, skipping...');
+                return;
+            }
+            
+            isUpdating = true;
+            
             try {
-                // Show updating indicator
-                document.body.classList.add('updating');
+                // Subtle loading indicator
+                const refreshBtn = document.querySelector('.refresh-btn');
+                if (refreshBtn) {
+                    refreshBtn.textContent = '⏳ Updating...';
+                    refreshBtn.disabled = true;
+                }
                 
-                // Fetch devices with metrics
+                // Fetch data
                 const [devices, analytics] = await Promise.all([
                     fetchAPI('/devices'),
                     fetchAPI(`/analytics/session-issues?hours=${currentTimeRange}`)
                 ]);
                 
-                // Store current devices
-                currentDevices = devices;
+                // Check if data actually changed
+                const devicesChanged = JSON.stringify(devices) !== JSON.stringify(currentDevices);
                 
-                // Update stats with smooth animation
-                updateStats(devices);
+                if (devicesChanged) {
+                    // Store current devices
+                    currentDevices = devices;
+                    
+                    // Update stats with smooth animation only if changed
+                    updateStats(devices);
+                    
+                    // Apply current filters (preserves search and filter state)
+                    applyFilters();
+                    
+                    // Update charts only if data changed
+                    updateStatusChart(devices.filter(d => d.status === 'online').length,
+                                    devices.filter(d => d.status === 'recent').length,
+                                    devices.filter(d => d.status === 'offline').length);
+                    updateBatteryChart(devices);
+                    updateNetworkChart(devices);
+                }
                 
-                // Apply current filters
-                applyFilters();
-                
-                // Update charts
-                updateStatusChart(devices.filter(d => d.status === 'online').length,
-                                devices.filter(d => d.status === 'recent').length,
-                                devices.filter(d => d.status === 'offline').length);
+                // Always try to update session chart (it's less disruptive)
                 updateSessionChart(analytics);
-                updateBatteryChart(devices);
-                updateNetworkChart(devices);
                 
-                // Update last update time
+                // Update timestamp
+                lastUpdateTime = Date.now();
                 document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
                 
-                // Remove updating indicator
-                document.body.classList.remove('updating');
+                // Restore refresh button
+                if (refreshBtn) {
+                    refreshBtn.textContent = '🔄 Refresh';
+                    refreshBtn.disabled = false;
+                }
                 
             } catch (error) {
                 console.error('Dashboard update error:', error);
-                document.body.classList.remove('updating');
-                const devicesContainer = document.getElementById('devices-container');
-                devicesContainer.innerHTML = '<div class="error">Failed to load data. Please check your connection and try again.</div>';
+                // Show error but don't crash the dashboard
+                const refreshBtn = document.querySelector('.refresh-btn');
+                if (refreshBtn) {
+                    refreshBtn.textContent = '❌ Error';
+                    refreshBtn.disabled = false;
+                    setTimeout(() => {
+                        refreshBtn.textContent = '🔄 Refresh';
+                    }, 3000);
+                }
+            } finally {
+                isUpdating = false;
             }
         }
         
@@ -685,33 +719,45 @@
                 return;
             }
             
-            devicesContainer.innerHTML = devices.map(device => `
-                <div class="device-card fade-in" data-device-id="${device.device_id}" onclick="toggleDeviceDetails('${device.device_id}')">
-                    <div class="device-header">
-                        <div class="device-name">${device.device_name || device.device_id}</div>
-                        <div class="device-status status-${device.status}">${device.status}</div>
+            // Save currently expanded devices before re-rendering
+            const currentlyExpanded = document.querySelectorAll('.device-card.expanded');
+            currentlyExpanded.forEach(card => {
+                expandedDevices.add(card.dataset.deviceId);
+            });
+            
+            // Create device cards with preserved state
+            devicesContainer.innerHTML = devices.map(device => {
+                const isExpanded = expandedDevices.has(device.device_id);
+                return `
+                    <div class="device-card fade-in ${isExpanded ? 'expanded' : ''}" 
+                         data-device-id="${device.device_id}" 
+                         onclick="toggleDeviceDetails('${device.device_id}')">
+                        <div class="device-header">
+                            <div class="device-name">${device.device_name || device.device_id}</div>
+                            <div class="device-status status-${device.status}">${device.status}</div>
+                        </div>
+                        <div class="device-info">
+                            <div class="metric-row">
+                                <span class="metric-label">Location:</span>
+                                <span class="metric-value">${device.location || 'Unknown'}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Last Seen:</span>
+                                <span class="metric-value">${formatTimeAgo(device.last_seen)}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Sessions:</span>
+                                <span class="metric-value">${device.total_sessions || 0}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Timeouts:</span>
+                                <span class="metric-value">${device.total_timeouts || 0}</span>
+                            </div>
+                        </div>
+                        ${renderDeviceDetails(device)}
                     </div>
-                    <div class="device-info">
-                        <div class="metric-row">
-                            <span class="metric-label">Location:</span>
-                            <span class="metric-value">${device.location || 'Unknown'}</span>
-                        </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Last Seen:</span>
-                            <span class="metric-value">${formatTimeAgo(device.last_seen)}</span>
-                        </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Sessions:</span>
-                            <span class="metric-value">${device.total_sessions || 0}</span>
-                        </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Timeouts:</span>
-                            <span class="metric-value">${device.total_timeouts || 0}</span>
-                        </div>
-                    </div>
-                    ${renderDeviceDetails(device)}
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
         
         // Render device details
@@ -789,6 +835,13 @@
             const card = document.querySelector(`[data-device-id="${deviceId}"]`);
             if (card) {
                 card.classList.toggle('expanded');
+                
+                // Track expanded state
+                if (card.classList.contains('expanded')) {
+                    expandedDevices.add(deviceId);
+                } else {
+                    expandedDevices.delete(deviceId);
+                }
             }
         }
         
@@ -1013,19 +1066,27 @@
         
         // Refresh data
         async function refreshData() {
+            // Prevent rapid successive refreshes
+            if (isUpdating) {
+                return;
+            }
+            
             const btn = document.querySelector('.refresh-btn');
-            btn.disabled = true;
-            btn.textContent = '⏳ Refreshing...';
+            if (btn && btn.disabled) {
+                return; // Already updating
+            }
             
             await updateDashboard();
-            
-            btn.disabled = false;
-            btn.textContent = '🔄 Refresh';
         }
         
-        // Auto-refresh
+        // Smart auto-refresh that pauses when user is interacting
         function startAutoRefresh() {
-            refreshTimer = setInterval(updateDashboard, REFRESH_INTERVAL);
+            refreshTimer = setInterval(() => {
+                // Only refresh if the page has been visible and no recent user interaction
+                if (!document.hidden && (Date.now() - lastUpdateTime > 30000)) {
+                    updateDashboard();
+                }
+            }, REFRESH_INTERVAL);
         }
         
         function stopAutoRefresh() {
@@ -1040,11 +1101,22 @@
             updateDashboard();
             startAutoRefresh();
             
+            // Track user interactions to pause auto-refresh
+            let userInteractionTimeout;
+            function trackUserInteraction() {
+                lastUpdateTime = Date.now(); // Reset the interaction timer
+                clearTimeout(userInteractionTimeout);
+                userInteractionTimeout = setTimeout(() => {
+                    // User has been inactive for 30 seconds, allow auto-refresh
+                }, 30000);
+            }
+            
             // Search functionality
             const searchInput = document.getElementById('search-input');
             searchInput.addEventListener('input', (e) => {
                 currentSearchTerm = e.target.value;
                 applyFilters();
+                trackUserInteraction();
             });
             
             // Filter buttons
@@ -1057,6 +1129,7 @@
                     
                     currentFilter = e.target.dataset.filter;
                     applyFilters();
+                    trackUserInteraction();
                 });
             });
             
@@ -1070,7 +1143,15 @@
                     
                     currentTimeRange = parseInt(e.target.dataset.hours);
                     updateDashboard(); // Refresh to get new time range data
+                    trackUserInteraction();
                 });
+            });
+            
+            // Track clicks on device cards
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('.device-card')) {
+                    trackUserInteraction();
+                }
             });
         });
         
