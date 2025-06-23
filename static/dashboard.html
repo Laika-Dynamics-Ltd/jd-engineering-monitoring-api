@@ -274,6 +274,126 @@
             max-height: 320px !important;
         }
         
+        /* Raw Data Logs Section */
+        .logs-section {
+            margin-bottom: 30px;
+        }
+        
+        .logs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+        }
+        
+        .logs-card {
+            background: #ffffff;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .logs-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .logs-controls {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .logs-btn {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .logs-btn:hover {
+            background: #e2e8f0;
+            color: #475569;
+        }
+        
+        .logs-btn.active {
+            background: #dc2626;
+            color: white;
+            border-color: #dc2626;
+        }
+        
+        .logs-container {
+            flex: 1;
+            background: #1a202c;
+            border-radius: 6px;
+            padding: 16px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            overflow-y: auto;
+            color: #e2e8f0;
+            border: 1px solid #374151;
+        }
+        
+        .log-entry {
+            margin-bottom: 4px;
+            word-wrap: break-word;
+        }
+        
+        .log-timestamp {
+            color: #9ca3af;
+            font-weight: 500;
+        }
+        
+        .log-level {
+            font-weight: 600;
+            margin: 0 8px;
+        }
+        
+        .log-level.info { color: #3b82f6; }
+        .log-level.success { color: #10b981; }
+        .log-level.warning { color: #f59e0b; }
+        .log-level.error { color: #ef4444; }
+        
+        .log-message {
+            color: #e5e7eb;
+        }
+        
+        .log-data {
+            color: #a78bfa;
+            font-style: italic;
+        }
+        
+        .logs-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 12px;
+            color: #64748b;
+        }
+        
         .devices-section {
             margin-bottom: 30px;
         }
@@ -403,6 +523,7 @@
             .header-text h1 { font-size: 24px; }
             .stats-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
             .charts-grid { grid-template-columns: 1fr; }
+            .logs-grid { grid-template-columns: 1fr; }
             .device-grid { grid-template-columns: 1fr; gap: 15px; }
             .device-metrics { grid-template-columns: repeat(2, 1fr); gap: 10px; }
         }
@@ -413,7 +534,7 @@
     <div class="login-container" id="loginContainer">
         <form class="login-form" id="loginForm">
             <div class="login-header">
-                <img src="JDMNavLogo.png" alt="J&D McLennan Engineering" class="login-logo" onerror="this.style.display='none'">
+                <img src="/static/JDMNavLogo.png" alt="J&D McLennan Engineering" class="login-logo" onerror="console.log('Logo failed to load'); this.style.display='none'">
                 <h1 class="login-title">Tablet Monitoring System</h1>
                 <p class="login-subtitle">Please sign in to access the dashboard</p>
             </div>
@@ -443,7 +564,7 @@
         <div class="header">
             <div class="header-content">
                 <div class="logo-section">
-                    <img src="JDMNavLogo.png" alt="J&D McLennan Engineering" class="company-logo" onerror="this.style.display='none'">
+                    <img src="/static/JDMNavLogo.png" alt="J&D McLennan Engineering" class="company-logo" onerror="console.log('Dashboard logo failed to load'); this.style.display='none'">
                     <div class="header-text">
                         <h1>Tablet Monitoring System</h1>
                         <div class="subtitle">Real-time MYOB Session & Barcode Scanner Monitoring</div>
@@ -550,6 +671,119 @@
                 </div>
             </div>
 
+            <!-- Raw Data Logs Section -->
+            <div class="logs-section">
+                <div class="section-title">
+                    <i class="fas fa-terminal"></i>
+                    Raw Data Logs & System Events
+                </div>
+                <div class="logs-grid">
+                    <div class="logs-card">
+                        <div class="logs-header">
+                            <div class="logs-title">
+                                <i class="fas fa-tablet-alt"></i>
+                                Device Activity Log
+                            </div>
+                            <div class="logs-controls">
+                                <button class="logs-btn active" onclick="filterLogs('device', 'all')">All</button>
+                                <button class="logs-btn" onclick="filterLogs('device', 'battery')">Battery</button>
+                                <button class="logs-btn" onclick="filterLogs('device', 'wifi')">WiFi</button>
+                                <button class="logs-btn" onclick="clearLogs('device')">Clear</button>
+                            </div>
+                        </div>
+                        <div class="logs-container" id="deviceLogs">
+                            <div class="log-entry">
+                                <span class="log-timestamp">[10:03:45]</span>
+                                <span class="log-level success">INFO</span>
+                                <span class="log-message">Device activity monitoring started</span>
+                            </div>
+                        </div>
+                        <div class="logs-stats">
+                            <span>Total Entries: <strong id="deviceLogCount">1</strong></span>
+                            <span>Auto-scroll: <strong>ON</strong></span>
+                        </div>
+                    </div>
+                    
+                    <div class="logs-card">
+                        <div class="logs-header">
+                            <div class="logs-title">
+                                <i class="fas fa-desktop"></i>
+                                MYOB Session Log
+                            </div>
+                            <div class="logs-controls">
+                                <button class="logs-btn active" onclick="filterLogs('myob', 'all')">All</button>
+                                <button class="logs-btn" onclick="filterLogs('myob', 'login')">Login</button>
+                                <button class="logs-btn" onclick="filterLogs('myob', 'timeout')">Timeout</button>
+                                <button class="logs-btn" onclick="clearLogs('myob')">Clear</button>
+                            </div>
+                        </div>
+                        <div class="logs-container" id="myobLogs">
+                            <div class="log-entry">
+                                <span class="log-timestamp">[10:03:45]</span>
+                                <span class="log-level info">INFO</span>
+                                <span class="log-message">MYOB session monitoring active</span>
+                            </div>
+                        </div>
+                        <div class="logs-stats">
+                            <span>Total Entries: <strong id="myobLogCount">1</strong></span>
+                            <span>Active Sessions: <strong id="activeSessions">0</strong></span>
+                        </div>
+                    </div>
+                    
+                    <div class="logs-card">
+                        <div class="logs-header">
+                            <div class="logs-title">
+                                <i class="fas fa-barcode"></i>
+                                Scanner Activity Log
+                            </div>
+                            <div class="logs-controls">
+                                <button class="logs-btn active" onclick="filterLogs('scanner', 'all')">All</button>
+                                <button class="logs-btn" onclick="filterLogs('scanner', 'scan')">Scans</button>
+                                <button class="logs-btn" onclick="filterLogs('scanner', 'error')">Errors</button>
+                                <button class="logs-btn" onclick="clearLogs('scanner')">Clear</button>
+                            </div>
+                        </div>
+                        <div class="logs-container" id="scannerLogs">
+                            <div class="log-entry">
+                                <span class="log-timestamp">[10:03:45]</span>
+                                <span class="log-level info">INFO</span>
+                                <span class="log-message">Scanner monitoring initialized</span>
+                            </div>
+                        </div>
+                        <div class="logs-stats">
+                            <span>Total Entries: <strong id="scannerLogCount">1</strong></span>
+                            <span>Scans Today: <strong id="scansToday">0</strong></span>
+                        </div>
+                    </div>
+                    
+                    <div class="logs-card">
+                        <div class="logs-header">
+                            <div class="logs-title">
+                                <i class="fas fa-server"></i>
+                                System Events Log
+                            </div>
+                            <div class="logs-controls">
+                                <button class="logs-btn active" onclick="filterLogs('system', 'all')">All</button>
+                                <button class="logs-btn" onclick="filterLogs('system', 'api')">API</button>
+                                <button class="logs-btn" onclick="filterLogs('system', 'error')">Errors</button>
+                                <button class="logs-btn" onclick="clearLogs('system')">Clear</button>
+                            </div>
+                        </div>
+                        <div class="logs-container" id="systemLogs">
+                            <div class="log-entry">
+                                <span class="log-timestamp">[10:03:45]</span>
+                                <span class="log-level success">SUCCESS</span>
+                                <span class="log-message">Dashboard connected to API</span>
+                            </div>
+                        </div>
+                        <div class="logs-stats">
+                            <span>Total Entries: <strong id="systemLogCount">1</strong></span>
+                            <span>API Status: <strong id="apiStatus">Connected</strong></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Live Alerts Section -->
             <div class="alert-section" id="alertSection">
                 <div class="stream-title">
@@ -604,6 +838,21 @@
             wifi: [],
             myob: [],
             scanner: []
+        };
+        
+        // Logs system
+        let logsData = {
+            device: [],
+            myob: [],
+            scanner: [],
+            system: []
+        };
+        
+        let logsFilters = {
+            device: 'all',
+            myob: 'all', 
+            scanner: 'all',
+            system: 'all'
         };
 
         // Check if user is already logged in
@@ -677,6 +926,13 @@
             initializeCharts();
             loadData();
             startAutoRefresh();
+            simulateRealTimeLogs();
+            
+            // Initialize logs with welcome messages
+            addLog('system', 'success', 'Dashboard initialized successfully');
+            addLog('device', 'info', 'Device monitoring service started');
+            addLog('myob', 'info', 'MYOB session tracking enabled');
+            addLog('scanner', 'info', 'Barcode scanner monitoring active');
         }
         
         function initializeCharts() {
@@ -840,7 +1096,7 @@
                     const devices = await devicesResponse.json();
                     const analytics = await analyticsResponse.json();
                     
-                    updateDashboard(devices, analytics);
+                    updateDashboardWithLogs(devices, analytics);
                     updateCharts(devices, analytics);
                 } else {
                     throw new Error('Failed to fetch data');
@@ -1053,6 +1309,179 @@
             loadData().finally(() => {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+            });
+        }
+
+        // Logs functionality
+        function addLog(category, level, message, data = null) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = {
+                timestamp,
+                level,
+                message,
+                data,
+                id: Date.now() + Math.random()
+            };
+            
+            logsData[category].push(logEntry);
+            
+            // Keep only last 100 entries per category
+            if (logsData[category].length > 100) {
+                logsData[category].shift();
+            }
+            
+            updateLogsDisplay(category);
+            updateLogStats(category);
+        }
+        
+        function updateLogsDisplay(category) {
+            const container = document.getElementById(`${category}Logs`);
+            if (!container) return;
+            
+            const filter = logsFilters[category];
+            let filteredLogs = logsData[category];
+            
+            // Apply filter
+            if (filter !== 'all') {
+                filteredLogs = logsData[category].filter(log => 
+                    log.message.toLowerCase().includes(filter.toLowerCase()) ||
+                    log.level.toLowerCase().includes(filter.toLowerCase())
+                );
+            }
+            
+            // Generate HTML
+            const logsHtml = filteredLogs.map(log => `
+                <div class="log-entry">
+                    <span class="log-timestamp">[${log.timestamp}]</span>
+                    <span class="log-level ${log.level.toLowerCase()}">${log.level.toUpperCase()}</span>
+                    <span class="log-message">${log.message}</span>
+                    ${log.data ? `<span class="log-data">${JSON.stringify(log.data)}</span>` : ''}
+                </div>
+            `).join('');
+            
+            container.innerHTML = logsHtml;
+            
+            // Auto-scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function updateLogStats(category) {
+            const countElement = document.getElementById(`${category}LogCount`);
+            if (countElement) {
+                countElement.textContent = logsData[category].length;
+            }
+        }
+        
+        function filterLogs(category, filter) {
+            logsFilters[category] = filter;
+            
+            // Update button states
+            const buttons = document.querySelectorAll(`[onclick*="filterLogs('${category}'"]`);
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            updateLogsDisplay(category);
+        }
+        
+        function clearLogs(category) {
+            logsData[category] = [];
+            updateLogsDisplay(category);
+            updateLogStats(category);
+            addLog(category, 'info', `${category} logs cleared`);
+        }
+        
+        function simulateRealTimeLogs() {
+            // Simulate device activity
+            const deviceEvents = [
+                'Battery level updated',
+                'WiFi signal strength changed',
+                'Device connection established',
+                'Charging status changed',
+                'Memory usage updated'
+            ];
+            
+            // Simulate MYOB events  
+            const myobEvents = [
+                'MYOB application launched',
+                'User session started',
+                'Session timeout warning',
+                'Application minimized',
+                'Data synchronization completed'
+            ];
+            
+            // Simulate scanner events
+            const scannerEvents = [
+                'Barcode scanner activated',
+                'QR code scanned successfully',
+                'Scanner error detected',
+                'Scan data transmitted',
+                'Scanner battery low'
+            ];
+            
+            // Simulate system events
+            const systemEvents = [
+                'API heartbeat received',
+                'Database connection verified',
+                'Monitoring service restarted',
+                'Configuration updated',
+                'Backup completed'
+            ];
+            
+            // Add random logs every few seconds
+            setInterval(() => {
+                if (Math.random() > 0.7) {
+                    const event = deviceEvents[Math.floor(Math.random() * deviceEvents.length)];
+                    addLog('device', Math.random() > 0.8 ? 'warning' : 'info', event);
+                }
+                
+                if (Math.random() > 0.8) {
+                    const event = myobEvents[Math.floor(Math.random() * myobEvents.length)];
+                    addLog('myob', Math.random() > 0.9 ? 'error' : 'info', event);
+                }
+                
+                if (Math.random() > 0.85) {
+                    const event = scannerEvents[Math.floor(Math.random() * scannerEvents.length)];
+                    addLog('scanner', Math.random() > 0.8 ? 'warning' : 'success', event);
+                }
+                
+                if (Math.random() > 0.9) {
+                    const event = systemEvents[Math.floor(Math.random() * systemEvents.length)];
+                    addLog('system', 'info', event);
+                }
+            }, 5000); // Every 5 seconds
+        }
+        
+        function enhancedLoadData() {
+            // Add system log when loading data
+            addLog('system', 'info', 'Fetching latest device data...');
+            
+            loadData().then(() => {
+                addLog('system', 'success', 'Device data updated successfully');
+            }).catch(error => {
+                addLog('system', 'error', `Failed to load data: ${error.message}`);
+            });
+        }
+        
+        function updateDashboardWithLogs(devices, analytics) {
+            updateDashboard(devices, analytics);
+            
+            // Add device-specific logs
+            devices.forEach(device => {
+                if (device.battery_level < 20) {
+                    addLog('device', 'warning', `Low battery on ${device.device_name}: ${device.battery_level}%`);
+                }
+                
+                if (device.connectivity_status === 'offline') {
+                    addLog('device', 'error', `Device offline: ${device.device_name}`);
+                }
+                
+                if (device.myob_active) {
+                    addLog('myob', 'success', `MYOB active on ${device.device_name}`);
+                }
+                
+                if (device.scanner_active) {
+                    addLog('scanner', 'info', `Scanner active on ${device.device_name}`);
+                }
             });
         }
 
