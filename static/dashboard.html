@@ -12,7 +12,7 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #E53E3E 0%, #C53030 30%, #319795 70%, #2C7A7B 100%);
             color: #333; min-height: 100vh;
         }
         
@@ -21,13 +21,55 @@
             backdrop-filter: blur(10px); box-shadow: 0 2px 20px rgba(0,0,0,0.1);
         }
         
-        .header h1 { font-size: 32px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-        .header .subtitle { opacity: 0.9; margin-top: 5px; font-size: 16px; }
-        .header .live-indicator { display: inline-flex; align-items: center; margin-top: 10px; font-size: 14px; }
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .company-logo {
+            height: 60px;
+            width: auto;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+        }
+        
+        .header-text h1 { 
+            font-size: 32px; 
+            font-weight: 700; 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            margin: 0;
+            color: white;
+        }
+        
+        .header .subtitle { 
+            opacity: 0.9; 
+            margin-top: 5px; 
+            font-size: 16px; 
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .header .live-indicator { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            font-size: 14px;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
         
         .live-dot {
-            width: 8px; height: 8px; background: #4caf50; border-radius: 50%;
-            margin-right: 8px; animation: pulse 2s infinite;
+            width: 8px; height: 8px; background: #68D391; border-radius: 50%;
+            animation: pulse 2s infinite;
         }
         
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
@@ -48,14 +90,14 @@
         
         .stat-card::before {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
-            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            background: linear-gradient(90deg, #E53E3E, #319795);
         }
         
         .stat-card:hover { transform: translateY(-5px); box-shadow: 0 12px 40px rgba(0,0,0,0.15); }
-        .stat-card .icon { font-size: 24px; margin-bottom: 10px; color: #667eea; }
+        .stat-card .icon { font-size: 24px; margin-bottom: 10px; color: #E53E3E; }
         .stat-card .label { color: #666; font-size: 13px; margin-bottom: 8px; text-transform: uppercase; font-weight: 600; }
         .stat-card .value { font-size: 28px; font-weight: 700; color: #333; margin-bottom: 5px; }
-        .stat-card .trend { font-size: 12px; color: #4caf50; }
+        .stat-card .trend { font-size: 12px; color: #319795; }
         
         .devices-section {
             background: rgba(255,255,255,0.95); padding: 25px; border-radius: 15px;
@@ -69,12 +111,12 @@
         }
         
         .refresh-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none;
+            background: linear-gradient(135deg, #E53E3E, #C53030); color: white; border: none;
             padding: 10px 20px; border-radius: 25px; cursor: pointer; font-size: 14px;
-            font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(229, 62, 62, 0.3);
         }
         
-        .refresh-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4); }
+        .refresh-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(229, 62, 62, 0.4); }
         .refresh-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
         
         .device-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
@@ -86,7 +128,7 @@
         }
         
         .device-card:hover {
-            transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.15); border-color: #667eea;
+            transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.15); border-color: #E53E3E;
         }
         
         .device-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
@@ -98,18 +140,18 @@
         }
         
         .status-online {
-            background: linear-gradient(135deg, #4caf50, #8bc34a); color: white;
-            box-shadow: 0 2px 10px rgba(76, 175, 80, 0.3);
+            background: linear-gradient(135deg, #319795, #4FD1C7); color: white;
+            box-shadow: 0 2px 10px rgba(49, 151, 149, 0.3);
         }
         
         .status-recent {
-            background: linear-gradient(135deg, #ff9800, #ffc107); color: white;
-            box-shadow: 0 2px 10px rgba(255, 152, 0, 0.3);
+            background: linear-gradient(135deg, #ED8936, #F6AD55); color: white;
+            box-shadow: 0 2px 10px rgba(237, 137, 54, 0.3);
         }
         
         .status-offline {
-            background: linear-gradient(135deg, #f44336, #e57373); color: white;
-            box-shadow: 0 2px 10px rgba(244, 67, 54, 0.3);
+            background: linear-gradient(135deg, #E53E3E, #FC8181); color: white;
+            box-shadow: 0 2px 10px rgba(229, 62, 62, 0.3);
         }
         
         .device-metrics {
@@ -118,11 +160,11 @@
         }
         
         .metric {
-            text-align: center; padding: 10px; background: rgba(102, 126, 234, 0.1);
-            border-radius: 10px; border: 1px solid rgba(102, 126, 234, 0.2);
+            text-align: center; padding: 10px; background: rgba(229, 62, 62, 0.1);
+            border-radius: 10px; border: 1px solid rgba(229, 62, 62, 0.2);
         }
         
-        .metric .metric-icon { font-size: 20px; margin-bottom: 5px; color: #667eea; }
+        .metric .metric-icon { font-size: 20px; margin-bottom: 5px; color: #E53E3E; }
         .metric .metric-value { font-size: 18px; font-weight: 700; color: #333; }
         .metric .metric-label { font-size: 11px; color: #666; text-transform: uppercase; font-weight: 600; }
         
@@ -139,15 +181,15 @@
         }
         
         .battery-fill { height: 100%; border-radius: 1px; transition: all 0.3s ease; }
-        .battery-fill.high { background: linear-gradient(90deg, #4caf50, #8bc34a); }
-        .battery-fill.medium { background: linear-gradient(90deg, #ff9800, #ffc107); }
-        .battery-fill.low { background: linear-gradient(90deg, #f44336, #e57373); }
+        .battery-fill.high { background: linear-gradient(90deg, #319795, #4FD1C7); }
+        .battery-fill.medium { background: linear-gradient(90deg, #ED8936, #F6AD55); }
+        .battery-fill.low { background: linear-gradient(90deg, #E53E3E, #FC8181); }
         
         .wifi-indicator { display: flex; align-items: center; gap: 5px; }
         .wifi-bars { display: flex; align-items: end; gap: 2px; }
         
         .wifi-bar { width: 4px; background: #ddd; border-radius: 1px; }
-        .wifi-bar.active { background: #4caf50; }
+        .wifi-bar.active { background: #319795; }
         .wifi-bar:nth-child(1) { height: 6px; }
         .wifi-bar:nth-child(2) { height: 10px; }
         .wifi-bar:nth-child(3) { height: 14px; }
@@ -188,8 +230,8 @@
         }
         
         .stream-item {
-            padding: 8px 12px; margin-bottom: 8px; background: rgba(102, 126, 234, 0.1);
-            border-radius: 8px; border-left: 4px solid #667eea; font-size: 13px;
+            padding: 8px 12px; margin-bottom: 8px; background: rgba(229, 62, 62, 0.1);
+            border-radius: 8px; border-left: 4px solid #E53E3E; font-size: 13px;
             font-family: 'Courier New', monospace;
         }
         
@@ -213,7 +255,7 @@
         .loading { text-align: center; padding: 40px; color: #666; }
         
         .spinner {
-            border: 3px solid #f3f3f3; border-top: 3px solid #667eea; border-radius: 50%;
+            border: 3px solid #f3f3f3; border-top: 3px solid #E53E3E; border-radius: 50%;
             width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 15px;
         }
         
@@ -221,21 +263,125 @@
         
         .last-updated { text-align: center; color: rgba(255,255,255,0.8); font-size: 14px; margin-top: 20px; }
         
+        /* Enhanced Mobile Responsiveness */
         @media (max-width: 768px) {
-            .stats-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
-            .device-grid { grid-template-columns: 1fr; }
-            .charts-section { grid-template-columns: 1fr; }
-            .device-metrics { grid-template-columns: repeat(2, 1fr); }
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            
+            .company-logo {
+                height: 50px;
+            }
+            
+            .header-text h1 {
+                font-size: 24px;
+            }
+            
+            .stats-grid { 
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
+                gap: 10px;
+            }
+            
+            .device-grid { 
+                grid-template-columns: 1fr; 
+                gap: 15px;
+            }
+            
+            .charts-section { 
+                grid-template-columns: 1fr; 
+                gap: 15px;
+            }
+            
+            .device-metrics { 
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 10px;
+            }
+            
+            .realtime-data {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .chart-container {
+                padding: 15px;
+                height: 350px;
+            }
+            
+            .chart-canvas {
+                height: 270px !important;
+                max-height: 270px !important;
+            }
+        }
+        
+        /* Enhanced Animations */
+        .stat-card {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .device-card {
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        .chart-container {
+            animation: fadeInUp 1s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Enhanced Hover Effects */
+        .stat-card:hover .icon {
+            transform: scale(1.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .device-card:hover .device-name {
+            color: #E53E3E;
+            transition: color 0.3s ease;
+        }
+        
+        /* Loading States */
+        .loading-pulse {
+            animation: pulse-loading 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-loading {
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                opacity: 1;
+            }
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1><i class="fas fa-tablet-alt"></i> JD Engineering Tablet Monitor</h1>
-        <div class="subtitle">Real-time MYOB Session & Barcode Scanner Monitoring</div>
-        <div class="live-indicator">
-            <div class="live-dot"></div>
-            <span>Live Data Stream Active</span>
+        <div class="header-content">
+            <div class="logo-section">
+                <img src="/static/JDMNavLogo.png" alt="J&D McLennan Engineering" class="company-logo">
+                <div class="header-text">
+                    <h1>Tablet Monitoring System</h1>
+                    <div class="subtitle">Real-time MYOB Session & Barcode Scanner Monitoring</div>
+                </div>
+            </div>
+            <div class="live-indicator">
+                <div class="live-dot"></div>
+                <span>Live Data Stream Active</span>
+            </div>
         </div>
     </div>
 
@@ -446,11 +592,11 @@
                     datasets: [{
                         data: [0, 0],
                         backgroundColor: [
-                            'rgba(76, 175, 80, 0.8)',
+                            'rgba(49, 151, 149, 0.8)',
                             'rgba(158, 158, 158, 0.3)'
                         ],
                         borderColor: [
-                            'rgba(76, 175, 80, 1)',
+                            'rgba(49, 151, 149, 1)',
                             'rgba(158, 158, 158, 0.5)'
                         ],
                         borderWidth: 2
@@ -479,8 +625,8 @@
                     datasets: [{
                         label: 'Scanner Activity',
                         data: [],
-                        backgroundColor: 'rgba(255, 152, 0, 0.6)',
-                        borderColor: 'rgba(255, 152, 0, 1)',
+                        backgroundColor: 'rgba(229, 62, 62, 0.6)',
+                        borderColor: 'rgba(229, 62, 62, 1)',
                         borderWidth: 2
                     }]
                 },
@@ -813,11 +959,12 @@
                     const batteryLevel = latestMetric?.battery_percentage || 0;
                     
                     if (!charts.battery.data.datasets[index]) {
+                        const colors = ['#E53E3E', '#319795', '#ED8936', '#805AD5', '#38B2AC'];
                         charts.battery.data.datasets[index] = {
                             label: device.device_name || device.device_id,
                             data: [],
-                            borderColor: `hsl(${index * 137.5}, 70%, 50%)`,
-                            backgroundColor: `hsla(${index * 137.5}, 70%, 50%, 0.1)`,
+                            borderColor: colors[index % colors.length],
+                            backgroundColor: colors[index % colors.length] + '20',
                             tension: 0.1,
                             fill: false,
                             pointRadius: 4,
@@ -848,18 +995,19 @@
                     const latestMetric = metricsData.metrics && metricsData.metrics.length > 0 ? metricsData.metrics[0] : null;
                     const wifiSignal = latestMetric?.wifi_signal_strength || -70;
                     
-                    if (!charts.wifi.data.datasets[index]) {
-                        charts.wifi.data.datasets[index] = {
-                            label: device.device_name || device.device_id,
-                            data: [],
-                            borderColor: `hsl(${index * 137.5}, 70%, 50%)`,
-                            backgroundColor: `hsla(${index * 137.5}, 70%, 50%, 0.1)`,
-                            tension: 0.1,
-                            fill: false,
-                            pointRadius: 4,
-                            pointHoverRadius: 6
-                        };
-                    }
+                                            if (!charts.wifi.data.datasets[index]) {
+                            const colors = ['#E53E3E', '#319795', '#ED8936', '#805AD5', '#38B2AC'];
+                            charts.wifi.data.datasets[index] = {
+                                label: device.device_name || device.device_id,
+                                data: [],
+                                borderColor: colors[index % colors.length],
+                                backgroundColor: colors[index % colors.length] + '20',
+                                tension: 0.1,
+                                fill: false,
+                                pointRadius: 4,
+                                pointHoverRadius: 6
+                            };
+                        }
                     
                     charts.wifi.data.datasets[index].data.push({
                         x: now,
