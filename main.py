@@ -469,12 +469,14 @@ async def get_device_metrics(device_id: str, hours: int = 24):
             session_id
         FROM tablet_metrics 
         WHERE device_id = $1
-        AND timestamp >= NOW() - INTERVAL '%s hours'
+        AND timestamp >= NOW() - INTERVAL $2
         ORDER BY timestamp DESC
         LIMIT 100
         """
         
-        results = await db_pool.fetch(query, device_id, hours)
+        # Create the interval string
+        interval_str = f"{hours} hours"
+        results = await db_pool.fetch(query, device_id, interval_str)
         
         metrics = []
         for row in results:
@@ -502,8 +504,8 @@ async def get_device_metrics(device_id: str, hours: int = 24):
         }
         
     except Exception as e:
-        logger.error(f"Error fetching device metrics: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error(f"Error fetching device metrics for {device_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch metrics: {str(e)}")
 
 @app.get("/analytics/session-issues")
 async def get_session_issues(
@@ -515,8 +517,9 @@ async def get_session_issues(
     try:
         async with db_pool.acquire() as conn:
             # Build base query for tablet metrics
-            params = [hours]
-            where_clause = "WHERE tm.timestamp >= NOW() - INTERVAL '%s hours'"
+            interval_str = f"{hours} hours"
+            params = [interval_str]
+            where_clause = "WHERE tm.timestamp >= NOW() - INTERVAL $1"
             
             if device_id:
                 where_clause += " AND tm.device_id = $2"
