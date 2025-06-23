@@ -611,7 +611,7 @@
     <div class="login-container" id="loginContainer">
         <form class="login-form" id="loginForm">
             <div class="login-header">
-                <img src="JDMNavLogo.png" alt="J&D McLennan Engineering" class="login-logo">
+                <img src="/static/JDMNavLogo.png" alt="J&D McLennan Engineering" class="login-logo">
                 <h1 class="login-title">Tablet Monitoring System</h1>
                 <p class="login-subtitle">Please sign in to access the dashboard</p>
             </div>
@@ -641,7 +641,7 @@
         <div class="header">
             <div class="header-content">
                 <div class="logo-section">
-                    <img src="JDMNavLogo.png" alt="J&D McLennan Engineering" class="company-logo">
+                    <img src="/static/JDMNavLogo.png" alt="J&D McLennan Engineering" class="company-logo">
                     <div class="header-text">
                         <h1>Tablet Monitoring System</h1>
                         <div class="subtitle">Real-time MYOB Session & Barcode Scanner Monitoring</div>
@@ -891,61 +891,223 @@
         // Initialize authentication check on page load
         checkAuth();
 
-        // Basic dashboard functions
-        function initializeDashboard() {
-            // Initialize dashboard when shown
-            document.getElementById('lastUpdated').textContent = 
-                `Last updated: ${new Date().toLocaleTimeString()}`;
-        }
-
-        function refreshData() {
-            const btn = document.getElementById('refreshBtn');
-            if (btn) {
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
-                
-                // Simulate refresh
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
-                    document.getElementById('lastUpdated').textContent = 
-                        `Last updated: ${new Date().toLocaleTimeString()}`;
-                }, 1000);
-            }
-        }
+        // Dashboard functionality
         const API_BASE = window.location.origin;
         const API_TOKEN = 'ArFetiWcHH5bIbiiwuQupQalDJocJA436YMi00tCvmHZOI82Awp8qbceO681';
         
-        let charts = {};
         let refreshInterval;
         let lastDataHash = '';
         let isUpdating = false;
-        let userInteractionTime = Date.now();
-        
-        // Track user interactions
-        document.addEventListener('mousemove', () => userInteractionTime = Date.now());
-        document.addEventListener('click', () => userInteractionTime = Date.now());
-        document.addEventListener('keypress', () => userInteractionTime = Date.now());
         
         function initializeDashboard() {
             loadData();
-            initializeCharts();
             startAutoRefresh();
         }
         
         function startAutoRefresh() {
             if (refreshInterval) clearInterval(refreshInterval);
             refreshInterval = setInterval(() => {
-                // Only auto-refresh if user hasn't interacted in last 10 seconds
-                if (Date.now() - userInteractionTime > 10000) {
-                    loadData();
-                }
-            }, 60000); // 60 seconds
+                loadData();
+            }, 30000); // 30 seconds
         }
         
         async function loadData() {
             if (isUpdating) return;
             isUpdating = true;
+            
+            try {
+                const [devicesResponse, analyticsResponse] = await Promise.all([
+                    fetch(`${API_BASE}/devices`, {
+                        headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+                    }),
+                    fetch(`${API_BASE}/analytics`, {
+                        headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+                    })
+                ]);
+                
+                if (devicesResponse.ok && analyticsResponse.ok) {
+                    const devices = await devicesResponse.json();
+                    const analytics = await analyticsResponse.json();
+                    
+                    const newDataHash = JSON.stringify({devices, analytics});
+                    if (newDataHash !== lastDataHash) {
+                        updateDashboard(devices, analytics);
+                        lastDataHash = newDataHash;
+                    }
+                } else {
+                    throw new Error('Failed to fetch data');
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError('Failed to load data. Please check your connection.');
+            } finally {
+                isUpdating = false;
+                document.getElementById('lastUpdated').textContent = 
+                    `Last updated: ${new Date().toLocaleTimeString()}`;
+            }
+        }
+        
+        function updateDashboard(devices, analytics) {
+            updateStats(analytics);
+            updateDeviceGrid(devices);
+            updateAlerts(devices);
+        }
+        
+        function updateStats(analytics) {
+            document.getElementById('totalDevices').textContent = analytics.total_devices || 0;
+            document.getElementById('onlineDevices').textContent = analytics.online_devices || 0;
+            document.getElementById('avgBattery').textContent = (analytics.avg_battery || 0) + '%';
+            document.getElementById('myobActive').textContent = analytics.myob_active || 0;
+            document.getElementById('scannerActive').textContent = analytics.scanner_active || 0;
+            document.getElementById('timeoutRisks').textContent = analytics.timeout_risks || 0;
+        }
+        
+        function updateDeviceGrid(devices) {
+            const grid = document.getElementById('deviceGrid');
+            
+            if (devices.length === 0) {
+                grid.innerHTML = '<div class="loading">No devices found</div>';
+                return;
+            }
+            
+            grid.innerHTML = devices.map(device => createDeviceCard(device)).join('');
+        }
+        
+        function createDeviceCard(device) {
+            const statusClass = getStatusClass(device.last_seen);
+            const batteryLevel = device.battery_level || 0;
+            const batteryClass = getBatteryClass(batteryLevel);
+            
+            return `
+                <div class="device-card">
+                    <div class="device-header">
+                        <div class="device-name">${device.device_name || device.device_id}</div>
+                        <div class="device-status ${statusClass}">${getStatusText(device.last_seen)}</div>
+                    </div>
+                    
+                    <div class="device-metrics">
+                        <div class="metric">
+                            <div class="metric-icon">
+                                <div class="battery-indicator">
+                                    <div class="battery-bar">
+                                        <div class="battery-fill ${batteryClass}" style="width: ${batteryLevel}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="metric-value">${batteryLevel}%</div>
+                            <div class="metric-label">Battery</div>
+                        </div>
+                        
+                        <div class="metric">
+                            <div class="metric-icon"><i class="fas fa-wifi"></i></div>
+                            <div class="metric-value">${device.connectivity_status || 'Unknown'}</div>
+                            <div class="metric-label">WiFi</div>
+                        </div>
+                        
+                        <div class="metric">
+                            <div class="metric-icon"><i class="fas fa-desktop"></i></div>
+                            <div class="metric-value">${device.myob_active ? 'Yes' : 'No'}</div>
+                            <div class="metric-label">MYOB</div>
+                        </div>
+                        
+                        <div class="metric">
+                            <div class="metric-icon"><i class="fas fa-barcode"></i></div>
+                            <div class="metric-value">${device.scanner_active ? 'Yes' : 'No'}</div>
+                            <div class="metric-label">Scanner</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function getStatusClass(lastSeen) {
+            if (!lastSeen) return 'status-offline';
+            const timeDiff = (Date.now() - new Date(lastSeen).getTime()) / 1000 / 60; // minutes
+            if (timeDiff < 5) return 'status-online';
+            if (timeDiff < 30) return 'status-recent';
+            return 'status-offline';
+        }
+        
+        function getStatusText(lastSeen) {
+            if (!lastSeen) return 'Offline';
+            const timeDiff = (Date.now() - new Date(lastSeen).getTime()) / 1000 / 60;
+            if (timeDiff < 5) return 'Online';
+            if (timeDiff < 30) return 'Recent';
+            return 'Offline';
+        }
+        
+        function getBatteryClass(level) {
+            if (level >= 60) return 'high';
+            if (level >= 30) return 'medium';
+            return 'low';
+        }
+        
+        function updateAlerts(devices) {
+            const alertsContainer = document.getElementById('alertsContainer');
+            const alerts = [];
+            
+            // Check for low battery
+            const lowBatteryDevices = devices.filter(d => (d.battery_level || 0) < 20);
+            if (lowBatteryDevices.length > 0) {
+                alerts.push({
+                    type: 'warning',
+                    icon: 'fas fa-battery-empty',
+                    message: `${lowBatteryDevices.length} device(s) have low battery`
+                });
+            }
+            
+            // Check for offline devices
+            const offlineDevices = devices.filter(d => getStatusClass(d.last_seen) === 'status-offline');
+            if (offlineDevices.length > 0) {
+                alerts.push({
+                    type: 'error',
+                    icon: 'fas fa-wifi',
+                    message: `${offlineDevices.length} device(s) are offline`
+                });
+            }
+            
+            if (alerts.length === 0) {
+                alertsContainer.innerHTML = `
+                    <div class="alert success">
+                        <i class="fas fa-check-circle"></i>
+                        <span>All systems operational - monitoring active</span>
+                    </div>
+                `;
+            } else {
+                alertsContainer.innerHTML = alerts.map(alert => `
+                    <div class="alert ${alert.type}">
+                        <i class="${alert.icon}"></i>
+                        <span>${alert.message}</span>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        function showError(message) {
+            const alertsContainer = document.getElementById('alertsContainer');
+            alertsContainer.innerHTML = `
+                <div class="alert error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+        }
+        
+        function refreshData() {
+            const btn = document.getElementById('refreshBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+                
+                loadData().finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+                });
+            }
+        }
+    </script>
+</body>
+</html>
             
             try {
                 const [devicesResponse, analyticsResponse] = await Promise.all([

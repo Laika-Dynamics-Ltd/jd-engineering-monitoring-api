@@ -3,6 +3,7 @@ from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone
@@ -80,6 +81,9 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
+
+# Mount static files for dashboard assets
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Security setup
 security = HTTPBearer(auto_error=False)
@@ -516,6 +520,60 @@ async def get_device_metrics(device_id: str, hours: int = 24):
     except Exception as e:
         logger.error(f"Error fetching device metrics for {device_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch metrics: {str(e)}")
+
+@app.get("/analytics")
+async def get_analytics(token: str = Depends(verify_token)):
+    """General analytics endpoint for dashboard"""
+    try:
+        async with db_pool.acquire() as conn:
+            # Get basic analytics data
+            analytics_query = """
+                SELECT 
+                    COUNT(DISTINCT dr.device_id) as total_devices,
+                    COUNT(*) FILTER (WHERE nm.connectivity_status = 'online' 
+                        AND nm.timestamp >= NOW() - INTERVAL '5 minutes') as online_devices,
+                    COALESCE(AVG(dm.battery_level), 0) as avg_battery,
+                    COUNT(*) FILTER (WHERE am.app_foreground LIKE '%myob%' 
+                        AND am.timestamp >= NOW() - INTERVAL '5 minutes') as myob_active,
+                    COUNT(*) FILTER (WHERE am.app_foreground LIKE '%scanner%' 
+                        AND am.timestamp >= NOW() - INTERVAL '5 minutes') as scanner_active,
+                    COUNT(*) FILTER (WHERE se.event_type = 'timeout' 
+                        AND se.timestamp >= NOW() - INTERVAL '1 hour') as timeout_risks
+                FROM device_registry dr
+                LEFT JOIN device_metrics dm ON dr.device_id = dm.device_id 
+                    AND dm.timestamp >= NOW() - INTERVAL '1 hour'
+                LEFT JOIN network_metrics nm ON dr.device_id = nm.device_id 
+                    AND nm.timestamp >= NOW() - INTERVAL '1 hour'
+                LEFT JOIN app_metrics am ON dr.device_id = am.device_id 
+                    AND am.timestamp >= NOW() - INTERVAL '1 hour'
+                LEFT JOIN session_events se ON dr.device_id = se.device_id 
+                    AND se.timestamp >= NOW() - INTERVAL '1 hour'
+            """
+            
+            result = await conn.fetchrow(analytics_query)
+            
+            return {
+                "total_devices": result['total_devices'] or 0,
+                "online_devices": result['online_devices'] or 0,
+                "avg_battery": round(result['avg_battery'] or 0, 1),
+                "myob_active": result['myob_active'] or 0,
+                "scanner_active": result['scanner_active'] or 0,
+                "timeout_risks": result['timeout_risks'] or 0,
+                "generated_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+    except Exception as e:
+        logger.error(f"Analytics error: {str(e)}")
+        # Return default values instead of error
+        return {
+            "total_devices": 0,
+            "online_devices": 0,
+            "avg_battery": 0,
+            "myob_active": 0,
+            "scanner_active": 0,
+            "timeout_risks": 0,
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
 
 @app.get("/analytics/session-issues")
 async def get_session_issues(
