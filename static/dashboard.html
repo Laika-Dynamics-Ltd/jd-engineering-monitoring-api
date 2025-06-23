@@ -419,13 +419,21 @@
             border: 1px solid #e2e8f0;
             border-radius: 8px;
             padding: 20px;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             cursor: pointer;
             position: relative;
+            overflow: hidden;
         }
         
         .device-card:hover {
             transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-color: #dc2626;
+        }
+        
+        .device-card.expanded {
+            grid-column: 1 / -1;
+            max-width: none;
+            border-color: #dc2626;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
         
         .device-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
@@ -480,6 +488,201 @@
         .wifi-bar:nth-child(2) { height: 10px; }
         .wifi-bar:nth-child(3) { height: 14px; }
         .wifi-bar:nth-child(4) { height: 18px; }
+        
+        /* Expanded Device Details */
+        .device-details {
+            display: none;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .device-card.expanded .device-details {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .details-section {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .details-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .details-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .details-row:last-child {
+            border-bottom: none;
+        }
+        
+        .details-label {
+            font-size: 13px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        
+        .details-value {
+            font-size: 13px;
+            color: #111827;
+            font-weight: 600;
+        }
+        
+        .expand-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .expand-btn:hover {
+            background: #e5e7eb;
+            color: #374151;
+        }
+        
+        .device-card.expanded .expand-btn {
+            background: #dc2626;
+            color: white;
+            border-color: #dc2626;
+        }
+        
+        .device-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            background: #ffffff;
+            color: #374151;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        
+        .action-btn:hover {
+            background: #f8fafc;
+            border-color: #dc2626;
+            color: #dc2626;
+        }
+        
+        .action-btn.primary {
+            background: #dc2626;
+            color: white;
+            border-color: #dc2626;
+        }
+        
+        .action-btn.primary:hover {
+            background: #991b1b;
+        }
+        
+        .device-timeline {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        
+        .timeline-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .timeline-entry {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .timeline-entry:last-child {
+            border-bottom: none;
+        }
+        
+        .timeline-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            flex-shrink: 0;
+        }
+        
+        .timeline-dot.warning { background: #f59e0b; }
+        .timeline-dot.error { background: #ef4444; }
+        
+        .timeline-content {
+            flex: 1;
+        }
+        
+        .timeline-time {
+            font-size: 11px;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+        
+        .timeline-message {
+            font-size: 12px;
+            color: #374151;
+            margin-top: 2px;
+        }
+        
+        /* Notification animations */
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
         
         .alert-section {
             background: #ffffff;
@@ -619,6 +822,23 @@
                     <div class="label">Timeout Risks</div>
                     <div class="value" id="timeoutRisks">-</div>
                     <div class="trend">Alerts</div>
+                </div>
+            </div>
+
+            <!-- Device Grid -->
+            <div class="devices-section">
+                <div class="section-title">
+                    <i class="fas fa-tablet-alt"></i>
+                    Connected Devices
+                    <button class="refresh-btn" onclick="refreshData()" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <div class="device-grid" id="deviceGrid">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Loading device data...
+                    </div>
                 </div>
             </div>
 
@@ -794,23 +1014,6 @@
                     <div class="alert success">
                         <i class="fas fa-check-circle"></i>
                         <span>All systems operational - monitoring active</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Device Grid -->
-            <div class="devices-section">
-                <div class="section-title">
-                    <i class="fas fa-tablet-alt"></i>
-                    Connected Devices
-                    <button class="refresh-btn" onclick="refreshData()" id="refreshBtn">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
-                </div>
-                <div class="device-grid" id="deviceGrid">
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        Loading device data...
                     </div>
                 </div>
             </div>
@@ -1179,15 +1382,34 @@
             }
             
             grid.innerHTML = devices.map(device => createDeviceCard(device)).join('');
+            
+            // Restore expanded states after update
+            expandedDevices.forEach(deviceId => {
+                const card = document.getElementById(`device-${deviceId}`);
+                if (card) {
+                    card.classList.add('expanded');
+                    const expandBtn = card.querySelector('.expand-btn');
+                    if (expandBtn) {
+                        expandBtn.innerHTML = '<i class="fas fa-chevron-up"></i> Collapse';
+                    }
+                }
+            });
         }
         
         function createDeviceCard(device) {
             const statusClass = getStatusClass(device.last_seen);
             const batteryLevel = device.battery_level || 0;
             const batteryClass = getBatteryClass(batteryLevel);
+            const deviceId = device.device_id;
+            const lastSeen = device.last_seen ? new Date(device.last_seen).toLocaleString() : 'Never';
+            const firstSeen = device.first_seen ? new Date(device.first_seen).toLocaleString() : 'Unknown';
             
             return `
-                <div class="device-card">
+                <div class="device-card" onclick="toggleDeviceExpand('${deviceId}')" id="device-${deviceId}">
+                    <button class="expand-btn" onclick="event.stopPropagation(); toggleDeviceExpand('${deviceId}')">
+                        <i class="fas fa-chevron-down"></i> Details
+                    </button>
+                    
                     <div class="device-header">
                         <div class="device-name">${device.device_name || device.device_id}</div>
                         <div class="device-status ${statusClass}">${getStatusText(device.last_seen)}</div>
@@ -1222,6 +1444,154 @@
                             <div class="metric-icon"><i class="fas fa-barcode"></i></div>
                             <div class="metric-value">${device.scanner_active ? 'Yes' : 'No'}</div>
                             <div class="metric-label">Scanner</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Expanded Details Section -->
+                    <div class="device-details">
+                        <div class="details-grid">
+                            <div class="details-section">
+                                <div class="details-title">
+                                    <i class="fas fa-info-circle"></i>
+                                    Device Information
+                                </div>
+                                <div class="details-row">
+                                    <span class="details-label">Device ID</span>
+                                    <span class="details-value">${device.device_id}</span>
+                                </div>
+                                <div class="details-row">
+                                    <span class="details-label">Location</span>
+                                    <span class="details-value">${device.location || 'Not specified'}</span>
+                                </div>
+                                <div class="details-row">
+                                    <span class="details-label">Android Version</span>
+                                    <span class="details-value">${device.android_version || 'Unknown'}</span>
+                                </div>
+                                <div class="details-row">
+                                    <span class="details-label">App Version</span>
+                                    <span class="details-value">${device.app_version || 'Unknown'}</span>
+                                </div>
+                                <div class="details-row">
+                                    <span class="details-label">First Seen</span>
+                                    <span class="details-value">${firstSeen}</span>
+                                </div>
+                                <div class="details-row">
+                                    <span class="details-label">Last Seen</span>
+                                    <span class="details-value">${lastSeen}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="details-section">
+                                <div class="details-title">
+                                    <i class="fas fa-battery-three-quarters"></i>
+                                    Power & Performance
+                                </div>
+                                <div class="details-row">
+                                    <span class="details-label">Battery Level</span>
+                                    <span class="details-value">${batteryLevel}%</span>
+                                </div>
+                                <div class="details-row">
+                                    <span class="details-label">Battery Temperature</span>
+                                    <span class="details-value">${device.battery_temperature ? device.battery_temperature + '°C' : 'Unknown'}</span>
+                                </div>
+                                <div class="details-row">
+                                    <span class="details-label">Memory Available</span>
+                                    <span class="details-value">${device.memory_available ? formatBytes(device.memory_available) : 'Unknown'}</span>
+                                </div>
+                                <div class="details-row">
+                                    <span class="details-label">Memory Total</span>
+                                    <span class="details-value">${device.memory_total ? formatBytes(device.memory_total) : 'Unknown'}</span>
+                                </div>
+                                <div class="details-row">
+                                    <span class="details-label">CPU Usage</span>
+                                    <span class="details-value">${device.cpu_usage ? device.cpu_usage + '%' : 'Unknown'}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="details-section">
+                                <div class="details-title">
+                                    <i class="fas fa-wifi"></i>
+                                    Network Details
+                                </div>
+                                <div class="details-row">
+                                    <span class="details-label">Connection Status</span>
+                                    <span class="details-value">${device.connectivity_status || 'Unknown'}</span>
+                                </div>
+                                <div class="details-row">
+                                    <span class="details-label">WiFi SSID</span>
+                                    <span class="details-value">${device.wifi_ssid || 'Not connected'}</span>
+                                </div>
+                                <div class="details-row">
+                                    <span class="details-label">Signal Strength</span>
+                                    <span class="details-value">${device.wifi_signal_strength ? device.wifi_signal_strength + ' dBm' : 'Unknown'}</span>
+                                </div>
+                                <div class="details-row">
+                                    <span class="details-label">Network Type</span>
+                                    <span class="details-value">${device.network_type || 'Unknown'}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="details-section">
+                                <div class="details-title">
+                                    <i class="fas fa-mobile-alt"></i>
+                                    Application Status
+                                </div>
+                                <div class="details-row">
+                                    <span class="details-label">Screen State</span>
+                                    <span class="details-value">${device.screen_state || 'Unknown'}</span>
+                                </div>
+                                <div class="details-row">
+                                    <span class="details-label">Foreground App</span>
+                                    <span class="details-value">${device.app_foreground || 'None'}</span>
+                                </div>
+                                <div class="details-row">
+                                    <span class="details-label">MYOB Active</span>
+                                    <span class="details-value">${device.myob_active ? 'Yes' : 'No'}</span>
+                                </div>
+                                <div class="details-row">
+                                    <span class="details-label">Scanner Active</span>
+                                    <span class="details-value">${device.scanner_active ? 'Yes' : 'No'}</span>
+                                </div>
+                                <div class="details-row">
+                                    <span class="details-label">Timeout Risk</span>
+                                    <span class="details-value">${device.timeout_risk ? 'Yes' : 'No'}</span>
+                                </div>
+                                <div class="details-row">
+                                    <span class="details-label">Last Interaction</span>
+                                    <span class="details-value">${device.last_user_interaction ? new Date(device.last_user_interaction).toLocaleString() : 'Unknown'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="device-actions">
+                            <button class="action-btn primary" onclick="event.stopPropagation(); viewDeviceMetrics('${deviceId}')">
+                                <i class="fas fa-chart-line"></i> View Metrics
+                            </button>
+                            <button class="action-btn" onclick="event.stopPropagation(); refreshDevice('${deviceId}')">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                            <button class="action-btn" onclick="event.stopPropagation(); deviceLogs('${deviceId}')">
+                                <i class="fas fa-list"></i> View Logs
+                            </button>
+                            <button class="action-btn" onclick="event.stopPropagation(); deviceSettings('${deviceId}')">
+                                <i class="fas fa-cog"></i> Settings
+                            </button>
+                        </div>
+                        
+                        <div class="device-timeline">
+                            <div class="timeline-title">
+                                <i class="fas fa-clock"></i>
+                                Recent Activity
+                            </div>
+                            <div id="timeline-${deviceId}">
+                                <div class="timeline-entry">
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-time">${new Date().toLocaleTimeString()}</div>
+                                        <div class="timeline-message">Device data refreshed</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1482,6 +1852,307 @@
                 if (device.scanner_active) {
                     addLog('scanner', 'info', `Scanner active on ${device.device_name}`);
                 }
+            });
+        }
+
+        // Keep track of expanded devices
+        let expandedDevices = new Set();
+        
+        // Toggle device card expansion
+        function toggleDeviceExpand(deviceId) {
+            const card = document.getElementById(`device-${deviceId}`);
+            const expandBtn = card.querySelector('.expand-btn');
+            
+            if (expandedDevices.has(deviceId)) {
+                // Collapse
+                card.classList.remove('expanded');
+                expandBtn.innerHTML = '<i class="fas fa-chevron-down"></i> Details';
+                expandedDevices.delete(deviceId);
+            } else {
+                // Expand
+                card.classList.add('expanded');
+                expandBtn.innerHTML = '<i class="fas fa-chevron-up"></i> Collapse';
+                expandedDevices.add(deviceId);
+                
+                // Load device timeline
+                loadDeviceTimeline(deviceId);
+            }
+        }
+        
+        // Format bytes for display
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Device action functions
+        function viewDeviceMetrics(deviceId) {
+            // Open device metrics in a modal or new window
+            window.open(`/devices/${deviceId}/metrics`, '_blank');
+        }
+        
+        function refreshDevice(deviceId) {
+            // Trigger device refresh
+            fetch(`/api/devices/${deviceId}/refresh`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${API_TOKEN}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    showNotification('Device refresh requested', 'success');
+                    // Refresh dashboard data
+                    setTimeout(loadData, 2000);
+                } else {
+                    showNotification('Failed to refresh device', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Refresh error:', error);
+                showNotification('Error refreshing device', 'error');
+            });
+        }
+        
+        function deviceLogs(deviceId) {
+            // Show device logs modal
+            showDeviceLogsModal(deviceId);
+        }
+        
+        function deviceSettings(deviceId) {
+            // Show device settings modal
+            showDeviceSettingsModal(deviceId);
+        }
+        
+        // Load device timeline
+        function loadDeviceTimeline(deviceId) {
+            const timelineContainer = document.getElementById(`timeline-${deviceId}`);
+            
+            fetch(`/api/devices/${deviceId}/timeline`, {
+                headers: {
+                    'Authorization': `Bearer ${API_TOKEN}`
+                }
+            })
+            .then(response => response.json())
+            .then(events => {
+                if (events && events.length > 0) {
+                    timelineContainer.innerHTML = events.map(event => `
+                        <div class="timeline-entry">
+                            <div class="timeline-dot ${event.type}"></div>
+                            <div class="timeline-content">
+                                <div class="timeline-time">${new Date(event.timestamp).toLocaleString()}</div>
+                                <div class="timeline-message">${event.message}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            })
+            .catch(error => {
+                console.error('Timeline error:', error);
+                timelineContainer.innerHTML = `
+                    <div class="timeline-entry">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-time">${new Date().toLocaleTimeString()}</div>
+                            <div class="timeline-message">Device data refreshed</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 6px;
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        // Modal functions for logs and settings
+        function showDeviceLogsModal(deviceId) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            `;
+            
+            modal.innerHTML = `
+                <div class="modal-content" style="
+                    background: white;
+                    border-radius: 8px;
+                    padding: 24px;
+                    max-width: 800px;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                    position: relative;
+                ">
+                    <button onclick="this.closest('.modal-overlay').remove()" style="
+                        position: absolute;
+                        top: 16px;
+                        right: 16px;
+                        background: none;
+                        border: none;
+                        font-size: 20px;
+                        cursor: pointer;
+                    ">&times;</button>
+                    <h3>Device Logs - ${deviceId}</h3>
+                    <div id="device-logs">Loading logs...</div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Load logs
+            fetch(`/api/devices/${deviceId}/logs`, {
+                headers: {
+                    'Authorization': `Bearer ${API_TOKEN}`
+                }
+            })
+            .then(response => response.json())
+            .then(logs => {
+                const logsContainer = document.getElementById('device-logs');
+                if (logs && logs.length > 0) {
+                    logsContainer.innerHTML = logs.map(log => `
+                        <div style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-family: monospace; font-size: 12px;">
+                            <strong>${new Date(log.timestamp).toLocaleString()}</strong> - ${log.level}: ${log.message}
+                        </div>
+                    `).join('');
+                } else {
+                    logsContainer.innerHTML = '<p>No logs available for this device.</p>';
+                }
+            })
+            .catch(error => {
+                document.getElementById('device-logs').innerHTML = '<p>Error loading logs.</p>';
+            });
+        }
+        
+        function showDeviceSettingsModal(deviceId) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            `;
+            
+            modal.innerHTML = `
+                <div class="modal-content" style="
+                    background: white;
+                    border-radius: 8px;
+                    padding: 24px;
+                    max-width: 600px;
+                    position: relative;
+                ">
+                    <button onclick="this.closest('.modal-overlay').remove()" style="
+                        position: absolute;
+                        top: 16px;
+                        right: 16px;
+                        background: none;
+                        border: none;
+                        font-size: 20px;
+                        cursor: pointer;
+                    ">&times;</button>
+                    <h3>Device Settings - ${deviceId}</h3>
+                    <form id="device-settings-form">
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Device Name:</label>
+                            <input type="text" name="device_name" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                        </div>
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Location:</label>
+                            <input type="text" name="location" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                        </div>
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Monitoring Interval (seconds):</label>
+                            <input type="number" name="monitoring_interval" min="30" max="300" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                        </div>
+                        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                            <button type="button" onclick="this.closest('.modal-overlay').remove()" style="
+                                padding: 8px 16px;
+                                border: 1px solid #d1d5db;
+                                background: white;
+                                border-radius: 4px;
+                                cursor: pointer;
+                            ">Cancel</button>
+                            <button type="submit" style="
+                                padding: 8px 16px;
+                                border: none;
+                                background: #dc2626;
+                                color: white;
+                                border-radius: 4px;
+                                cursor: pointer;
+                            ">Save Settings</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Handle form submission
+            document.getElementById('device-settings-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                const settings = Object.fromEntries(formData.entries());
+                
+                fetch(`/api/devices/${deviceId}/settings`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${API_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                })
+                .then(response => {
+                    if (response.ok) {
+                        showNotification('Settings saved successfully', 'success');
+                        modal.remove();
+                        loadData();
+                    } else {
+                        showNotification('Failed to save settings', 'error');
+                    }
+                })
+                .catch(error => {
+                    showNotification('Error saving settings', 'error');
+                });
             });
         }
 
