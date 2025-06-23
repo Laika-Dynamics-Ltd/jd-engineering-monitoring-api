@@ -729,6 +729,280 @@ async def get_session_issues(
             "error": "Analytics temporarily unavailable"
         }
 
+@app.get("/analytics/charts/battery")
+async def get_battery_chart_data(hours: int = 24, token: str = Depends(verify_token)):
+    """Get battery level time-series data for charts"""
+    try:
+        async with db_pool.acquire() as conn:
+            query = """
+                SELECT 
+                    dr.device_id,
+                    dr.device_name,
+                    dm.battery_level,
+                    dm.battery_temperature,
+                    dm.timestamp
+                FROM device_registry dr
+                JOIN device_metrics dm ON dr.device_id = dm.device_id
+                WHERE dm.timestamp >= NOW() - ($1 || ' hours')::interval
+                  AND dm.battery_level IS NOT NULL
+                ORDER BY dm.timestamp DESC
+                LIMIT 1000
+            """
+            
+            results = await conn.fetch(query, str(hours))
+            
+            # Group by device for chart format
+            chart_data = {}
+            for row in results:
+                device_id = row['device_id']
+                if device_id not in chart_data:
+                    chart_data[device_id] = {
+                        'device_name': row['device_name'] or device_id,
+                        'data': []
+                    }
+                
+                chart_data[device_id]['data'].append({
+                    'timestamp': row['timestamp'].isoformat(),
+                    'battery_level': row['battery_level'],
+                    'battery_temperature': row['battery_temperature']
+                })
+            
+            return {
+                "devices": chart_data,
+                "generated_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+    except Exception as e:
+        logger.error(f"Battery chart data error: {str(e)}")
+        return {"devices": {}, "error": str(e)}
+
+@app.get("/analytics/charts/wifi")
+async def get_wifi_chart_data(hours: int = 24, token: str = Depends(verify_token)):
+    """Get WiFi signal strength time-series data for charts"""
+    try:
+        async with db_pool.acquire() as conn:
+            query = """
+                SELECT 
+                    dr.device_id,
+                    dr.device_name,
+                    nm.wifi_signal_strength,
+                    nm.wifi_ssid,
+                    nm.connectivity_status,
+                    nm.timestamp
+                FROM device_registry dr
+                JOIN network_metrics nm ON dr.device_id = nm.device_id
+                WHERE nm.timestamp >= NOW() - ($1 || ' hours')::interval
+                  AND nm.wifi_signal_strength IS NOT NULL
+                ORDER BY nm.timestamp DESC
+                LIMIT 1000
+            """
+            
+            results = await conn.fetch(query, str(hours))
+            
+            # Group by device for chart format
+            chart_data = {}
+            for row in results:
+                device_id = row['device_id']
+                if device_id not in chart_data:
+                    chart_data[device_id] = {
+                        'device_name': row['device_name'] or device_id,
+                        'data': []
+                    }
+                
+                chart_data[device_id]['data'].append({
+                    'timestamp': row['timestamp'].isoformat(),
+                    'wifi_signal_strength': row['wifi_signal_strength'],
+                    'wifi_ssid': row['wifi_ssid'],
+                    'connectivity_status': row['connectivity_status']
+                })
+            
+            return {
+                "devices": chart_data,
+                "generated_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+    except Exception as e:
+        logger.error(f"WiFi chart data error: {str(e)}")
+        return {"devices": {}, "error": str(e)}
+
+@app.get("/analytics/charts/myob")
+async def get_myob_chart_data(hours: int = 24, token: str = Depends(verify_token)):
+    """Get MYOB session activity time-series data for charts"""
+    try:
+        async with db_pool.acquire() as conn:
+            query = """
+                SELECT 
+                    dr.device_id,
+                    dr.device_name,
+                    am.app_foreground,
+                    am.last_user_interaction,
+                    am.screen_state,
+                    am.timestamp,
+                    CASE 
+                        WHEN am.app_foreground ILIKE '%myob%' THEN 1 
+                        ELSE 0 
+                    END as myob_active
+                FROM device_registry dr
+                JOIN app_metrics am ON dr.device_id = am.device_id
+                WHERE am.timestamp >= NOW() - ($1 || ' hours')::interval
+                ORDER BY am.timestamp DESC
+                LIMIT 1000
+            """
+            
+            results = await conn.fetch(query, str(hours))
+            
+            # Group by device for chart format
+            chart_data = {}
+            for row in results:
+                device_id = row['device_id']
+                if device_id not in chart_data:
+                    chart_data[device_id] = {
+                        'device_name': row['device_name'] or device_id,
+                        'data': []
+                    }
+                
+                chart_data[device_id]['data'].append({
+                    'timestamp': row['timestamp'].isoformat(),
+                    'myob_active': bool(row['myob_active']),
+                    'app_foreground': row['app_foreground'],
+                    'screen_state': row['screen_state'],
+                    'last_user_interaction': row['last_user_interaction'].isoformat() if row['last_user_interaction'] else None
+                })
+            
+            return {
+                "devices": chart_data,
+                "generated_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+    except Exception as e:
+        logger.error(f"MYOB chart data error: {str(e)}")
+        return {"devices": {}, "error": str(e)}
+
+@app.get("/analytics/charts/scanner")
+async def get_scanner_chart_data(hours: int = 24, token: str = Depends(verify_token)):
+    """Get scanner activity time-series data for charts"""
+    try:
+        async with db_pool.acquire() as conn:
+            # Get scanner activity from both app_metrics and session_events
+            query = """
+                SELECT 
+                    dr.device_id,
+                    dr.device_name,
+                    am.app_foreground,
+                    am.timestamp,
+                    CASE 
+                        WHEN am.app_foreground ILIKE '%scanner%' 
+                          OR am.app_foreground ILIKE '%barcode%'
+                          OR am.app_foreground ILIKE '%zebra%'
+                          OR am.app_foreground ILIKE '%honeywell%'
+                          OR am.app_foreground ILIKE '%datalogic%'
+                        THEN 1 
+                        ELSE 0 
+                    END as scanner_active
+                FROM device_registry dr
+                JOIN app_metrics am ON dr.device_id = am.device_id
+                WHERE am.timestamp >= NOW() - ($1 || ' hours')::interval
+                ORDER BY am.timestamp DESC
+                LIMIT 1000
+            """
+            
+            results = await conn.fetch(query, str(hours))
+            
+            # Group by device for chart format
+            chart_data = {}
+            for row in results:
+                device_id = row['device_id']
+                if device_id not in chart_data:
+                    chart_data[device_id] = {
+                        'device_name': row['device_name'] or device_id,
+                        'data': []
+                    }
+                
+                chart_data[device_id]['data'].append({
+                    'timestamp': row['timestamp'].isoformat(),
+                    'scanner_active': bool(row['scanner_active']),
+                    'app_foreground': row['app_foreground']
+                })
+            
+            return {
+                "devices": chart_data,
+                "generated_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+    except Exception as e:
+        logger.error(f"Scanner chart data error: {str(e)}")
+        return {"devices": {}, "error": str(e)}
+
+@app.get("/api/devices/{device_id}/timeline")
+async def get_device_timeline(device_id: str, hours: int = 24, token: str = Depends(verify_token)):
+    """Get device timeline events for expanded card view"""
+    try:
+        async with db_pool.acquire() as conn:
+            query = """
+                SELECT 
+                    'session' as type,
+                    se.event_type,
+                    se.error_message as message,
+                    se.timestamp
+                FROM session_events se
+                WHERE se.device_id = $1 
+                  AND se.timestamp >= NOW() - ($2 || ' hours')::interval
+                
+                UNION ALL
+                
+                SELECT 
+                    'device' as type,
+                    'battery_update' as event_type,
+                    CONCAT('Battery: ', dm.battery_level, '%', 
+                           CASE WHEN dm.battery_temperature IS NOT NULL 
+                                THEN CONCAT(' (', dm.battery_temperature, '°C)')
+                                ELSE '' END) as message,
+                    dm.timestamp
+                FROM device_metrics dm
+                WHERE dm.device_id = $1 
+                  AND dm.timestamp >= NOW() - ($2 || ' hours')::interval
+                  AND dm.battery_level IS NOT NULL
+                
+                UNION ALL
+                
+                SELECT 
+                    'network' as type,
+                    'connectivity_change' as event_type,
+                    CONCAT('WiFi: ', nm.connectivity_status, 
+                           CASE WHEN nm.wifi_ssid IS NOT NULL 
+                                THEN CONCAT(' (', nm.wifi_ssid, ')')
+                                ELSE '' END) as message,
+                    nm.timestamp
+                FROM network_metrics nm
+                WHERE nm.device_id = $1 
+                  AND nm.timestamp >= NOW() - ($2 || ' hours')::interval
+                
+                ORDER BY timestamp DESC
+                LIMIT 50
+            """
+            
+            results = await conn.fetch(query, device_id, str(hours))
+            
+            events = []
+            for row in results:
+                event_type = 'success'
+                if 'timeout' in row['message'].lower() or 'error' in row['message'].lower():
+                    event_type = 'error'
+                elif 'warning' in row['message'].lower() or 'low' in row['message'].lower():
+                    event_type = 'warning'
+                
+                events.append({
+                    'type': event_type,
+                    'message': row['message'],
+                    'timestamp': row['timestamp'].isoformat()
+                })
+            
+            return events
+            
+    except Exception as e:
+        logger.error(f"Timeline error for device {device_id}: {str(e)}")
+        return []
+
 # Dashboard endpoint - serve interactive dashboard
 @app.get("/dashboard")
 async def dashboard():
