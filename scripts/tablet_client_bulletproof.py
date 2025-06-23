@@ -227,7 +227,7 @@ class BulletproofTabletMonitor:
                 "device_metrics": battery_data,
                 "network_metrics": wifi_data,
                 "app_metrics": {
-                    "screen_state": "active" if activity_data.get("recent_movement") else "idle",
+                    "screen_state": "active" if activity_data.get("recent_movement") else "dimmed",
                     "app_foreground": "myob" if process_data.get("myob_active") else ("scanner" if process_data.get("scanner_active") else "unknown"),
                     "last_user_interaction": self.last_interaction.isoformat(),
                     **process_data,
@@ -255,7 +255,7 @@ class BulletproofTabletMonitor:
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "device_metrics": {"battery_level": 50, "battery_temperature": 25, "battery_status": "unknown"},
                 "network_metrics": {"wifi_signal_strength": -50, "wifi_ssid": "unknown", "connectivity_status": "unknown"},
-                "app_metrics": {"screen_state": "unknown", "app_foreground": "unknown"},
+                "app_metrics": {"screen_state": "dimmed", "app_foreground": "unknown"},
                 "session_events": [],
                 "raw_logs": [f"Error collecting data: {e}"]
             }
