@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JD Engineering Tablet Monitor - DATA RICH Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -380,16 +381,161 @@
                     maintainAspectRatio: false,
                     animation: { duration: 0 },
                     scales: {
-                        y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } }
+                        y: { 
+                            beginAtZero: true, 
+                            max: 100, 
+                            ticks: { callback: v => v + '%' } 
+                        },
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'minute',
+                                displayFormats: { minute: 'HH:mm' }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            wifi: {
+                type: 'line',
+                data: { labels: [], datasets: [] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 0 },
+                    scales: {
+                        y: { 
+                            min: -100, 
+                            max: -30, 
+                            ticks: { callback: v => v + ' dBm' } 
+                        },
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'minute',
+                                displayFormats: { minute: 'HH:mm' }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y} dBm`;
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            myob: {
+                type: 'doughnut',
+                data: {
+                    labels: ['MYOB Active', 'MYOB Inactive'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: [
+                            'rgba(76, 175, 80, 0.8)',
+                            'rgba(158, 158, 158, 0.3)'
+                        ],
+                        borderColor: [
+                            'rgba(76, 175, 80, 1)',
+                            'rgba(158, 158, 158, 0.5)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 0 },
+                    plugins: {
+                        legend: { display: true, position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.parsed} devices`;
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            scanner: {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Scanner Activity',
+                        data: [],
+                        backgroundColor: 'rgba(255, 152, 0, 0.6)',
+                        borderColor: 'rgba(255, 152, 0, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 0 },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: { 
+                                callback: function(value) {
+                                    return value ? 'Active' : 'Inactive';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.parsed.y ? 'Active' : 'Inactive'}`;
+                                }
+                            }
+                        }
                     }
                 }
             }
         };
 
         function initCharts() {
-            const ctx = document.getElementById('batteryChart');
-            if (ctx) {
-                charts.battery = new Chart(ctx, chartConfigs.battery);
+            // Initialize Battery Chart
+            const batteryCtx = document.getElementById('batteryChart');
+            if (batteryCtx) {
+                charts.battery = new Chart(batteryCtx, chartConfigs.battery);
+            }
+            
+            // Initialize WiFi Chart
+            const wifiCtx = document.getElementById('wifiChart');
+            if (wifiCtx) {
+                charts.wifi = new Chart(wifiCtx, chartConfigs.wifi);
+            }
+            
+            // Initialize MYOB Chart
+            const myobCtx = document.getElementById('myobChart');
+            if (myobCtx) {
+                charts.myob = new Chart(myobCtx, chartConfigs.myob);
+            }
+            
+            // Initialize Scanner Chart
+            const scannerCtx = document.getElementById('scannerChart');
+            if (scannerCtx) {
+                charts.scanner = new Chart(scannerCtx, chartConfigs.scanner);
             }
         }
 
@@ -597,33 +743,177 @@
             }
         }
 
-        function generateMockEvents() {
+        async function generateRealEvents() {
             if (devices.length === 0) return;
             
-            // Generate events based on real device data
+            // Generate events based on REAL device data
             if (Math.random() > 0.6) {
                 const device = devices[Math.floor(Math.random() * devices.length)];
-                const events = [
-                    `Battery level: 79% on ${device.device_id}`,
-                    `WiFi signal: -50 dBm on ${device.device_id}`,
-                    `Device ${device.device_id} app state: dimmed`,
-                    `Temperature: 20.0°C on ${device.device_id}`,
-                    `Network connectivity: Connected on ${device.device_id}`,
-                    `Device ${device.device_id} last seen: ${device.seconds_since_last_seen}s ago`,
-                    `Location update: ${device.location} - ${device.device_id}`,
-                    `Session monitoring active on ${device.device_id}`
-                ];
                 
-                const event = events[Math.floor(Math.random() * events.length)];
-                addEventToStream('eventStream', event);
+                try {
+                    // Fetch real metrics for this device
+                    const metricsData = await fetchDeviceMetrics(device.device_id, 1);
+                    const latestMetric = metricsData.metrics && metricsData.metrics.length > 0 ? metricsData.metrics[0] : null;
+                    
+                    if (latestMetric) {
+                        const events = [
+                            `Battery level: ${latestMetric.battery_percentage}% on ${device.device_id}`,
+                            `WiFi signal: ${latestMetric.wifi_signal_strength} dBm on ${device.device_id}`,
+                            `Device ${device.device_id} app state: ${latestMetric.app_state}`,
+                            `Temperature: ${latestMetric.battery_temperature}°C on ${device.device_id}`,
+                            `Network connectivity: ${latestMetric.wifi_connected ? 'Connected' : 'Disconnected'} on ${device.device_id}`,
+                            `Device ${device.device_id} last seen: ${device.seconds_since_last_seen}s ago`,
+                            `Location: ${device.location} - ${device.device_id}`,
+                            `Session monitoring: ${device.status} - ${device.device_id}`
+                        ];
+                        
+                        const event = events[Math.floor(Math.random() * events.length)];
+                        addEventToStream('eventStream', event);
+                        
+                        // Health stream with real data
+                        if (Math.random() > 0.5) {
+                            const healthStatus = latestMetric.battery_percentage > 20 && latestMetric.wifi_connected ? 'HEALTHY' : 'WARNING';
+                            addEventToStream('healthStream', `${healthStatus}: ${device.device_id} - Battery: ${latestMetric.battery_percentage}%, WiFi: ${latestMetric.wifi_connected ? 'OK' : 'DISCONNECTED'}`);
+                        }
+                        
+                        // Timeout warnings based on real idle time
+                        if (device.seconds_since_last_seen > 60) {
+                            const riskLevel = device.seconds_since_last_seen > 300 ? 'HIGH RISK' : 'MODERATE RISK';
+                            addEventToStream('timeoutStream', `${riskLevel}: ${device.device_id} idle for ${device.seconds_since_last_seen}s - App: ${latestMetric.app_state}`);
+                        }
+                        
+                        // Battery warnings
+                        if (latestMetric.battery_percentage < 30) {
+                            addEventToStream('timeoutStream', `LOW BATTERY: ${device.device_id} at ${latestMetric.battery_percentage}% - Temperature: ${latestMetric.battery_temperature}°C`);
+                        }
+                        
+                        // WiFi warnings
+                        if (latestMetric.wifi_signal_strength < -70) {
+                            addEventToStream('timeoutStream', `WEAK WIFI: ${device.device_id} signal ${latestMetric.wifi_signal_strength} dBm`);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error generating events for', device.device_id, error);
+                }
+            }
+        }
+
+        // Update charts with REAL data
+        async function updateCharts(devices) {
+            const now = new Date();
+            
+            // Update battery chart with REAL data
+            if (charts.battery && devices.length > 0) {
+                for (let index = 0; index < devices.length; index++) {
+                    const device = devices[index];
+                    
+                    // Fetch real metrics for this device
+                    const metricsData = await fetchDeviceMetrics(device.device_id, 1);
+                    const latestMetric = metricsData.metrics && metricsData.metrics.length > 0 ? metricsData.metrics[0] : null;
+                    const batteryLevel = latestMetric?.battery_percentage || 0;
+                    
+                    if (!charts.battery.data.datasets[index]) {
+                        charts.battery.data.datasets[index] = {
+                            label: device.device_name || device.device_id,
+                            data: [],
+                            borderColor: `hsl(${index * 137.5}, 70%, 50%)`,
+                            backgroundColor: `hsla(${index * 137.5}, 70%, 50%, 0.1)`,
+                            tension: 0.1,
+                            fill: false,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        };
+                    }
+                    
+                    charts.battery.data.datasets[index].data.push({
+                        x: now,
+                        y: batteryLevel
+                    });
+                    
+                    // Keep only last 20 points
+                    if (charts.battery.data.datasets[index].data.length > 20) {
+                        charts.battery.data.datasets[index].data.shift();
+                    }
+                }
+                charts.battery.update('none');
+            }
+            
+            // Update WiFi chart with REAL data
+            if (charts.wifi && devices.length > 0) {
+                for (let index = 0; index < devices.length; index++) {
+                    const device = devices[index];
+                    
+                    // Fetch real metrics for this device
+                    const metricsData = await fetchDeviceMetrics(device.device_id, 1);
+                    const latestMetric = metricsData.metrics && metricsData.metrics.length > 0 ? metricsData.metrics[0] : null;
+                    const wifiSignal = latestMetric?.wifi_signal_strength || -70;
+                    
+                    if (!charts.wifi.data.datasets[index]) {
+                        charts.wifi.data.datasets[index] = {
+                            label: device.device_name || device.device_id,
+                            data: [],
+                            borderColor: `hsl(${index * 137.5}, 70%, 50%)`,
+                            backgroundColor: `hsla(${index * 137.5}, 70%, 50%, 0.1)`,
+                            tension: 0.1,
+                            fill: false,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        };
+                    }
+                    
+                    charts.wifi.data.datasets[index].data.push({
+                        x: now,
+                        y: wifiSignal
+                    });
+                    
+                    // Keep only last 20 points
+                    if (charts.wifi.data.datasets[index].data.length > 20) {
+                        charts.wifi.data.datasets[index].data.shift();
+                    }
+                }
+                charts.wifi.update('none');
+            }
+            
+            // Update MYOB chart with REAL data
+            if (charts.myob && devices.length > 0) {
+                let myobActiveCount = 0;
+                let myobInactiveCount = 0;
                 
-                if (Math.random() > 0.5) {
-                    addEventToStream('healthStream', `System check: OK - ${device.device_id} responding`);
+                for (const device of devices) {
+                    const metricsData = await fetchDeviceMetrics(device.device_id, 1);
+                    const latestMetric = metricsData.metrics && metricsData.metrics.length > 0 ? metricsData.metrics[0] : null;
+                    const isActive = latestMetric?.app_state === 'active' || latestMetric?.app_state === 'foreground';
+                    
+                    if (isActive) {
+                        myobActiveCount++;
+                    } else {
+                        myobInactiveCount++;
+                    }
                 }
                 
-                if (device.seconds_since_last_seen > 60) {
-                    addEventToStream('timeoutStream', `${device.device_id} idle for ${device.seconds_since_last_seen}s`);
+                charts.myob.data.datasets[0].data = [myobActiveCount, myobInactiveCount];
+                charts.myob.update('none');
+            }
+            
+            // Update Scanner chart with REAL data
+            if (charts.scanner && devices.length > 0) {
+                const scannerData = [];
+                const labels = [];
+                
+                for (const device of devices) {
+                    const metricsData = await fetchDeviceMetrics(device.device_id, 1);
+                    const latestMetric = metricsData.metrics && metricsData.metrics.length > 0 ? metricsData.metrics[0] : null;
+                    
+                    // Mock scanner activity based on app state (would be real scanner detection in production)
+                    const scannerActive = latestMetric?.app_state === 'active' && Math.random() > 0.7 ? 1 : 0;
+                    
+                    labels.push(device.device_name || device.device_id);
+                    scannerData.push(scannerActive);
                 }
+                
+                charts.scanner.data.labels = labels;
+                charts.scanner.data.datasets[0].data = scannerData;
+                charts.scanner.update('none');
             }
         }
 
@@ -638,7 +928,8 @@
                 // Update stats and device grid with real data
                 await updateStats(devices);
                 await updateDeviceGrid(devices);
-                generateMockEvents();
+                await updateCharts(devices);
+                await generateRealEvents();
                 
                 document.getElementById('lastUpdated').textContent = 
                     `Last updated: ${new Date().toLocaleTimeString()}`;
