@@ -642,16 +642,20 @@ async def store_tablet_data(data: TabletData, client_ip: str = None):
         logger.error(f"❌ Failed to store data for device {data.device_id}: {str(e)}")
         raise
 
-# Dashboard endpoint (unchanged - serves the existing branded dashboard)
+# Dashboard endpoint (serves the production dashboard)
 @app.get("/dashboard")
 async def dashboard():
-    """Serve the enhanced J&D McLennan dashboard"""
+    """Serve the enhanced J&D McLennan production dashboard"""
     try:
+        production_path = Path("static/dashboard_production.html")
         clean_path = Path("static/dashboard_clean.html")
         backup_path = Path("static/dashboard_backup.html")
         static_path = Path("static/dashboard.html")
         
-        if clean_path.exists():
+        # Prioritize production dashboard
+        if production_path.exists():
+            return FileResponse(production_path, media_type="text/html")
+        elif clean_path.exists():
             return FileResponse(clean_path, media_type="text/html")
         elif backup_path.exists():
             return FileResponse(backup_path, media_type="text/html")
