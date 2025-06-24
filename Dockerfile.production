@@ -41,9 +41,10 @@ FROM base as production
 # Install production dependencies only
 RUN pip install --no-cache-dir gunicorn uvicorn[standard]
 
-# Copy health check script
+# Copy startup and health check scripts
 COPY --chown=appuser:appuser scripts/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod +x /usr/local/bin/healthcheck.sh
+COPY --chown=appuser:appuser scripts/start_production.sh /usr/local/bin/start_production.sh
+RUN chmod +x /usr/local/bin/healthcheck.sh /usr/local/bin/start_production.sh
 
 # Switch to non-root user
 USER appuser
@@ -55,5 +56,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-# Production startup command for Railway (uses $PORT env var with fallback)
-CMD gunicorn main_production:app --worker-class uvicorn.workers.UvicornWorker --workers 4 --bind 0.0.0.0:${PORT:-8000} --access-logfile - --error-logfile - --log-level info --timeout 120 --keep-alive 5 
+# Production startup command using startup script
+CMD ["/usr/local/bin/start_production.sh"] 

@@ -103,32 +103,17 @@ CREATE INDEX IF NOT EXISTS idx_device_registry_active ON device_registry(is_acti
 
 \echo 'Performance indexes created...'
 
--- Insert sample data for testing
-INSERT INTO device_registry (device_id, device_name, location, android_version, app_version) VALUES
-('tablet-001', 'Production Tablet 1', 'Warehouse A', '11.0', '2.1.0'),
-('tablet-002', 'Production Tablet 2', 'Warehouse B', '11.0', '2.1.0'),
-('tablet-003', 'Production Tablet 3', 'Office', '12.0', '2.1.0')
-ON CONFLICT (device_id) DO NOTHING;
+-- Real device data will be inserted when tablets connect
+-- The following devices are expected to connect:
+-- - tablet_electrical_dept (from scripts/tablet_client_working.py)
+-- - Other tablets running the monitoring client
 
-\echo 'Sample data inserted...'
-
--- Insert sample device metrics
-INSERT INTO device_metrics (device_id, battery_level, memory_available, memory_total, cpu_usage) VALUES
-('tablet-001', 85, 2048000000, 4096000000, 12.5),
-('tablet-002', 72, 1536000000, 4096000000, 8.3),
-('tablet-003', 91, 3072000000, 8192000000, 15.2)
-ON CONFLICT DO NOTHING;
-
-\echo 'Sample device metrics inserted...'
-
--- Insert sample network metrics
-INSERT INTO network_metrics (device_id, wifi_signal_strength, wifi_ssid, connectivity_status, network_type) VALUES
-('tablet-001', -45, 'JD_McLennan_Warehouse', 'online', 'wifi'),
-('tablet-002', -52, 'JD_McLennan_Warehouse', 'online', 'wifi'),
-('tablet-003', -38, 'JD_McLennan_Office', 'online', 'wifi')
-ON CONFLICT DO NOTHING;
-
-\echo 'Sample network metrics inserted...'
+\echo 'Database ready for real tablet connections...'
+\echo 'Waiting for real devices to connect and send data...'
+\echo ''
+\echo 'Expected device IDs:'
+\echo '- tablet_electrical_dept (Electrical Department)'
+\echo ''
 
 -- Performance monitoring view
 CREATE OR REPLACE VIEW device_health_summary AS

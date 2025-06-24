@@ -882,14 +882,25 @@
             }
 
             renderFallbackDevices() {
-                const fallbackDevices = [
-                    { device_id: 'tablet-001', device_name: 'Production Tablet 1', location: 'Warehouse A', is_active: true, battery_level: 85 },
-                    { device_id: 'tablet-002', device_name: 'Production Tablet 2', location: 'Warehouse B', is_active: true, battery_level: 72 },
-                    { device_id: 'tablet-003', device_name: 'Production Tablet 3', location: 'Office', is_active: true, battery_level: 91 }
-                ];
+                // NO MOCK DATA - Show actual state when no devices connected
+                const grid = document.getElementById('deviceGrid');
+                grid.innerHTML = `
+                    <div class="device-card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+                        <i class="fas fa-tablet-alt" style="font-size: 3rem; color: #dc3545; margin-bottom: 1rem; display: block;"></i>
+                        <h3 style="color: #212529; margin-bottom: 1rem;">No Tablets Connected</h3>
+                        <p style="color: #6c757d; margin-bottom: 2rem;">Waiting for real tablets to connect...</p>
+                        <div style="background: rgba(220, 53, 69, 0.1); padding: 1rem; border-radius: 8px; border: 1px solid rgba(220, 53, 69, 0.2);">
+                            <p style="font-size: 0.9rem; color: #dc3545; margin-bottom: 0.5rem;">
+                                <strong>Expected Device ID:</strong> tablet_electrical_dept
+                            </p>
+                            <p style="font-size: 0.85rem; color: #6c757d;">
+                                Ensure tablets are running the monitoring client and connected to the network
+                            </p>
+                        </div>
+                    </div>
+                `;
                 
-                this.devices = fallbackDevices;
-                this.renderDevices();
+                this.devices = [];
                 this.updateDeviceKPIs();
             }
 

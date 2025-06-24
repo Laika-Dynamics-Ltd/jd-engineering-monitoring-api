@@ -461,36 +461,9 @@ async def get_devices_enhanced(token: str = Depends(verify_token)):
                 
                 return device_list
         
-        # Fallback data if no database
-        return [
-            {
-                "device_id": "tablet-001",
-                "device_name": "Production Tablet 1",
-                "location": "Warehouse A",
-                "android_version": "11.0",
-                "app_version": "2.1.0",
-                "is_active": True,
-                "last_seen": datetime.now(timezone.utc).isoformat()
-            },
-            {
-                "device_id": "tablet-002", 
-                "device_name": "Production Tablet 2",
-                "location": "Warehouse B",
-                "android_version": "11.0",
-                "app_version": "2.1.0",
-                "is_active": True,
-                "last_seen": datetime.now(timezone.utc).isoformat()
-            },
-            {
-                "device_id": "tablet-003",
-                "device_name": "Production Tablet 3",
-                "location": "Office",
-                "android_version": "12.0",
-                "app_version": "2.1.0",
-                "is_active": True,
-                "last_seen": datetime.now(timezone.utc).isoformat()
-            }
-        ]
+        # NO MOCK DATA - Return empty list when no real devices connected
+        logger.warning("No database connection - returning empty device list")
+        return []
         
     except Exception as e:
         logger.error(f"Error getting devices: {e}")
@@ -537,6 +510,137 @@ async def get_active_alerts() -> List[Dict[str, Any]]:
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
     ]
+
+# Main tablet data ingestion endpoint for real devices
+@app.post("/tablet-metrics", response_model=Dict[str, Any])
+async def receive_tablet_data(
+    data: TabletData,
+    background_tasks: BackgroundTasks,
+    request: Request,
+    token: str = Depends(verify_token)
+):
+    """Primary endpoint for receiving real tablet monitoring data"""
+    try:
+        # Add client IP for debugging
+        client_ip = request.client.host
+        logger.info(f"📱 Received data from real device: {data.device_id} (IP: {client_ip})")
+        
+        # Process data in background to return quickly
+        background_tasks.add_task(store_tablet_data, data, client_ip)
+        
+        # Broadcast update to WebSocket clients
+        await connection_manager.broadcast({
+            "type": "device_update",
+            "data": {
+                "device_id": data.device_id,
+                "device_name": data.device_name,
+                "location": data.location,
+                "battery_level": data.device_metrics.battery_level if data.device_metrics else None,
+                "status": "online"
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        
+        return {
+            "status": "success",
+            "message": "Data received and queued for processing",
+            "device_id": data.device_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "records_received": {
+                "device_metrics": 1 if data.device_metrics else 0,
+                "network_metrics": 1 if data.network_metrics else 0,
+                "app_metrics": 1 if data.app_metrics else 0,
+                "session_events": len(data.session_events) if data.session_events else 0
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error processing tablet data from {data.device_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to process data: {str(e)}")
+
+async def store_tablet_data(data: TabletData, client_ip: str = None):
+    """Store real tablet data in database"""
+    if not db_manager:
+        logger.warning("No database connection - data not persisted")
+        return
+    
+    try:
+        async with db_manager.get_connection() as conn:
+            async with conn.transaction():
+                # Update or insert device registry
+                await conn.execute('''
+                    INSERT INTO device_registry (device_id, device_name, location, android_version, app_version, last_seen)
+                    VALUES ($1, $2, $3, $4, $5, $6)
+                    ON CONFLICT (device_id) DO UPDATE SET
+                        device_name = COALESCE(EXCLUDED.device_name, device_registry.device_name),
+                        location = COALESCE(EXCLUDED.location, device_registry.location),
+                        android_version = COALESCE(EXCLUDED.android_version, device_registry.android_version),
+                        app_version = COALESCE(EXCLUDED.app_version, device_registry.app_version),
+                        last_seen = EXCLUDED.last_seen,
+                        is_active = TRUE
+                ''', data.device_id, data.device_name, data.location, data.android_version, data.app_version, data.timestamp)
+                
+                # Store device metrics if provided
+                if data.device_metrics:
+                    await conn.execute('''
+                        INSERT INTO device_metrics (device_id, battery_level, battery_temperature, 
+                                                  memory_available, memory_total, storage_available, 
+                                                  cpu_usage, timestamp)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    ''', data.device_id, data.device_metrics.battery_level,
+                    data.device_metrics.battery_temperature, data.device_metrics.memory_available,
+                    data.device_metrics.memory_total, data.device_metrics.storage_available,
+                    data.device_metrics.cpu_usage, data.device_metrics.timestamp)
+                
+                # Store network metrics if provided
+                if data.network_metrics:
+                    await conn.execute('''
+                        INSERT INTO network_metrics (device_id, wifi_signal_strength, wifi_ssid,
+                                                   connectivity_status, network_type, ip_address,
+                                                   dns_response_time, data_usage_mb, timestamp)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                    ''', data.device_id, data.network_metrics.wifi_signal_strength,
+                    data.network_metrics.wifi_ssid, data.network_metrics.connectivity_status,
+                    data.network_metrics.network_type, data.network_metrics.ip_address,
+                    data.network_metrics.dns_response_time, data.network_metrics.data_usage_mb,
+                    data.network_metrics.timestamp)
+                
+                # Store app metrics if provided
+                if data.app_metrics:
+                    await conn.execute('''
+                        INSERT INTO app_metrics (device_id, screen_state, app_foreground,
+                                               app_memory_usage, screen_timeout_setting,
+                                               last_user_interaction, notification_count, 
+                                               app_crashes, timestamp)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                    ''', data.device_id, data.app_metrics.screen_state,
+                    data.app_metrics.app_foreground, data.app_metrics.app_memory_usage,
+                    data.app_metrics.screen_timeout_setting, data.app_metrics.last_user_interaction,
+                    data.app_metrics.notification_count, data.app_metrics.app_crashes,
+                    data.app_metrics.timestamp)
+                
+                # Store session events if provided
+                if data.session_events:
+                    for event in data.session_events:
+                        await conn.execute('''
+                            INSERT INTO session_events (device_id, event_type, session_id,
+                                                      duration, error_message, user_id, 
+                                                      app_version, timestamp)
+                            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                        ''', data.device_id, event.event_type, event.session_id,
+                        event.duration, event.error_message, event.user_id,
+                        event.app_version, event.timestamp)
+                
+                logger.info(f"✅ Successfully stored real data for device {data.device_id}")
+                
+                # Clear cache to ensure fresh data
+                if cache_manager:
+                    await cache_manager.delete("devices_list")
+                    await cache_manager.delete("system_metrics")
+                
+    except Exception as e:
+        logger.error(f"❌ Failed to store data for device {data.device_id}: {str(e)}")
+        raise
 
 # Dashboard endpoint (unchanged - serves the existing branded dashboard)
 @app.get("/dashboard")
