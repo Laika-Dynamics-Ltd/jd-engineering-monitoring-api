@@ -2616,7 +2616,9 @@
         function showDashboard() {
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('dashboardContainer').style.display = 'block';
-            initializeDashboard();
+            
+            // Initialize with new tabbed system
+            switchTab('business-intelligence');
         }
 
         // Handle login form submission
@@ -2664,152 +2666,15 @@
         let isUpdating = false;
         
         function initializeDashboard() {
-            initializeCharts();
-            loadData();
-            startAutoRefresh();
-            simulateRealTimeLogs();
-            
-            // Initialize logs with welcome messages
-            addLog('system', 'success', 'Dashboard initialized successfully');
-            addLog('device', 'info', 'Device monitoring service started');
-            addLog('myob', 'info', 'MYOB session tracking enabled');
-            addLog('scanner', 'info', 'Barcode scanner monitoring active');
+            // This function is deprecated - using new tabbed system
+            console.log('Legacy initializeDashboard called - using new tab system instead');
+            return;
         }
         
         function initializeCharts() {
-            // Battery Chart
-            const batteryCtx = document.getElementById('batteryChart').getContext('2d');
-            batteryChart = new Chart(batteryCtx, {
-                type: 'bar',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Battery %',
-                        data: [],
-                        backgroundColor: '#10b981',
-                        borderColor: '#059669',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: { duration: 0 },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: {
-                                callback: function(value) {
-                                    return value + '%';
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-
-            // WiFi Signal Chart
-            const wifiCtx = document.getElementById('wifiChart').getContext('2d');
-            wifiChart = new Chart(wifiCtx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Signal Strength (dBm)',
-                        data: [],
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: { duration: 0 },
-                    scales: {
-                        y: {
-                            min: -100,
-                            max: 0,
-                            ticks: {
-                                callback: function(value) {
-                                    return value + ' dBm';
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-
-            // MYOB Activity Chart
-            const myobCtx = document.getElementById('myobChart').getContext('2d');
-            myobChart = new Chart(myobCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['MYOB Active', 'MYOB Inactive'],
-                    datasets: [{
-                        data: [0, 100],
-                        backgroundColor: ['#dc2626', '#e5e7eb'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: { duration: 0 },
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-
-            // Scanner Activity Chart
-            const scannerCtx = document.getElementById('scannerChart').getContext('2d');
-            scannerChart = new Chart(scannerCtx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Scanner Events',
-                        data: [],
-                        borderColor: '#f59e0b',
-                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: { duration: 0 },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
+            // This function is deprecated - charts are now initialized per-tab
+            console.log('Legacy initializeCharts called - using new tab-specific chart initialization');
+            return;
         }
         
         function startAutoRefresh() {
@@ -2868,11 +2733,9 @@
         }
         
         function updateCharts(devices, analytics) {
-            // Load real persistent chart data from database
-            loadBatteryChart();
-            loadWifiChart();
-            loadMyobChart();
-            loadScannerChart();
+            // This function is deprecated - charts are now tab-specific
+            console.log('Legacy updateCharts called - using tab-specific chart updates');
+            return;
         }
         
         function updateDeviceGrid(devices) {
@@ -4567,6 +4430,24 @@
             }
         }
         
+        // Fetch analytics data function used by new tabbed system
+        async function fetchAnalyticsData() {
+            try {
+                const response = await fetch(`${API_BASE}/analytics`, {
+                    headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+                });
+                
+                if (response.ok) {
+                    return await response.json();
+                } else {
+                    throw new Error(`API responded with status: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error fetching analytics data:', error);
+                throw error;
+            }
+        }
+        
         // Enhanced Business Intelligence Loading
         function loadBusinessIntelligence() {
             console.log('Loading Business Intelligence...');
@@ -5346,13 +5227,157 @@
         // Load analytics charts tab
         function loadAnalyticsCharts() {
             console.log('Loading Analytics Charts...');
-            // Implement charts loading logic here
+            
+            // Add content to analytics charts tab
+            const chartsTab = document.getElementById('analytics-charts');
+            if (chartsTab && !chartsTab.innerHTML.trim()) {
+                chartsTab.innerHTML = `
+                    <div class="charts-section">
+                        <div class="section-title">
+                            <i class="fas fa-chart-line"></i>
+                            Real-time Analytics
+                        </div>
+                        <div class="charts-grid">
+                            <div class="chart-card">
+                                <div class="chart-title">
+                                    <i class="fas fa-battery-three-quarters"></i>
+                                    Battery Levels
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="batteryChart"></canvas>
+                                </div>
+                            </div>
+                            
+                            <div class="chart-card">
+                                <div class="chart-title">
+                                    <i class="fas fa-wifi"></i>
+                                    WiFi Signal Strength
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="wifiChart"></canvas>
+                                </div>
+                            </div>
+                            
+                            <div class="chart-card">
+                                <div class="chart-title">
+                                    <i class="fas fa-desktop"></i>
+                                    MYOB Session Activity
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="myobChart"></canvas>
+                                </div>
+                            </div>
+                            
+                            <div class="chart-card">
+                                <div class="chart-title">
+                                    <i class="fas fa-barcode"></i>
+                                    Scanner Activity Timeline
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="scannerChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
         }
         
         // Load system logs tab
         function loadSystemLogs() {
             console.log('Loading System Logs...');
-            // Implement logs loading logic here
+            
+            // Add content to system logs tab
+            const logsTab = document.getElementById('system-logs');
+            if (logsTab && !logsTab.innerHTML.trim()) {
+                logsTab.innerHTML = `
+                    <div class="logs-section">
+                        <div class="section-title">
+                            <i class="fas fa-terminal"></i>
+                            Raw Data Logs & System Events
+                        </div>
+                        <div class="logs-grid">
+                            <div class="logs-card">
+                                <div class="logs-header">
+                                    <div class="logs-title">
+                                        <i class="fas fa-tablet-alt"></i>
+                                        Device Activity Log
+                                    </div>
+                                    <div class="logs-controls">
+                                        <button class="logs-btn active" onclick="filterLogs('device', 'all')">All</button>
+                                        <button class="logs-btn" onclick="filterLogs('device', 'battery')">Battery</button>
+                                        <button class="logs-btn" onclick="filterLogs('device', 'wifi')">WiFi</button>
+                                        <button class="logs-btn" onclick="clearLogs('device')">Clear</button>
+                                    </div>
+                                </div>
+                                <div class="logs-container" id="deviceLogs">
+                                    <div class="log-entry">
+                                        <span class="log-timestamp">[${new Date().toLocaleTimeString()}]</span>
+                                        <span class="log-level success">INFO</span>
+                                        <span class="log-message">Device activity monitoring started</span>
+                                    </div>
+                                </div>
+                                <div class="logs-stats">
+                                    <span>Total Entries: <strong id="deviceLogCount">1</strong></span>
+                                    <span>Auto-scroll: <strong>ON</strong></span>
+                                </div>
+                            </div>
+                            
+                            <div class="logs-card">
+                                <div class="logs-header">
+                                    <div class="logs-title">
+                                        <i class="fas fa-desktop"></i>
+                                        MYOB Session Log
+                                    </div>
+                                    <div class="logs-controls">
+                                        <button class="logs-btn active" onclick="filterLogs('myob', 'all')">All</button>
+                                        <button class="logs-btn" onclick="filterLogs('myob', 'login')">Login</button>
+                                        <button class="logs-btn" onclick="filterLogs('myob', 'timeout')">Timeout</button>
+                                        <button class="logs-btn" onclick="clearLogs('myob')">Clear</button>
+                                    </div>
+                                </div>
+                                <div class="logs-container" id="myobLogs">
+                                    <div class="log-entry">
+                                        <span class="log-timestamp">[${new Date().toLocaleTimeString()}]</span>
+                                        <span class="log-level info">INFO</span>
+                                        <span class="log-message">MYOB session monitoring active</span>
+                                    </div>
+                                </div>
+                                <div class="logs-stats">
+                                    <span>Total Entries: <strong id="myobLogCount">1</strong></span>
+                                    <span>Active Sessions: <strong id="activeSessions">0</strong></span>
+                                </div>
+                            </div>
+                            
+                            <div class="logs-card">
+                                <div class="logs-header">
+                                    <div class="logs-title">
+                                        <i class="fas fa-server"></i>
+                                        System Events Log
+                                    </div>
+                                    <div class="logs-controls">
+                                        <button class="logs-btn active" onclick="filterLogs('system', 'all')">All</button>
+                                        <button class="logs-btn" onclick="filterLogs('system', 'api')">API</button>
+                                        <button class="logs-btn" onclick="filterLogs('system', 'error')">Errors</button>
+                                        <button class="logs-btn" onclick="clearLogs('system')">Clear</button>
+                                    </div>
+                                </div>
+                                <div class="logs-container" id="systemLogs">
+                                    <div class="log-entry">
+                                        <span class="log-timestamp">[${new Date().toLocaleTimeString()}]</span>
+                                        <span class="log-level success">SUCCESS</span>
+                                        <span class="log-message">Dashboard connected to API</span>
+                                    </div>
+                                </div>
+                                <div class="logs-stats">
+                                    <span>Total Entries: <strong id="systemLogCount">1</strong></span>
+                                    <span>API Status: <strong id="apiStatus">Connected</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
         }
         
         // Device actions
