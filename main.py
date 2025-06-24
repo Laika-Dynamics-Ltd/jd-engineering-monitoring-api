@@ -1274,7 +1274,7 @@ def generate_timeout_recommendations_simple(business_impact):
     
     return recommendations
 
-# OpenAI Configuration
+# OpenAI Configuration - Real Data Integration v2.0
 openai.api_key = "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"
 
 @app.get("/analytics/ai/comprehensive-analysis")
