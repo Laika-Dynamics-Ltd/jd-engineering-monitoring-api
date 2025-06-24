@@ -311,6 +311,109 @@ async def health_check():
             }
         )
 
+# Public device status endpoint (no auth required for dashboard)
+@app.get("/public/device-status")
+async def get_public_device_status():
+    """Public endpoint for basic device status - used by dashboard"""
+    try:
+        if not db_pool:
+            # Return sample data if no database
+            return {
+                "devices": [
+                    {
+                        "device_id": "demo_tablet_01",
+                        "device_name": "Demo Front Desk",
+                        "location": "Reception",
+                        "status": "online",
+                        "battery_level": 85,
+                        "last_seen": "2m ago"
+                    },
+                    {
+                        "device_id": "demo_tablet_02", 
+                        "device_name": "Demo Warehouse",
+                        "location": "Warehouse",
+                        "status": "warning",
+                        "battery_level": 23,
+                        "last_seen": "8m ago"
+                    }
+                ],
+                "total_count": 2,
+                "online_count": 1,
+                "warning_count": 1,
+                "offline_count": 0,
+                "last_updated": datetime.now(timezone.utc).isoformat(),
+                "demo_mode": True
+            }
+            
+        async with db_pool.acquire() as conn:
+            # Simple device query
+            devices = await conn.fetch("""
+                SELECT DISTINCT ON (device_id)
+                    device_id,
+                    device_name,
+                    location,
+                    last_seen,
+                    CASE 
+                        WHEN last_seen > NOW() - INTERVAL '5 minutes' THEN 'online'
+                        WHEN last_seen > NOW() - INTERVAL '15 minutes' THEN 'warning'
+                        ELSE 'offline'
+                    END as status
+                FROM device_registry
+                WHERE is_active = TRUE
+                ORDER BY device_id, last_seen DESC
+                LIMIT 20
+            """)
+            
+            device_list = []
+            for device in devices:
+                last_seen = device['last_seen']
+                if last_seen:
+                    time_diff = datetime.now(timezone.utc) - last_seen.replace(tzinfo=timezone.utc)
+                    minutes_ago = int(time_diff.total_seconds() / 60)
+                    last_seen_text = f"{minutes_ago}m ago" if minutes_ago < 60 else f"{int(minutes_ago/60)}h ago"
+                else:
+                    last_seen_text = "Never"
+                
+                device_list.append({
+                    "device_id": device['device_id'],
+                    "device_name": device['device_name'] or device['device_id'],
+                    "location": device['location'] or "Unknown",
+                    "status": device['status'],
+                    "last_seen": last_seen_text
+                })
+            
+            return {
+                "devices": device_list,
+                "total_count": len(device_list),
+                "online_count": len([d for d in device_list if d["status"] == "online"]),
+                "warning_count": len([d for d in device_list if d["status"] == "warning"]),
+                "offline_count": len([d for d in device_list if d["status"] == "offline"]),
+                "last_updated": datetime.now(timezone.utc).isoformat(),
+                "demo_mode": False
+            }
+            
+    except Exception as e:
+        logger.error(f"Public device status error: {str(e)}")
+        # Return fallback data
+        return {
+            "devices": [
+                {
+                    "device_id": "error_recovery",
+                    "device_name": "Status Unavailable",
+                    "location": "System",
+                    "status": "offline",
+                    "last_seen": "Unknown"
+                }
+            ],
+            "total_count": 1,
+            "online_count": 0,
+            "warning_count": 0,
+            "offline_count": 1,
+            "last_updated": datetime.now(timezone.utc).isoformat(),
+            "error": "Device data temporarily unavailable",
+            "demo_mode": True
+        }
+
 # Main tablet data ingestion endpoint
 @app.post("/tablet-metrics", response_model=Dict[str, Any])
 async def receive_tablet_data(
@@ -1050,12 +1153,15 @@ async def get_device_timeline(device_id: str, hours: int = 24, token: str = Depe
 async def dashboard():
     """Interactive dashboard endpoint - business-focused version"""
     try:
-        # Prioritize business-focused dashboard
+        # Prioritize clean dashboard that works without API
+        clean_path = Path("static/dashboard_clean.html")
         business_path = Path("static/dashboard_business_focused.html")
         enhanced_path = Path("static/dashboard_enhanced.html")
         static_path = Path("static/dashboard.html")
         
-        if business_path.exists():
+        if clean_path.exists():
+            return FileResponse(clean_path, media_type="text/html")
+        elif business_path.exists():
             return FileResponse(business_path, media_type="text/html")
         elif enhanced_path.exists():
             return FileResponse(enhanced_path, media_type="text/html")
