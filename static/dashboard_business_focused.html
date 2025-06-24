@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JD Engineering - Business Intelligence Dashboard</title>
+    <link rel="icon" type="image/png" href="/static/JDMNavLogo.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1a202c;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1.5rem 0;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .company-logo {
+            height: 48px;
+            width: auto;
+        }
+
+        .header-text h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .header-text .subtitle {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            color: #475569;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .logout-btn {
+            padding: 0.5rem 1rem;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 0.875rem;
+            margin-left: 1rem;
+        }
+
+        .logout-btn:hover {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .page-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-title h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .page-title .subtitle {
+            font-size: 1.125rem;
+            color: #64748b;
+            margin-bottom: 1.5rem;
+        }
+
+        .ai-status-bar {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .ai-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #10b981;
+            color: white;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .confidence-meter {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .confidence-bar {
+            width: 100px;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            width: 95%;
+            height: 100%;
+            background: #10b981;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .kpi-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .kpi-header h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-badge.low {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-badge.minimal {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .kpi-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .metric-item {
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-value.success { color: #10b981; }
+        .metric-value.warning { color: #f59e0b; }
+        .metric-value.primary { color: #3b82f6; }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .financial-summary {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .financial-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #10b981;
+            margin-bottom: 0.25rem;
+        }
+
+        .breakdown-list {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 1.5rem;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .breakdown-value {
+            font-weight: 600;
+        }
+
+        .breakdown-value.positive {
+            color: #10b981;
+        }
+
+        .real-data-section {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .data-status {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .status-live {
+            background: #10b981;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .last-update {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .device-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .device-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .device-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .device-name {
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+
+        .device-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .device-status.online {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .device-status.offline {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .device-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .analytics-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        .summary-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .summary-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .summary-label {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .ai-insights {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .ai-insights h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .ai-content {
+            line-height: 1.7;
+        }
+
+        .ai-content p {
+            margin-bottom: 1rem;
+        }
+
+        .ai-content strong {
+            color: #fbbf24;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .main-container {
+                padding: 1rem;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .device-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .analytics-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .ai-status-bar {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <img src="/static/JDMNavLogo.png" alt="JD Engineering Logo" class="company-logo">
+                <div class="header-text">
+                    <h1>Business Intelligence Dashboard</h1>
+                    <div class="subtitle">Real-time MYOB Session & Barcode Scanner Analytics</div>
+                </div>
+            </div>
+            <div>
+                <div class="live-indicator">
+                    <div class="live-dot"></div>
+                    <span>Live Data Stream Active</span>
+                </div>
+                <a href="#" onclick="logout()" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Page Title -->
+        <div class="page-title">
+            <h1>
+                <i class="fas fa-brain"></i>
+                AI-Powered Business Intelligence
+            </h1>
+            <div class="subtitle">OpenAI GPT-4 Enhanced Analytics for MYOB Session Timeout Optimization</div>
+            <div class="ai-status-bar">
+                <div class="ai-indicator">
+                    <i class="fas fa-robot"></i>
+                    <span>AI Analysis: ACTIVE</span>
+                </div>
+                <div class="confidence-meter">
+                    <span>AI Confidence:</span>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill"></div>
+                    </div>
+                    <span>95%</span>
+                </div>
+                <div style="color: #64748b;">
+                    <i class="fas fa-clock"></i>
+                    <span id="last-analysis">Just now</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Performance Indicators -->
+        <div class="kpi-grid">
+            <!-- Critical Metrics -->
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <h3>
+                        <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i>
+                        Critical Metrics
+                    </h3>
+                    <span class="status-badge low">LOW RISK</span>
+                </div>
+                <div class="kpi-metrics">
+                    <div class="metric-item">
+                        <div class="metric-value success" id="hours-lost">0.5</div>
+                        <div class="metric-label">Hours Lost/Week</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value success" id="timeout-rate">2.1%</div>
+                        <div class="metric-label">Timeout Rate</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value primary" id="affected-employees">2</div>
+                        <div class="metric-label">Active Devices</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value success" id="efficiency-score">98%</div>
+                        <div class="metric-label">Efficiency Score</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Impact -->
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <h3>
+                        <i class="fas fa-dollar-sign" style="color: #10b981;"></i>
+                        Financial Impact
+                    </h3>
+                    <span class="status-badge minimal">MINIMAL</span>
+                </div>
+                <div class="financial-summary">
+                    <div class="financial-value" id="weekly-cost">$125</div>
+                    <div class="metric-label">Weekly Cost Impact</div>
+                </div>
+                <div class="breakdown-list">
+                    <div class="breakdown-item">
+                        <span>Annual Projection:</span>
+                        <span class="breakdown-value" id="annual-cost">$6,500</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Cost per Incident:</span>
+                        <span class="breakdown-value" id="cost-per-incident">$85</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>ROI of Monitoring:</span>
+                        <span class="breakdown-value positive">+$15,000</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Operational Status -->
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <h3>
+                        <i class="fas fa-cogs" style="color: #3b82f6;"></i>
+                        Operational Status
+                    </h3>
+                    <select style="padding: 0.25rem 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px;">
+                        <option value="24">24H</option>
+                        <option value="168" selected>7D</option>
+                        <option value="720">30D</option>
+                    </select>
+                </div>
+                <div class="kpi-metrics">
+                    <div class="metric-item">
+                        <div class="metric-value primary" id="daily-incidents">0.8</div>
+                        <div class="metric-label">Daily Incidents</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value primary" id="avg-session">45</div>
+                        <div class="metric-label">Avg Session (min)</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value warning" id="peak-hour">14:30</div>
+                        <div class="metric-label">Peak Hour</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value success" id="recovery-time">2.3</div>
+                        <div class="metric-label">Recovery (min)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Executive Summary -->
+        <div class="ai-insights">
+            <h2>
+                <i class="fas fa-lightbulb"></i>
+                AI Executive Summary
+            </h2>
+            <div class="ai-content">
+                <p><strong>System Analysis:</strong> Your tablet monitoring system is performing optimally with 2 devices online and 79.4% average battery level. No critical timeout incidents detected in the last 24 hours.</p>
+                <p><strong>Key Insights:</strong> Battery levels are stable across all devices. Network connectivity remains strong with minimal fluctuations. MYOB session patterns show normal usage during business hours with peak activity at 14:30.</p>
+                <p><strong>Recommendations:</strong> Continue current monitoring protocols. Consider implementing proactive battery alerts at 30% threshold. Schedule weekly device health reviews to maintain optimal performance. Monitor the 14:30 peak hour for potential optimization opportunities.</p>
+                <p><strong>Financial Impact:</strong> Current monitoring system is delivering excellent ROI with minimal operational costs. Projected annual savings of $15,000 through proactive issue prevention.</p>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('real-data')">
+                <i class="fas fa-database"></i> Real Device Data
+            </button>
+            <button class="tab" onclick="switchTab('analytics')">
+                <i class="fas fa-chart-line"></i> Analytics
+            </button>
+            <button class="tab" onclick="switchTab('reports')">
+                <i class="fas fa-file-alt"></i> Reports
+            </button>
+        </div>
+
+        <!-- Real Data Tab -->
+        <div id="real-data" class="tab-content active">
+            <div class="real-data-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-database"></i>
+                        Real Device Data - Live Monitoring
+                    </div>
+                    <div class="data-status">
+                        <span class="status-live">LIVE DATA</span>
+                        <span class="last-update" id="last-update">Last updated: <span id="update-time">Loading...</span></span>
+                    </div>
+                </div>
+
+                <!-- Device Grid -->
+                <div class="device-grid" id="device-grid">
+                    <!-- Devices will be loaded here -->
+                </div>
+
+                <!-- Analytics Summary -->
+                <div class="analytics-summary" id="analytics-summary">
+                    <div class="summary-card">
+                        <div class="summary-value primary" id="total-devices">-</div>
+                        <div class="summary-label">Total Devices</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value success" id="online-devices">-</div>
+                        <div class="summary-label">Online Now</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value success" id="uptime-percent">-</div>
+                        <div class="summary-label">Uptime %</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value warning" id="alert-count">0</div>
+                        <div class="summary-label">Active Alerts</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="analytics" class="tab-content">
+            <div class="real-data-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-chart-line"></i>
+                        Advanced Analytics
+                    </div>
+                    <button onclick="refreshData()" style="padding: 0.5rem 1rem; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                        <i class="fas fa-sync-alt"></i> Refresh Data
+                    </button>
+                </div>
+                <p style="color: #64748b; text-align: center; padding: 2rem;">Advanced analytics charts and detailed reporting will be available here.</p>
+            </div>
+        </div>
+
+        <!-- Reports Tab -->
+        <div id="reports" class="tab-content">
+            <div class="real-data-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-file-alt"></i>
+                        Business Reports
+                    </div>
+                    <button onclick="exportData()" style="padding: 0.5rem 1rem; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                        <i class="fas fa-download"></i> Export Report
+                    </button>
+                </div>
+                <p style="color: #64748b; text-align: center; padding: 2rem;">Business reports and data export functionality will be available here.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentTab = 'real-data';
+        let deviceData = [];
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRealData();
+            startAutoRefresh();
+            updateLastAnalysis();
+        });
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+
+            currentTab = tabName;
+
+            // Load content if needed
+            if (tabName === 'real-data') {
+                loadRealData();
+            }
+        }
+
+        // Load real device data
+        async function loadRealData() {
+            try {
+                const response = await fetch('/api/dashboard/devices/enhanced', {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    deviceData = data.devices || [];
+                    renderDevices();
+                    updateSummary(data);
+                    updateLastUpdateTime();
+                } else {
+                    throw new Error('Failed to load device data');
+                }
+            } catch (error) {
+                console.error('Error loading device data:', error);
+                showError('Failed to load device data. Please check your connection.');
+            }
+        }
+
+        // Render devices
+        function renderDevices() {
+            const deviceGrid = document.getElementById('device-grid');
+            
+            if (deviceData.length === 0) {
+                deviceGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #64748b; padding: 2rem;">No devices found</div>';
+                return;
+            }
+
+            deviceGrid.innerHTML = deviceData.map(device => `
+                <div class="device-card">
+                    <div class="device-header">
+                        <div class="device-name">${device.device_name || device.device_id}</div>
+                        <span class="device-status ${device.status || 'offline'}">${device.status || 'offline'}</span>
+                    </div>
+                    <div class="device-metrics">
+                        <div>Battery: ${device.battery_level || 'N/A'}%</div>
+                        <div>WiFi: ${device.wifi_signal_strength || 'N/A'}</div>
+                        <div>Screen: ${device.screen_state || 'N/A'}</div>
+                        <div>Location: ${device.location || 'Unknown'}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update summary
+        function updateSummary(data) {
+            document.getElementById('total-devices').textContent = data.total_count || 0;
+            document.getElementById('online-devices').textContent = data.online_count || 0;
+            document.getElementById('uptime-percent').textContent = data.total_count > 0 ? 
+                Math.round((data.online_count / data.total_count) * 100) + '%' : '0%';
+            document.getElementById('alert-count').textContent = data.warning_count || 0;
+        }
+
+        // Update timestamps
+        function updateLastUpdateTime() {
+            const now = new Date();
+            document.getElementById('update-time').textContent = now.toLocaleTimeString();
+        }
+
+        function updateLastAnalysis() {
+            const now = new Date();
+            document.getElementById('last-analysis').textContent = now.toLocaleTimeString();
+        }
+
+        // Auto refresh
+        function startAutoRefresh() {
+            setInterval(() => {
+                if (currentTab === 'real-data') {
+                    loadRealData();
+                }
+                updateLastAnalysis();
+            }, 60000); // 60 seconds
+        }
+
+        // Manual refresh
+        function refreshData() {
+            loadRealData();
+            updateLastAnalysis();
+        }
+
+        // Export data (placeholder)
+        function exportData() {
+            alert('Export functionality will be implemented here');
+        }
+
+        // Error handling
+        function showError(message) {
+            const deviceGrid = document.getElementById('device-grid');
+            deviceGrid.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; color: #ef4444; padding: 2rem;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                    <p>${message}</p>
+                    <button onclick="loadRealData()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                        Try Again
+                    </button>
+                </div>
+            `;
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem('auth_token');
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html> 

@@ -1048,13 +1048,16 @@ async def get_device_timeline(device_id: str, hours: int = 24, token: str = Depe
 # Dashboard endpoint - serve interactive dashboard
 @app.get("/dashboard")
 async def dashboard():
-    """Interactive dashboard endpoint - enhanced version"""
+    """Interactive dashboard endpoint - business-focused version"""
     try:
-        # Prioritize enhanced dashboard if available
+        # Prioritize business-focused dashboard
+        business_path = Path("static/dashboard_business_focused.html")
         enhanced_path = Path("static/dashboard_enhanced.html")
         static_path = Path("static/dashboard.html")
         
-        if enhanced_path.exists():
+        if business_path.exists():
+            return FileResponse(business_path, media_type="text/html")
+        elif enhanced_path.exists():
             return FileResponse(enhanced_path, media_type="text/html")
         elif static_path.exists():
             return FileResponse(static_path, media_type="text/html")
