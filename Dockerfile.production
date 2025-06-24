@@ -48,12 +48,12 @@ RUN chmod +x /usr/local/bin/healthcheck.sh
 # Switch to non-root user
 USER appuser
 
-# Expose port
+# Expose port for Railway (Railway will override with $PORT at runtime)
 EXPOSE 8000
 
-# Add health check
+# Add health check (will use runtime $PORT)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD /usr/local/bin/healthcheck.sh
+    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-# Production startup command
-CMD ["gunicorn", "main_production:app", "--worker-class", "uvicorn.workers.UvicornWorker", "--workers", "4", "--bind", "0.0.0.0:8000", "--access-logfile", "-", "--error-logfile", "-", "--log-level", "info"] 
+# Production startup command for Railway (uses $PORT env var with fallback)
+CMD gunicorn main_production:app --worker-class uvicorn.workers.UvicornWorker --workers 4 --bind 0.0.0.0:${PORT:-8000} --access-logfile - --error-logfile - --log-level info --timeout 120 --keep-alive 5 
