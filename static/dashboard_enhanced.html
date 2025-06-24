@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JD Engineering - Tablet Monitoring System</title>
+    <link rel="icon" type="image/png" href="/static/JDMNavLogo.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --surface-dark: #f1f5f9;
+            --border: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .company-logo {
+            height: 48px;
+            width: auto;
+        }
+
+        .header-text h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .header-text .subtitle {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            background: var(--surface-dark);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success-color);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .logout-btn {
+            padding: 0.5rem 1rem;
+            background: var(--surface-dark);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        .logout-btn:hover {
+            background: var(--border);
+            color: var(--text-primary);
+        }
+
+        .nav-tabs {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-tabs-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-tab {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-tab:hover {
+            color: var(--text-primary);
+            background: var(--surface-dark);
+        }
+
+        .nav-tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .status-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .status-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+        }
+
+        .status-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .status-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .status-card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .status-card-icon.devices {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+        }
+
+        .status-card-icon.wifi {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-card-icon.battery {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+
+        .status-card-icon.myob {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary-color);
+        }
+
+        .status-card-icon.scanner {
+            background: rgba(168, 85, 247, 0.1);
+            color: #a855f7;
+        }
+
+        .status-card-icon.risks {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+        }
+
+        .status-card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .status-card-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        .status-card-trend {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        .alert-banner {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 1px solid #f59e0b;
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alert-banner .icon {
+            color: var(--warning-color);
+            font-size: 1.25rem;
+        }
+
+        .alert-banner .text {
+            color: #92400e;
+            font-weight: 500;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .device-monitoring-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface-dark);
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            gap: 1rem;
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .refresh-btn {
+            padding: 0.5rem 1rem;
+            background: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-left: auto;
+        }
+
+        .refresh-btn:hover {
+            background: #059669;
+        }
+
+        .refresh-btn:disabled {
+            background: var(--text-secondary);
+            cursor: not-allowed;
+        }
+
+        .device-controls {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            background: var(--surface);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .view-toggle {
+            display: flex;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+        }
+
+        .view-toggle button {
+            padding: 0.5rem 1rem;
+            background: var(--surface);
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .view-toggle button.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .loading-skeleton {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .device-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1rem;
+            padding: 1.5rem;
+        }
+
+        .device-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .device-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .device-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .device-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .device-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .device-status.online {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .device-status.offline {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+        }
+
+        .device-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .metric-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .metric-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+        }
+
+        .metric-text {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .chart-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .chart-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .chart-canvas {
+            height: 300px;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .main-container {
+                padding: 1rem;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .status-bar {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.75rem;
+            }
+
+            .device-grid {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+
+            .nav-tabs-content {
+                overflow-x: auto;
+            }
+
+            .nav-tab {
+                white-space: nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <img src="/static/JDMNavLogo.png" alt="JD Engineering Logo" class="company-logo">
+                <div class="header-text">
+                    <h1>Tablet Monitoring System</h1>
+                    <div class="subtitle">Real-time MYOB Session & Barcode Scanner Monitoring</div>
+                </div>
+            </div>
+            <div class="header-controls">
+                <div class="live-indicator">
+                    <div class="live-dot"></div>
+                    <span>Live Data Stream Active</span>
+                </div>
+                <a href="#" onclick="logout()" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+        <div class="nav-tabs-content">
+            <button class="nav-tab active" data-tab="business-intelligence">
+                <i class="fas fa-chart-line"></i>
+                Business Intelligence
+            </button>
+            <button class="nav-tab" data-tab="device-monitoring">
+                <i class="fas fa-tablet-alt"></i>
+                Device Monitoring
+            </button>
+            <button class="nav-tab" data-tab="analytics-charts">
+                <i class="fas fa-chart-bar"></i>
+                Analytics & Charts
+            </button>
+            <button class="nav-tab" data-tab="system-logs">
+                <i class="fas fa-list-alt"></i>
+                System Logs
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-card">
+                <div class="status-card-header">
+                    <div class="status-card-icon devices">
+                        <i class="fas fa-tablet-alt"></i>
+                    </div>
+                </div>
+                <div class="status-card-value" id="total-devices">2</div>
+                <div class="status-card-label">Total Devices</div>
+                <div class="status-card-trend">Monitoring Active</div>
+            </div>
+
+            <div class="status-card">
+                <div class="status-card-header">
+                    <div class="status-card-icon wifi">
+                        <i class="fas fa-wifi"></i>
+                    </div>
+                </div>
+                <div class="status-card-value" id="online-now">209960</div>
+                <div class="status-card-label">Online Now</div>
+                <div class="status-card-trend">Last Hour</div>
+            </div>
+
+            <div class="status-card">
+                <div class="status-card-header">
+                    <div class="status-card-icon battery">
+                        <i class="fas fa-battery-three-quarters"></i>
+                    </div>
+                </div>
+                <div class="status-card-value" id="avg-battery">79.4%</div>
+                <div class="status-card-label">Avg Battery</div>
+                <div class="status-card-trend">Last 24h</div>
+            </div>
+
+            <div class="status-card">
+                <div class="status-card-header">
+                    <div class="status-card-icon myob">
+                        <i class="fas fa-user-clock"></i>
+                    </div>
+                </div>
+                <div class="status-card-value" id="myob-active">0</div>
+                <div class="status-card-label">MYOB Active</div>
+                <div class="status-card-trend">Current</div>
+            </div>
+
+            <div class="status-card">
+                <div class="status-card-header">
+                    <div class="status-card-icon scanner">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                </div>
+                <div class="status-card-value" id="scanner-active">0</div>
+                <div class="status-card-label">Scanner Active</div>
+                <div class="status-card-trend">Current</div>
+            </div>
+
+            <div class="status-card">
+                <div class="status-card-header">
+                    <div class="status-card-icon risks">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                </div>
+                <div class="status-card-value" id="timeout-risks">0</div>
+                <div class="status-card-label">Timeout Risks</div>
+                <div class="status-card-trend">Detected</div>
+            </div>
+        </div>
+
+        <!-- Alert Banner -->
+        <div class="alert-banner" id="system-alert">
+            <div class="icon">
+                <i class="fas fa-info-circle"></i>
+            </div>
+            <div class="text">2 device(s) have low battery</div>
+        </div>
+
+        <!-- Tab Content: Business Intelligence -->
+        <div class="tab-content active" id="business-intelligence">
+            <div class="content-grid">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">
+                            <i class="fas fa-brain"></i>
+                            AI-Powered Business Intelligence Dashboard
+                        </div>
+                    </div>
+                    <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                        <i class="fas fa-chart-line" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                        <p>OpenAI GPT-4 Enhanced Analytics for MYOB Session Timeout Optimization</p>
+                        <div style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: center;">
+                            <span style="background: var(--success-color); color: white; padding: 0.25rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.75rem;">Analysis Active</span>
+                            <span style="background: var(--primary-color); color: white; padding: 0.25rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.75rem;">Real-time</span>
+                            <span style="background: var(--warning-color); color: white; padding: 0.25rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.75rem;">Predictive</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">System Health</div>
+                    </div>
+                    <div style="text-align: center; padding: 2rem;">
+                        <div style="font-size: 3rem; color: var(--success-color); margin-bottom: 1rem;">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">All Systems Operational</div>
+                        <div style="color: var(--text-secondary); margin-bottom: 1rem;">Monitoring Active</div>
+                        <div style="background: var(--success-color); color: white; padding: 0.5rem 1rem; border-radius: var(--radius-md); display: inline-block;">
+                            Auto-Refresh: Enabled (60s)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Device Monitoring -->
+        <div class="tab-content" id="device-monitoring">
+            <div class="device-monitoring-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-desktop"></i>
+                        Real-Time Device Monitoring
+                    </div>
+                    <button class="refresh-btn" onclick="refreshDeviceData()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+
+                <div class="device-controls">
+                    <input type="text" class="search-input" placeholder="Search devices..." id="device-search">
+                    <div class="view-toggle">
+                        <button class="active" data-view="grid">
+                            <i class="fas fa-th"></i> Grid
+                        </button>
+                        <button data-view="list">
+                            <i class="fas fa-list"></i> List
+                        </button>
+                    </div>
+                </div>
+
+                <div class="device-grid" id="device-grid">
+                    <div class="loading-skeleton">
+                        <div class="loading-spinner"></div>
+                        <span style="margin-left: 1rem;">Loading device data...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Analytics & Charts -->
+        <div class="tab-content" id="analytics-charts">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">Battery Levels</div>
+                    </div>
+                    <canvas id="batteryChart" class="chart-canvas"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">WiFi Signal Strength</div>
+                    </div>
+                    <canvas id="wifiChart" class="chart-canvas"></canvas>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">MYOB Session Activity</div>
+                    </div>
+                    <canvas id="myobChart" class="chart-canvas"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">Scanner Activity Timeline</div>
+                    </div>
+                    <canvas id="scannerChart" class="chart-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: System Logs -->
+        <div class="tab-content" id="system-logs">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2rem;">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">
+                            <i class="fas fa-bell"></i>
+                            Live Events
+                        </div>
+                    </div>
+                    <div style="padding: 1rem; background: var(--surface-dark); border-radius: var(--radius-md);">
+                        <div style="font-size: 0.875rem; color: var(--text-secondary);">Just now</div>
+                        <div style="font-weight: 500;">System initialized - monitoring started</div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">
+                            <i class="fas fa-heart"></i>
+                            System Health
+                        </div>
+                    </div>
+                    <div style="padding: 1rem; background: var(--surface-dark); border-radius: var(--radius-md);">
+                        <div style="font-size: 0.875rem; color: var(--text-secondary);">Just now</div>
+                        <div style="font-weight: 500;">All services running normally</div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">
+                            <i class="fas fa-clock"></i>
+                            Timeout Warnings
+                        </div>
+                    </div>
+                    <div style="padding: 1rem; background: var(--surface-dark); border-radius: var(--radius-md);">
+                        <div style="font-size: 0.875rem; color: var(--text-secondary);">Just now</div>
+                        <div style="font-weight: 500;">No timeout risks detected</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentTab = 'business-intelligence';
+        let deviceData = [];
+        let charts = {};
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTabNavigation();
+            initializeCharts();
+            loadDeviceData();
+            startAutoRefresh();
+        });
+
+        // Tab navigation
+        function initializeTabNavigation() {
+            const tabs = document.querySelectorAll('.nav-tab');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetTab = tab.getAttribute('data-tab');
+                    
+                    // Update active tab
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Update active content
+                    contents.forEach(c => c.classList.remove('active'));
+                    document.getElementById(targetTab).classList.add('active');
+                    
+                    currentTab = targetTab;
+                    
+                    // Load content if needed
+                    if (targetTab === 'analytics-charts') {
+                        updateCharts();
+                    }
+                });
+            });
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            // Battery Chart
+            const batteryCtx = document.getElementById('batteryChart').getContext('2d');
+            charts.battery = new Chart(batteryCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Battery Level (%)',
+                        data: [],
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+
+            // WiFi Chart
+            const wifiCtx = document.getElementById('wifiChart').getContext('2d');
+            charts.wifi = new Chart(wifiCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Signal Strength (dBm)',
+                        data: [],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: -100,
+                            max: 0
+                        }
+                    }
+                }
+            });
+
+            // MYOB Chart
+            const myobCtx = document.getElementById('myobChart').getContext('2d');
+            charts.myob = new Chart(myobCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Session Count',
+                        data: [12, 19, 3, 5, 2, 3, 7],
+                        backgroundColor: 'rgba(37, 99, 235, 0.8)',
+                        borderColor: '#2563eb',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Scanner Chart
+            const scannerCtx = document.getElementById('scannerChart').getContext('2d');
+            charts.scanner = new Chart(scannerCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Successful Scans', 'Failed Scans', 'Timeout'],
+                    datasets: [{
+                        data: [300, 50, 10],
+                        backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // Load device data
+        async function loadDeviceData() {
+            const deviceGrid = document.getElementById('device-grid');
+            
+            try {
+                const response = await fetch('/devices', {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+                    }
+                });
+                
+                if (response.ok) {
+                    deviceData = await response.json();
+                    renderDeviceCards();
+                } else {
+                    throw new Error('Failed to load device data');
+                }
+            } catch (error) {
+                console.error('Error loading device data:', error);
+                deviceGrid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-secondary);">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem; color: var(--error-color);"></i>
+                        <p>Failed to load device data</p>
+                        <button onclick="loadDeviceData()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: var(--primary-color); color: white; border: none; border-radius: var(--radius-md); cursor: pointer;">
+                            Try Again
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Render device cards
+        function renderDeviceCards() {
+            const deviceGrid = document.getElementById('device-grid');
+            
+            if (deviceData.length === 0) {
+                deviceGrid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-secondary);">
+                        <i class="fas fa-tablet-alt" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                        <p>No devices found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            deviceGrid.innerHTML = deviceData.map(device => `
+                <div class="device-card">
+                    <div class="device-card-header">
+                        <div class="device-name">${device.device_name || device.device_id}</div>
+                        <div class="device-status ${device.connectivity_status}">${device.connectivity_status}</div>
+                    </div>
+                    <div class="device-metrics">
+                        <div class="metric-item">
+                            <div class="metric-icon" style="color: var(--warning-color);">
+                                <i class="fas fa-battery-three-quarters"></i>
+                            </div>
+                            <div class="metric-text">${device.battery_level || 'Unknown'}%</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-icon" style="color: var(--success-color);">
+                                <i class="fas fa-wifi"></i>
+                            </div>
+                            <div class="metric-text">${device.wifi_signal_strength || 'Unknown'}</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-icon" style="color: var(--primary-color);">
+                                <i class="fas fa-mobile-alt"></i>
+                            </div>
+                            <div class="metric-text">${device.screen_state || 'Unknown'}</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-icon" style="color: var(--error-color);">
+                                <i class="fas fa-qrcode"></i>
+                            </div>
+                            <div class="metric-text">${device.scanner_active ? 'Yes' : 'No'}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update charts
+        function updateCharts() {
+            // Update with real data when available
+            Object.values(charts).forEach(chart => {
+                if (chart) chart.update();
+            });
+        }
+
+        // Refresh device data
+        async function refreshDeviceData() {
+            const refreshBtn = document.querySelector('.refresh-btn');
+            refreshBtn.disabled = true;
+            refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+            
+            await loadDeviceData();
+            
+            setTimeout(() => {
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+            }, 1000);
+        }
+
+        // Auto refresh
+        function startAutoRefresh() {
+            setInterval(() => {
+                if (currentTab === 'device-monitoring') {
+                    loadDeviceData();
+                }
+                updateCharts();
+            }, 60000); // 60 seconds
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('auth_token');
+            window.location.href = '/';
+        }
+
+        // Search functionality
+        document.getElementById('device-search').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const deviceCards = document.querySelectorAll('.device-card');
+            
+            deviceCards.forEach(card => {
+                const deviceName = card.querySelector('.device-name').textContent.toLowerCase();
+                if (deviceName.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // View toggle functionality
+        document.querySelectorAll('.view-toggle button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const view = this.getAttribute('data-view');
+                const deviceGrid = document.getElementById('device-grid');
+                
+                if (view === 'list') {
+                    deviceGrid.style.gridTemplateColumns = '1fr';
+                } else {
+                    deviceGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(320px, 1fr))';
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

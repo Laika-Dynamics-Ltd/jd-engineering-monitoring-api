@@ -1048,11 +1048,15 @@ async def get_device_timeline(device_id: str, hours: int = 24, token: str = Depe
 # Dashboard endpoint - serve interactive dashboard
 @app.get("/dashboard")
 async def dashboard():
-    """Interactive dashboard endpoint"""
+    """Interactive dashboard endpoint - enhanced version"""
     try:
-        # Try to serve the static dashboard file
+        # Prioritize enhanced dashboard if available
+        enhanced_path = Path("static/dashboard_enhanced.html")
         static_path = Path("static/dashboard.html")
-        if static_path.exists():
+        
+        if enhanced_path.exists():
+            return FileResponse(enhanced_path, media_type="text/html")
+        elif static_path.exists():
             return FileResponse(static_path, media_type="text/html")
         else:
             # Fallback HTML if static file doesn't exist
@@ -1865,6 +1869,417 @@ async def generate_business_forecast(historical_data, forecast_days):
         ],
         'confidence': {'forecast_accuracy': '85%', 'data_quality': 'HIGH'}
     }
+
+# Enhanced API endpoints for improved dashboard
+@app.get("/api/dashboard/status")
+async def get_dashboard_status(token: str = Depends(verify_token)):
+    """Get real-time dashboard status summary"""
+    try:
+        async with db_pool.acquire() as conn:
+            # Get device count and status
+            total_devices = await conn.fetchval("SELECT COUNT(*) FROM device_registry") or 0
+            
+            # Get recent activity (last 5 minutes)
+            recent_activity = await conn.fetchval("""
+                SELECT COUNT(*) FROM device_metrics 
+                WHERE timestamp > NOW() - INTERVAL '5 minutes'
+            """) or 0
+            
+            # Calculate average battery from recent data
+            avg_battery = await conn.fetchval("""
+                SELECT AVG(battery_level) FROM device_metrics 
+                WHERE battery_level IS NOT NULL 
+                AND timestamp > NOW() - INTERVAL '1 hour'
+            """)
+            
+            # Get low battery devices
+            low_battery_count = await conn.fetchval("""
+                SELECT COUNT(DISTINCT device_id) FROM device_metrics 
+                WHERE battery_level < 20 
+                AND timestamp > NOW() - INTERVAL '1 hour'
+            """) or 0
+            
+            # Get offline devices (no activity in last 10 minutes)
+            offline_devices = await conn.fetchval("""
+                SELECT COUNT(*) FROM device_registry dr
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM device_metrics dm 
+                    WHERE dm.device_id = dr.device_id 
+                    AND dm.timestamp > NOW() - INTERVAL '10 minutes'
+                )
+            """) or 0
+            
+            online_devices = total_devices - offline_devices
+            
+            return {
+                "total_devices": total_devices,
+                "online_devices": online_devices,
+                "offline_devices": offline_devices,
+                "recent_activity": recent_activity,
+                "avg_battery": round(avg_battery, 1) if avg_battery else 0,
+                "low_battery_count": low_battery_count,
+                "myob_active": 0,  # Placeholder for MYOB session count
+                "scanner_active": 0,  # Placeholder for scanner activity
+                "timeout_risks": 0,  # Placeholder for timeout risk analysis
+                "system_health": "operational" if online_devices > 0 else "warning",
+                "last_updated": datetime.now(timezone.utc).isoformat()
+            }
+            
+    except Exception as e:
+        logger.error(f"Dashboard status error: {str(e)}")
+        return {
+            "error": "Status temporarily unavailable",
+            "total_devices": 0,
+            "online_devices": 0,
+            "system_health": "error",
+            "last_updated": datetime.now(timezone.utc).isoformat()
+        }
+
+@app.get("/api/dashboard/alerts")
+async def get_dashboard_alerts(token: str = Depends(verify_token)):
+    """Get current system alerts and warnings"""
+    try:
+        async with db_pool.acquire() as conn:
+            alerts = []
+            
+            # Check for low battery devices
+            low_battery_devices = await conn.fetch("""
+                SELECT DISTINCT device_id, MIN(battery_level) as min_battery
+                FROM device_metrics 
+                WHERE battery_level < 30 
+                AND timestamp > NOW() - INTERVAL '1 hour'
+                GROUP BY device_id
+                ORDER BY min_battery ASC
+            """)
+            
+            if low_battery_devices:
+                count = len(low_battery_devices)
+                alerts.append({
+                    "type": "warning",
+                    "icon": "fas fa-battery-quarter",
+                    "message": f"{count} device(s) have low battery",
+                    "details": [f"{row['device_id']}: {row['min_battery']}%" for row in low_battery_devices[:3]],
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                })
+            
+            # Check for offline devices
+            offline_devices = await conn.fetch("""
+                SELECT device_id, device_name 
+                FROM device_registry dr
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM device_metrics dm 
+                    WHERE dm.device_id = dr.device_id 
+                    AND dm.timestamp > NOW() - INTERVAL '15 minutes'
+                )
+                LIMIT 5
+            """)
+            
+            if offline_devices:
+                count = len(offline_devices)
+                alerts.append({
+                    "type": "error",
+                    "icon": "fas fa-wifi-slash",
+                    "message": f"{count} device(s) appear offline",
+                    "details": [f"{row['device_name'] or row['device_id']}" for row in offline_devices],
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                })
+            
+            # If no alerts, add a positive message
+            if not alerts:
+                alerts.append({
+                    "type": "success",
+                    "icon": "fas fa-check-circle",
+                    "message": "All systems operational",
+                    "details": ["No issues detected"],
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                })
+            
+            return {
+                "alerts": alerts,
+                "alert_count": len([a for a in alerts if a["type"] in ["warning", "error"]]),
+                "last_updated": datetime.now(timezone.utc).isoformat()
+            }
+            
+    except Exception as e:
+        logger.error(f"Dashboard alerts error: {str(e)}")
+        return {
+            "alerts": [{
+                "type": "error",
+                "icon": "fas fa-exclamation-triangle",
+                "message": "Alert system temporarily unavailable",
+                "details": [str(e)],
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }],
+            "alert_count": 1,
+            "last_updated": datetime.now(timezone.utc).isoformat()
+        }
+
+@app.get("/api/dashboard/devices/enhanced")
+async def get_enhanced_device_list(token: str = Depends(verify_token)):
+    """Get enhanced device list with real-time status and metrics"""
+    try:
+        async with db_pool.acquire() as conn:
+            # Get devices with latest metrics
+            devices = await conn.fetch("""
+                WITH latest_metrics AS (
+                    SELECT DISTINCT ON (device_id) 
+                        device_id,
+                        battery_level,
+                        timestamp as last_seen
+                    FROM device_metrics 
+                    ORDER BY device_id, timestamp DESC
+                ),
+                latest_network AS (
+                    SELECT DISTINCT ON (device_id)
+                        device_id,
+                        wifi_signal_strength,
+                        connectivity_status
+                    FROM network_metrics
+                    ORDER BY device_id, timestamp DESC
+                ),
+                latest_app AS (
+                    SELECT DISTINCT ON (device_id)
+                        device_id,
+                        screen_state,
+                        app_foreground
+                    FROM app_metrics
+                    ORDER BY device_id, timestamp DESC
+                )
+                SELECT 
+                    dr.device_id,
+                    dr.device_name,
+                    dr.location,
+                    lm.battery_level,
+                    lm.last_seen,
+                    ln.wifi_signal_strength,
+                    ln.connectivity_status,
+                    la.screen_state,
+                    la.app_foreground,
+                    CASE 
+                        WHEN lm.last_seen > NOW() - INTERVAL '5 minutes' THEN 'online'
+                        WHEN lm.last_seen > NOW() - INTERVAL '15 minutes' THEN 'warning'
+                        ELSE 'offline'
+                    END as device_status
+                FROM device_registry dr
+                LEFT JOIN latest_metrics lm ON dr.device_id = lm.device_id
+                LEFT JOIN latest_network ln ON dr.device_id = ln.device_id  
+                LEFT JOIN latest_app la ON dr.device_id = la.device_id
+                ORDER BY dr.device_name, dr.device_id
+            """)
+            
+            enhanced_devices = []
+            for device in devices:
+                # Calculate time since last seen
+                last_seen = device['last_seen']
+                if last_seen:
+                    time_diff = datetime.now(timezone.utc) - last_seen.replace(tzinfo=timezone.utc)
+                    minutes_ago = int(time_diff.total_seconds() / 60)
+                    last_seen_text = f"{minutes_ago}m ago" if minutes_ago < 60 else f"{int(minutes_ago/60)}h ago"
+                else:
+                    last_seen_text = "Never"
+                
+                # Determine overall health score
+                health_score = 100
+                if device['battery_level'] and device['battery_level'] < 20:
+                    health_score -= 30
+                elif device['battery_level'] and device['battery_level'] < 50:
+                    health_score -= 15
+                
+                if device['connectivity_status'] == 'offline':
+                    health_score -= 40
+                elif device['connectivity_status'] == 'limited':
+                    health_score -= 20
+                
+                enhanced_devices.append({
+                    "device_id": device['device_id'],
+                    "device_name": device['device_name'] or device['device_id'],
+                    "location": device['location'] or "Unknown",
+                    "status": device['device_status'],
+                    "battery_level": device['battery_level'],
+                    "wifi_signal_strength": device['wifi_signal_strength'],
+                    "connectivity_status": device['connectivity_status'] or "unknown",
+                    "screen_state": device['screen_state'] or "unknown",
+                    "app_foreground": device['app_foreground'] or "unknown",
+                    "last_seen": last_seen.isoformat() if last_seen else None,
+                    "last_seen_text": last_seen_text,
+                    "health_score": max(0, health_score),
+                    "myob_active": False,  # Placeholder
+                    "scanner_active": False  # Placeholder
+                })
+            
+            return {
+                "devices": enhanced_devices,
+                "total_count": len(enhanced_devices),
+                "online_count": len([d for d in enhanced_devices if d["status"] == "online"]),
+                "warning_count": len([d for d in enhanced_devices if d["status"] == "warning"]),
+                "offline_count": len([d for d in enhanced_devices if d["status"] == "offline"]),
+                "last_updated": datetime.now(timezone.utc).isoformat()
+            }
+            
+    except Exception as e:
+        logger.error(f"Enhanced device list error: {str(e)}")
+        return {
+            "devices": [],
+            "total_count": 0,
+            "error": "Device data temporarily unavailable",
+            "last_updated": datetime.now(timezone.utc).isoformat()
+        }
+
+@app.get("/api/dashboard/charts/realtime")
+async def get_realtime_chart_data(hours: int = 24, token: str = Depends(verify_token)):
+    """Get real-time chart data for dashboard visualizations"""
+    try:
+        async with db_pool.acquire() as conn:
+            # Battery levels over time
+            battery_data = await conn.fetch("""
+                SELECT 
+                    DATE_TRUNC('hour', timestamp) as hour,
+                    AVG(battery_level) as avg_battery,
+                    MIN(battery_level) as min_battery,
+                    MAX(battery_level) as max_battery
+                FROM device_metrics 
+                WHERE battery_level IS NOT NULL 
+                AND timestamp > NOW() - INTERVAL '%s hours'
+                GROUP BY hour
+                ORDER BY hour
+            """, hours)
+            
+            # WiFi signal strength over time
+            wifi_data = await conn.fetch("""
+                SELECT 
+                    DATE_TRUNC('hour', timestamp) as hour,
+                    AVG(wifi_signal_strength) as avg_signal,
+                    COUNT(*) as measurements
+                FROM network_metrics 
+                WHERE wifi_signal_strength IS NOT NULL 
+                AND timestamp > NOW() - INTERVAL '%s hours'
+                GROUP BY hour
+                ORDER BY hour
+            """, hours)
+            
+            # Device activity over time
+            activity_data = await conn.fetch("""
+                SELECT 
+                    DATE_TRUNC('hour', timestamp) as hour,
+                    COUNT(DISTINCT device_id) as active_devices,
+                    COUNT(*) as total_metrics
+                FROM device_metrics 
+                WHERE timestamp > NOW() - INTERVAL '%s hours'
+                GROUP BY hour
+                ORDER BY hour
+            """, hours)
+            
+            return {
+                "battery_chart": {
+                    "labels": [row['hour'].isoformat() for row in battery_data],
+                    "datasets": [{
+                        "label": "Average Battery %",
+                        "data": [float(row['avg_battery']) if row['avg_battery'] else 0 for row in battery_data],
+                        "borderColor": "#f59e0b",
+                        "backgroundColor": "rgba(245, 158, 11, 0.1)"
+                    }]
+                },
+                "wifi_chart": {
+                    "labels": [row['hour'].isoformat() for row in wifi_data],
+                    "datasets": [{
+                        "label": "WiFi Signal (dBm)",
+                        "data": [float(row['avg_signal']) if row['avg_signal'] else 0 for row in wifi_data],
+                        "borderColor": "#10b981",
+                        "backgroundColor": "rgba(16, 185, 129, 0.1)"
+                    }]
+                },
+                "activity_chart": {
+                    "labels": [row['hour'].isoformat() for row in activity_data],
+                    "datasets": [{
+                        "label": "Active Devices",
+                        "data": [int(row['active_devices']) for row in activity_data],
+                        "borderColor": "#2563eb",
+                        "backgroundColor": "rgba(37, 99, 235, 0.1)"
+                    }]
+                },
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "period_hours": hours
+            }
+            
+    except Exception as e:
+        logger.error(f"Realtime chart data error: {str(e)}")
+        return {
+            "battery_chart": {"labels": [], "datasets": []},
+            "wifi_chart": {"labels": [], "datasets": []},
+            "activity_chart": {"labels": [], "datasets": []},
+            "error": "Chart data temporarily unavailable",
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "period_hours": hours
+        }
+
+@app.post("/api/dashboard/export")
+async def export_dashboard_data(
+    format: str = "json",
+    hours: int = 24,
+    token: str = Depends(verify_token)
+):
+    """Export dashboard data in various formats"""
+    try:
+        async with db_pool.acquire() as conn:
+            # Get comprehensive export data
+            devices = await conn.fetch("""
+                SELECT dr.*, 
+                       dm.battery_level, dm.timestamp as last_metrics,
+                       nm.connectivity_status, nm.wifi_signal_strength
+                FROM device_registry dr
+                LEFT JOIN LATERAL (
+                    SELECT battery_level, timestamp 
+                    FROM device_metrics 
+                    WHERE device_id = dr.device_id 
+                    ORDER BY timestamp DESC LIMIT 1
+                ) dm ON true
+                LEFT JOIN LATERAL (
+                    SELECT connectivity_status, wifi_signal_strength
+                    FROM network_metrics 
+                    WHERE device_id = dr.device_id 
+                    ORDER BY timestamp DESC LIMIT 1
+                ) nm ON true
+            """)
+            
+            export_data = {
+                "export_info": {
+                    "generated_at": datetime.now(timezone.utc).isoformat(),
+                    "period_hours": hours,
+                    "format": format,
+                    "total_devices": len(devices)
+                },
+                "devices": [dict(device) for device in devices],
+                "summary": {
+                    "online_devices": len([d for d in devices if d['connectivity_status'] == 'online']),
+                    "avg_battery": sum(d['battery_level'] for d in devices if d['battery_level']) / max(1, len([d for d in devices if d['battery_level']])) if devices else 0
+                }
+            }
+            
+            if format.lower() == "csv":
+                # Convert to CSV format
+                import io
+                import csv
+                
+                output = io.StringIO()
+                if devices:
+                    writer = csv.DictWriter(output, fieldnames=devices[0].keys())
+                    writer.writeheader()
+                    writer.writerows([dict(device) for device in devices])
+                
+                from fastapi.responses import Response
+                return Response(
+                    content=output.getvalue(),
+                    media_type="text/csv",
+                    headers={"Content-Disposition": f"attachment; filename=dashboard_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"}
+                )
+            else:
+                return export_data
+                
+    except Exception as e:
+        logger.error(f"Export error: {str(e)}")
+        return {"error": "Export temporarily unavailable", "timestamp": datetime.now(timezone.utc).isoformat()}
+
+# ... existing code ...
 
 # Railway deployment configuration
 # Updated with comprehensive AI business intelligence endpoints
