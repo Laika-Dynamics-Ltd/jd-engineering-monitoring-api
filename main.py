@@ -34,30 +34,30 @@ async def lifespan(app: FastAPI):
     """Manage application lifecycle - startup and shutdown"""
     global db_pool
     
-    # Startup - Create database connection pool
+    # Startup - Create database connection pool (optional for local dev)
     try:
         # Railway provides DATABASE_URL automatically for PostgreSQL
         database_url = os.getenv("DATABASE_URL")
         if not database_url:
-            logger.error("DATABASE_URL environment variable not found")
-            raise Exception("Database configuration missing")
+            logger.warning("DATABASE_URL environment variable not found - running in local mode without database")
+            db_pool = None
+        else:
+            # Railway PostgreSQL connection
+            db_pool = await asyncpg.create_pool(
+                database_url,
+                min_size=2,
+                max_size=10,
+                command_timeout=60
+            )
+            logger.info("✅ Database connection pool created successfully")
             
-        # Railway PostgreSQL connection
-        db_pool = await asyncpg.create_pool(
-            database_url,
-            min_size=2,
-            max_size=10,
-            command_timeout=60
-        )
-        logger.info("✅ Database connection pool created successfully")
-        
-        # Initialize database tables
-        await init_database()
-        logger.info("✅ Database tables initialized")
+            # Initialize database tables
+            await init_database()
+            logger.info("✅ Database tables initialized")
         
     except Exception as e:
-        logger.error(f"❌ Failed to initialize database: {str(e)}")
-        raise
+        logger.warning(f"⚠️ Database initialization failed, continuing without database: {str(e)}")
+        db_pool = None
     
     yield
     
@@ -152,6 +152,10 @@ class TabletData(BaseModel):
 # Database initialization for Railway PostgreSQL
 async def init_database():
     """Initialize all required database tables with proper indexes"""
+    if not db_pool:
+        logger.warning("No database pool available, skipping table initialization")
+        return
+        
     async with db_pool.acquire() as conn:
         try:
             # Create extension for better timestamp handling
@@ -290,15 +294,20 @@ async def global_exception_handler(request: Request, exc: Exception):
 async def health_check():
     """Health check endpoint for Railway deployment monitoring"""
     try:
-        # Test database connection
-        async with db_pool.acquire() as conn:
-            await conn.fetchval("SELECT 1")
+        if db_pool:
+            # Test database connection
+            async with db_pool.acquire() as conn:
+                await conn.fetchval("SELECT 1")
+            database_status = "connected"
+        else:
+            database_status = "not_configured"
         
         return {
             "status": "healthy",
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "database": "connected",
-            "environment": os.getenv("RAILWAY_ENVIRONMENT", "unknown")
+            "database": database_status,
+            "environment": os.getenv("RAILWAY_ENVIRONMENT", "local"),
+            "mode": "local_dev" if not db_pool else "production"
         }
     except Exception as e:
         logger.error(f"Health check failed: {str(e)}")
@@ -1050,9 +1059,16 @@ async def get_device_timeline(device_id: str, hours: int = 24, token: str = Depe
 async def dashboard():
     """Interactive dashboard endpoint"""
     try:
-        # Try to serve the static dashboard file
+        # Prioritize enterprise-grade dashboard files
+        clean_path = Path("static/dashboard_clean.html")
+        backup_path = Path("static/dashboard_backup.html")
         static_path = Path("static/dashboard.html")
-        if static_path.exists():
+        
+        if clean_path.exists():
+            return FileResponse(clean_path, media_type="text/html")
+        elif backup_path.exists():
+            return FileResponse(backup_path, media_type="text/html")
+        elif static_path.exists():
             return FileResponse(static_path, media_type="text/html")
         else:
             # Fallback HTML if static file doesn't exist

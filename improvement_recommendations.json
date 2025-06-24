@@ -1,0 +1,12 @@
+{
+  "critical": [],
+  "high": [
+    {
+      "category": "Functionality",
+      "issue": "Refresh button not working in chromium",
+      "solution": "Fix JavaScript event handlers, add proper error handling"
+    }
+  ],
+  "medium": [],
+  "low": []
+}
