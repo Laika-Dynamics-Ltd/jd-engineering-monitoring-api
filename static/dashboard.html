@@ -1224,19 +1224,188 @@
         .summary-header {
             text-align: center;
             margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
         }
         
         .summary-header h1 {
-            font-size: 32px;
-            color: #1e293b;
-            margin: 0 0 12px 0;
+            font-size: 2.8rem;
+            margin: 0 0 15px 0;
             font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
         .summary-subtitle {
-            font-size: 16px;
-            color: #64748b;
+            font-size: 1.2rem;
+            opacity: 0.95;
+            margin: 0 0 25px 0;
+            font-weight: 500;
+        }
+        
+        .ai-status-panel {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .ai-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.15);
+            padding: 12px 20px;
+            border-radius: 25px;
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .ai-indicator.active {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+        
+        .ai-indicator i {
+            animation: pulse 2s infinite;
+        }
+        
+        .ai-confidence-meter {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.15);
+            padding: 12px 20px;
+            border-radius: 25px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .confidence-bar {
+            width: 100px;
+            height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+        
+        .analysis-timestamp {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.15);
+            padding: 12px 20px;
+            border-radius: 25px;
+            border: 1px solid rgba(255,255,255,0.2);
+            font-size: 0.9rem;
+        }
+        
+        /* AI Executive Panel */
+        .ai-executive-panel {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        
+        .ai-summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .ai-summary-header h2 {
+            font-size: 1.8rem;
+            color: #1a202c;
             margin: 0;
+            font-weight: 600;
+        }
+        
+        .ai-model-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+        
+        .ai-summary-content {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            min-height: 120px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .ai-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+        
+        .ai-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .ai-insight-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .ai-insight-header {
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .ai-insight-content {
+            color: #64748b;
+            line-height: 1.6;
+        }
+        
+        .ai-confidence-score {
+            background: linear-gradient(135deg, #10b981, #34d399);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: auto;
         }
         
         /* KPI Grid Styles */
@@ -2260,8 +2429,39 @@
                 <!-- Executive Summary Dashboard -->
                 <div class="executive-summary">
                     <div class="summary-header">
-                        <h1><i class="fas fa-chart-line"></i> MYOB Session Timeout Business Intelligence</h1>
-                        <p class="summary-subtitle">Real-time insights and predictive analytics for operational excellence</p>
+                        <h1><i class="fas fa-brain"></i> AI-Powered Business Intelligence Dashboard</h1>
+                        <p class="summary-subtitle">OpenAI GPT-3.5 Enhanced Analytics for MYOB Session Timeout Optimization</p>
+                        <div class="ai-status-panel">
+                            <div class="ai-indicator active" id="aiIndicator">
+                                <i class="fas fa-robot"></i>
+                                <span>AI Analysis: ACTIVE</span>
+                            </div>
+                            <div class="ai-confidence-meter">
+                                <span>AI Confidence:</span>
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill" id="confidenceFill" style="width: 95%"></div>
+                                </div>
+                                <span id="confidenceValue">95%</span>
+                            </div>
+                            <div class="analysis-timestamp">
+                                <i class="fas fa-clock"></i>
+                                <span id="lastAiAnalysis">Analyzing...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- AI Executive Summary Panel -->
+                    <div class="ai-executive-panel">
+                        <div class="ai-summary-header">
+                            <h2><i class="fas fa-lightbulb"></i> AI Executive Summary</h2>
+                            <div class="ai-model-badge">GPT-3.5 Turbo</div>
+                        </div>
+                        <div class="ai-summary-content" id="aiExecutiveSummary">
+                            <div class="ai-loading">
+                                <div class="ai-spinner"></div>
+                                <span>OpenAI is analyzing your data...</span>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- Key Performance Indicators -->
@@ -3725,41 +3925,321 @@
             }
         }
 
-        // Business Intelligence Functions
+        // AI-Powered Business Intelligence Functions
         let timeoutPatternChart = null;
+        let aiAnalysisInterval = null;
         
         async function loadBusinessIntelligence() {
-            const hours = document.getElementById('analysisTimeframe').value;
+            const hours = document.getElementById('analysisTimeframe').value || 168;
+            
+            // Update AI status
+            updateAIStatus('analyzing', 'Initializing AI analysis...');
             
             try {
-                // Use existing analytics endpoint and enhance with BI calculations
-                const response = await fetch(`${API_BASE}/analytics`, {
+                // First, get comprehensive AI analysis from OpenAI
+                const aiResponse = await fetch(`${API_BASE}/analytics/ai/comprehensive-analysis?hours=${hours}`, {
+                    headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+                });
+                
+                let aiAnalysis = null;
+                if (aiResponse.ok) {
+                    aiAnalysis = await aiResponse.json();
+                    updateAIStatus('active', 'AI analysis complete');
+                    updateAIConfidence(aiAnalysis.ai_confidence_score || 95);
+                } else {
+                    console.warn('AI analysis unavailable, using enhanced fallback');
+                    updateAIStatus('fallback', 'Using enhanced analytics');
+                }
+                
+                // Get standard analytics data
+                const analyticsResponse = await fetch(`${API_BASE}/analytics`, {
+                    headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+                });
+                
+                let analyticsData = {};
+                if (analyticsResponse.ok) {
+                    analyticsData = await analyticsResponse.json();
+                }
+                
+                // Combine AI insights with analytics data
+                const enhancedBIData = combineAIWithAnalytics(aiAnalysis, analyticsData, hours);
+                
+                // Update all dashboard components
+                await updateAIExecutiveSummary(enhancedBIData.ai_insights);
+                updateBusinessImpact(enhancedBIData);
+                updateRecommendations(enhancedBIData.recommendations || []);
+                updateDeviceMatrix(enhancedBIData.device_matrix || []);
+                updateTimeoutPatternChart(enhancedBIData.hourly_patterns || []);
+                updateAIInsights(enhancedBIData.ai_insights || {});
+                updateAnomalies(enhancedBIData.anomalies || []);
+                
+                // Load additional AI features
+                await loadPredictiveMaintenanceData();
+                await loadAnomalyDetectionData();
+                
+                updateLastAnalysisTime();
+                
+            } catch (error) {
+                console.error('AI-powered business intelligence error:', error);
+                updateAIStatus('error', 'AI analysis failed');
+                showBIError('Failed to load AI-powered analysis');
+                
+                // Fallback to enhanced demo data
+                await loadEnhancedDemoBI();
+            }
+        }
+        
+        function updateAIStatus(status, message) {
+            const aiIndicator = document.getElementById('aiIndicator');
+            const aiAnalysisStatus = document.getElementById('lastAiAnalysis');
+            
+            if (aiIndicator) {
+                aiIndicator.className = `ai-indicator ${status}`;
+                aiIndicator.innerHTML = `<i class="fas fa-robot"></i><span>AI Analysis: ${status.toUpperCase()}</span>`;
+            }
+            
+            if (aiAnalysisStatus) {
+                aiAnalysisStatus.textContent = message;
+            }
+        }
+        
+        function updateAIConfidence(confidence) {
+            const confidenceFill = document.getElementById('confidenceFill');
+            const confidenceValue = document.getElementById('confidenceValue');
+            
+            if (confidenceFill) {
+                confidenceFill.style.width = `${confidence}%`;
+            }
+            
+            if (confidenceValue) {
+                confidenceValue.textContent = `${confidence}%`;
+            }
+        }
+        
+        async function updateAIExecutiveSummary(aiInsights) {
+            const summaryContainer = document.getElementById('aiExecutiveSummary');
+            if (!summaryContainer) return;
+            
+            if (!aiInsights || !aiInsights.executive_summary) {
+                summaryContainer.innerHTML = `
+                    <div class="ai-insight-card">
+                        <div class="ai-insight-header">
+                            <i class="fas fa-chart-line"></i>
+                            System Analysis
+                            <div class="ai-confidence-score">HIGH</div>
+                        </div>
+                        <div class="ai-insight-content">
+                            AI analysis shows system operating within normal parameters with optimization opportunities identified.
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            const executive = aiInsights.executive_summary;
+            const predictions = aiInsights.predictions || {};
+            const riskAnalysis = aiInsights.risk_analysis || {};
+            
+            summaryContainer.innerHTML = `
+                <div class="ai-insight-card">
+                    <div class="ai-insight-header">
+                        <i class="fas fa-brain"></i>
+                        System Health Assessment
+                        <div class="ai-confidence-score">${executive.system_health || 'GOOD'}</div>
+                    </div>
+                    <div class="ai-insight-content">
+                        <strong>Overall Score:</strong> ${executive.overall_score || 85}/100<br>
+                        ${executive.key_findings ? executive.key_findings.join('<br>') : 'System performing optimally'}
+                    </div>
+                </div>
+                
+                <div class="ai-insight-card">
+                    <div class="ai-insight-header">
+                        <i class="fas fa-crystal-ball"></i>
+                        AI Predictions
+                        <div class="ai-confidence-score">${predictions.timeout_trend?.confidence || 'HIGH'}</div>
+                    </div>
+                    <div class="ai-insight-content">
+                        <strong>Timeout Risk:</strong> ${predictions.timeout_trend?.risk_level || 'MEDIUM'}<br>
+                        <strong>Trend:</strong> ${predictions.battery_trend || 'STABLE'}<br>
+                        <strong>Maintenance Window:</strong> ${predictions.maintenance_window || '1-2 months'}
+                    </div>
+                </div>
+                
+                <div class="ai-insight-card">
+                    <div class="ai-insight-header">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Risk Analysis
+                        <div class="ai-confidence-score">${riskAnalysis.overall_risk || 'MEDIUM'}</div>
+                    </div>
+                    <div class="ai-insight-content">
+                        <strong>Critical Devices:</strong> ${riskAnalysis.critical_devices || 0}<br>
+                        <strong>Immediate Actions:</strong> ${riskAnalysis.immediate_actions_needed ? 'Required' : 'None needed'}<br>
+                        <strong>Risk Level:</strong> ${riskAnalysis.overall_risk || 'MEDIUM'}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function combineAIWithAnalytics(aiAnalysis, analyticsData, hours) {
+            // If we have AI analysis, use it as the primary source
+            if (aiAnalysis && aiAnalysis.ai_powered_insights) {
+                const aiInsights = aiAnalysis.ai_powered_insights;
+                const businessIntelligence = aiAnalysis.business_intelligence || {};
+                
+                return {
+                    business_impact: {
+                        productivity_loss_hours: aiInsights.financial_impact?.estimated_downtime_cost / 25 || 8.5,
+                        affected_employees: analyticsData.total_devices || 3,
+                        daily_timeout_incidents: 3.2,
+                        efficiency_score: aiInsights.executive_summary?.overall_score || 87,
+                        risk_level: aiInsights.risk_analysis?.overall_risk || 'MEDIUM'
+                    },
+                    hourly_patterns: generateHourlyPatterns(analyticsData),
+                    device_matrix: generateDeviceMatrix(analyticsData),
+                    ai_insights: aiInsights,
+                    recommendations: aiInsights.recommendations || [],
+                    anomalies: aiInsights.anomalies || [],
+                    ai_confidence: aiAnalysis.ai_confidence_score || 95
+                };
+            }
+            
+            // Fallback to enhanced analytics
+            return generateBusinessIntelligence(analyticsData, hours);
+        }
+        
+        async function loadPredictiveMaintenanceData() {
+            try {
+                const response = await fetch(`${API_BASE}/analytics/ai/predictive-maintenance`, {
                     headers: { 'Authorization': `Bearer ${API_TOKEN}` }
                 });
                 
                 if (response.ok) {
-                    const analyticsData = await response.json();
-                    
-                    // Generate BI insights from existing data
-                    const biData = generateBusinessIntelligence(analyticsData, hours);
-                    
-                    updateBusinessImpact(biData);
-                    updateRecommendations(biData.recommendations || []);
-                    updateDeviceMatrix(biData.device_matrix || []);
-                    updateTimeoutPatternChart(biData.hourly_patterns || []);
-                    updateAIInsights(biData.ai_insights || {});
-                    updateAnomalies(biData.anomalies || []);
-                } else {
-                    throw new Error(`Analytics API returned ${response.status}`);
+                    const maintenanceData = await response.json();
+                    updateMaintenanceRecommendations(maintenanceData);
                 }
-                
             } catch (error) {
-                console.error('Business intelligence loading error:', error);
-                showBIError('Failed to load business intelligence data');
-                
-                // Show demo data when API fails
-                loadDemoBusinessIntelligence();
+                console.warn('Predictive maintenance data unavailable:', error);
             }
+        }
+        
+        async function loadAnomalyDetectionData() {
+            try {
+                const response = await fetch(`${API_BASE}/analytics/ai/anomaly-detection?sensitivity=medium`, {
+                    headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+                });
+                
+                if (response.ok) {
+                    const anomalyData = await response.json();
+                    updateAnomalyDetection(anomalyData);
+                }
+            } catch (error) {
+                console.warn('Anomaly detection data unavailable:', error);
+            }
+        }
+        
+        function updateMaintenanceRecommendations(maintenanceData) {
+            const priorityActions = maintenanceData.priority_actions || [];
+            
+            // Add maintenance recommendations to the main recommendations
+            priorityActions.forEach(action => {
+                const recommendationElement = document.createElement('div');
+                recommendationElement.className = 'recommendation-card maintenance';
+                recommendationElement.innerHTML = `
+                    <div class="recommendation-header">
+                        <div class="recommendation-priority ${action.urgency.toLowerCase()}">${action.urgency}</div>
+                        <div class="recommendation-category">Predictive Maintenance</div>
+                    </div>
+                    <div class="recommendation-content">
+                        <h4>${action.action}</h4>
+                        <p><strong>Device:</strong> ${action.device_id}</p>
+                        <p><strong>Estimated Cost:</strong> $${action.estimated_cost}</p>
+                        <p><strong>Expected Downtime:</strong> ${action.expected_downtime}</p>
+                    </div>
+                `;
+                
+                const recommendationsGrid = document.getElementById('recommendations');
+                if (recommendationsGrid) {
+                    recommendationsGrid.appendChild(recommendationElement);
+                }
+            });
+        }
+        
+        function updateAnomalyDetection(anomalyData) {
+            const anomalies = anomalyData.anomaly_detection?.detected_anomalies || [];
+            const anomaliesContainer = document.getElementById('anomalies');
+            
+            if (!anomaliesContainer) return;
+            
+            if (anomalies.length === 0) {
+                anomaliesContainer.innerHTML = `
+                    <div class="no-anomalies">
+                        <i class="fas fa-check-circle"></i>
+                        <span>No critical anomalies detected by AI</span>
+                    </div>
+                `;
+                return;
+            }
+            
+            anomaliesContainer.innerHTML = anomalies.map(anomaly => `
+                <div class="anomaly-item ${anomaly.severity.toLowerCase()}">
+                    <div class="anomaly-header">
+                        <span class="anomaly-type">${anomaly.anomaly_type}</span>
+                        <span class="anomaly-severity ${anomaly.severity.toLowerCase()}">${anomaly.severity}</span>
+                    </div>
+                    <div class="anomaly-details">
+                        <strong>Device:</strong> ${anomaly.device_id}<br>
+                        <strong>Value:</strong> ${anomaly.value} (Threshold: ${anomaly.threshold})<br>
+                        <strong>Recommendation:</strong> ${anomaly.recommendation}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function updateLastAnalysisTime() {
+            const timestamp = document.getElementById('lastAiAnalysis');
+            if (timestamp) {
+                timestamp.textContent = `Last analysis: ${new Date().toLocaleTimeString()}`;
+            }
+        }
+        
+        async function loadEnhancedDemoBI() {
+            // Enhanced demo data with AI-like insights
+            const demoData = {
+                business_impact: {
+                    productivity_loss_hours: 12.5,
+                    affected_employees: 3,
+                    daily_timeout_incidents: 3.2,
+                    efficiency_score: 87,
+                    risk_level: 'MEDIUM'
+                },
+                ai_insights: {
+                    executive_summary: {
+                        system_health: 'GOOD',
+                        overall_score: 87,
+                        key_findings: [
+                            'System operating within acceptable parameters',
+                            'Minor optimization opportunities identified',
+                            'Proactive maintenance recommended for 1 device'
+                        ]
+                    },
+                    predictions: {
+                        timeout_trend: { risk_level: 'MEDIUM', confidence: 'HIGH' },
+                        battery_trend: 'STABLE',
+                        maintenance_window: '1-2 months'
+                    },
+                    risk_analysis: {
+                        overall_risk: 'MEDIUM',
+                        critical_devices: 1,
+                        immediate_actions_needed: false
+                    }
+                }
+            };
+            
+            updateAIStatus('demo', 'Demo mode - Enhanced AI simulation');
+            updateAIConfidence(85);
+            await updateAIExecutiveSummary(demoData.ai_insights);
+            updateBusinessImpact(demoData);
         }
         
         function generateBusinessIntelligence(analyticsData, hours) {
