@@ -580,6 +580,45 @@ async def debug_tables(token: str = Depends(verify_token)):
     except Exception as e:
         return {"error": str(e)}
 
+@app.get("/debug/real-data")
+async def debug_real_data(token: str = Depends(verify_token)):
+    """Debug endpoint to test real data connection for AI analysis"""
+    try:
+        async with db_pool.acquire() as conn:
+            logger.info("Testing real data connection for AI analysis")
+            
+            # Test the real analytics data function
+            analytics_data = await get_real_analytics_data(conn, 24)
+            
+            # Test the data preparation
+            data_summary = prepare_data_for_ai_analysis(analytics_data)
+            
+            # Get device registry data directly
+            devices = await conn.fetch("""
+                SELECT device_id, device_name, battery_level, connectivity_status, 
+                       myob_active, timeout_risk, last_seen, is_active
+                FROM device_registry 
+                ORDER BY last_seen DESC
+            """)
+            
+            return {
+                "debug_info": {
+                    "analytics_data_points": analytics_data.get('total_data_points', 0),
+                    "devices_analyzed": analytics_data.get('devices_analyzed', 0),
+                    "device_metrics_count": len(analytics_data.get('device_metrics', [])),
+                    "network_metrics_count": len(analytics_data.get('network_metrics', [])),
+                    "session_events_count": len(analytics_data.get('session_events', []))
+                },
+                "data_summary": data_summary,
+                "raw_devices": [dict(device) for device in devices],
+                "device_count": len(devices),
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+            
+    except Exception as e:
+        logger.error(f"Debug real data error: {str(e)}")
+        return {"error": str(e), "timestamp": datetime.now(timezone.utc).isoformat()}
+
 @app.get("/analytics")
 async def get_analytics(token: str = Depends(verify_token)):
     """General analytics endpoint for dashboard with real-time data"""
@@ -1279,21 +1318,30 @@ openai.api_key = "sk-proj-wrPJ08GK_UiwprTAazpGmXSHO9aJk6-d4D0qOzMlIMEUkiCm2lFtW8
 
 @app.get("/analytics/ai/comprehensive-analysis")
 async def get_comprehensive_ai_analysis(hours: int = 168, token: str = Depends(verify_token)):
-    """Comprehensive AI-powered business intelligence analysis using OpenAI"""
+    """Comprehensive AI-powered business intelligence analysis using OpenAI with REAL device data"""
     try:
         async with db_pool.acquire() as conn:
+            logger.info(f"Starting AI analysis for {hours} hours with real device data")
+            
             # Get real data from database
             analytics_data = await get_real_analytics_data(conn, hours)
+            logger.info(f"Retrieved analytics data: {analytics_data.get('total_data_points', 0)} points from {analytics_data.get('devices_analyzed', 0)} devices")
             
             # Prepare data for AI analysis
             data_summary = prepare_data_for_ai_analysis(analytics_data)
+            logger.info(f"Prepared data summary: {data_summary}")
             
-            # Get AI insights using OpenAI
+            # Get AI insights using OpenAI (or fallback if OpenAI fails)
             ai_analysis = await get_openai_insights(data_summary)
+            
+            # Ensure we return the real data points count
+            total_data_points = analytics_data.get('total_data_points', 0)
             
             return {
                 "analysis_period_hours": hours,
-                "data_points_analyzed": analytics_data.get('total_data_points', 0),
+                "data_points_analyzed": total_data_points,
+                "devices_analyzed": analytics_data.get('devices_analyzed', 0),
+                "real_data_source": "device_registry",
                 "ai_powered_insights": ai_analysis,
                 "business_intelligence": {
                     "executive_summary": ai_analysis.get('executive_summary', {}),
@@ -1303,7 +1351,8 @@ async def get_comprehensive_ai_analysis(hours: int = 168, token: str = Depends(v
                     "cost_benefit_analysis": ai_analysis.get('financial_impact', {})
                 },
                 "generated_at": datetime.now(timezone.utc).isoformat(),
-                "ai_confidence_score": ai_analysis.get('confidence_score', 85)
+                "ai_confidence_score": ai_analysis.get('confidence_score', 85),
+                "data_quality": "REAL_DEVICE_DATA" if total_data_points > 0 else "FALLBACK_DATA"
             }
             
     except Exception as e:
