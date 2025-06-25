@@ -1,0 +1,166 @@
+# Page snapshot
+
+```yaml
+- img
+- heading "Tablet Session Monitoring API 1.0.0 OAS 3.1" [level=2]
+- link "/openapi.json":
+  - /url: /openapi.json
+- paragraph: Real-time monitoring API for Android tablet session timeout diagnostics
+- button "Authorize"
+- heading "default Collapse operation" [level=3]:
+  - link "default":
+    - /url: "#/default"
+  - button "Collapse operation" [expanded]
+- button "get /health":
+  - text: GET
+  - link "/health":
+    - /url: "#/default/health_check_health_get"
+  - text: Health Check
+- button "get /health"
+- button "post /tablet-metrics":
+  - text: POST
+  - link "/tablet-metrics":
+    - /url: "#/default/receive_tablet_data_tablet_metrics_post"
+  - text: Receive Tablet Data
+- button "authorization button unlocked"
+- button "post /tablet-metrics"
+- button "get /devices":
+  - text: GET
+  - link "/devices":
+    - /url: "#/default/get_devices_devices_get"
+  - text: Get Devices
+- button "authorization button unlocked"
+- button "get /devices"
+- 'button "get /devices/{device_id}/metrics"':
+  - text: GET
+  - 'link "/devices/{device_id}/metrics"':
+    - /url: "#/default/get_device_metrics_devices__device_id__metrics_get"
+  - text: Get Device Metrics
+- 'button "get /devices/{device_id}/metrics"'
+- button "get /debug/tables":
+  - text: GET
+  - link "/debug/tables":
+    - /url: "#/default/debug_tables_debug_tables_get"
+  - text: Debug Tables
+- button "authorization button unlocked"
+- button "get /debug/tables"
+- button "get /analytics":
+  - text: GET
+  - link "/analytics":
+    - /url: "#/default/get_analytics_analytics_get"
+  - text: Get Analytics
+- button "authorization button unlocked"
+- button "get /analytics"
+- button "get /analytics/session-issues":
+  - text: GET
+  - link "/analytics/session-issues":
+    - /url: "#/default/get_session_issues_analytics_session_issues_get"
+  - text: Get Session Issues
+- button "authorization button unlocked"
+- button "get /analytics/session-issues"
+- button "get /analytics/charts/battery":
+  - text: GET
+  - link "/analytics/charts/battery":
+    - /url: "#/default/get_battery_chart_data_analytics_charts_battery_get"
+  - text: Get Battery Chart Data
+- button "authorization button unlocked"
+- button "get /analytics/charts/battery"
+- button "get /analytics/charts/wifi":
+  - text: GET
+  - link "/analytics/charts/wifi":
+    - /url: "#/default/get_wifi_chart_data_analytics_charts_wifi_get"
+  - text: Get Wifi Chart Data
+- button "authorization button unlocked"
+- button "get /analytics/charts/wifi"
+- button "get /analytics/charts/myob":
+  - text: GET
+  - link "/analytics/charts/myob":
+    - /url: "#/default/get_myob_chart_data_analytics_charts_myob_get"
+  - text: Get Myob Chart Data
+- button "authorization button unlocked"
+- button "get /analytics/charts/myob"
+- button "get /analytics/charts/scanner":
+  - text: GET
+  - link "/analytics/charts/scanner":
+    - /url: "#/default/get_scanner_chart_data_analytics_charts_scanner_get"
+  - text: Get Scanner Chart Data
+- button "authorization button unlocked"
+- button "get /analytics/charts/scanner"
+- 'button "get /api/devices/{device_id}/timeline"':
+  - text: GET
+  - 'link "/api/devices/{device_id}/timeline"':
+    - /url: "#/default/get_device_timeline_api_devices__device_id__timeline_get"
+  - text: Get Device Timeline
+- button "authorization button unlocked"
+- 'button "get /api/devices/{device_id}/timeline"'
+- button "get /dashboard":
+  - text: GET
+  - link "/dashboard":
+    - /url: "#/default/dashboard_dashboard_get"
+  - text: Dashboard
+- button "get /dashboard"
+- button "get /":
+  - text: GET
+  - link /:
+    - /url: "#/default/root__get"
+  - text: Root
+- button "get /"
+- button "get /analytics/business/myob-timeout-analysis":
+  - text: GET
+  - link "/analytics/business/myob-timeout-analysis":
+    - /url: "#/default/get_myob_timeout_analysis_analytics_business_myob_timeout_analysis_get"
+  - text: Get Myob Timeout Analysis
+- button "authorization button unlocked"
+- button "get /analytics/business/myob-timeout-analysis"
+- button "get /analytics/ai/insights":
+  - text: GET
+  - link "/analytics/ai/insights":
+    - /url: "#/default/get_ai_insights_analytics_ai_insights_get"
+  - text: Get Ai Insights
+- button "authorization button unlocked"
+- button "get /analytics/ai/insights"
+- heading "Schemas" [level=4]:
+  - button "Schemas" [expanded]
+- article:
+  - button "AppMetrics":
+    - text: AppMetrics
+    - img
+  - button "Expand all"
+  - strong: object
+- article:
+  - button "DeviceMetrics":
+    - text: DeviceMetrics
+    - img
+  - button "Expand all"
+  - strong: object
+- article:
+  - button "HTTPValidationError":
+    - text: HTTPValidationError
+    - img
+  - button "Expand all"
+  - strong: object
+- article:
+  - button "NetworkMetrics":
+    - text: NetworkMetrics
+    - img
+  - button "Expand all"
+  - strong: object
+- article:
+  - button "SessionEvent":
+    - text: SessionEvent
+    - img
+  - button "Expand all"
+  - strong: object
+- article:
+  - button "TabletData":
+    - text: TabletData
+    - img
+  - button "Expand all"
+  - strong: object
+- article:
+  - button "ValidationError":
+    - text: ValidationError
+    - img
+  - button "Expand all"
+  - strong: object
+```

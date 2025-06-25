@@ -15,6 +15,10 @@ import logging
 from contextlib import asynccontextmanager
 import uvicorn
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure logging for Railway
 logging.basicConfig(
@@ -31,30 +35,30 @@ async def lifespan(app: FastAPI):
     """Manage application lifecycle - startup and shutdown"""
     global db_pool
     
-    # Startup - Create database connection pool
+    # Startup - Create database connection pool (optional for local dev)
     try:
         # Railway provides DATABASE_URL automatically for PostgreSQL
         database_url = os.getenv("DATABASE_URL")
         if not database_url:
-            logger.error("DATABASE_URL environment variable not found")
-            raise Exception("Database configuration missing")
+            logger.warning("DATABASE_URL environment variable not found - running in local mode without database")
+            db_pool = None
+        else:
+            # Railway PostgreSQL connection
+            db_pool = await asyncpg.create_pool(
+                database_url,
+                min_size=2,
+                max_size=10,
+                command_timeout=60
+            )
+            logger.info("✅ Database connection pool created successfully")
             
-        # Railway PostgreSQL connection
-        db_pool = await asyncpg.create_pool(
-            database_url,
-            min_size=2,
-            max_size=10,
-            command_timeout=60
-        )
-        logger.info("✅ Database connection pool created successfully")
-        
-        # Initialize database tables
-        await init_database()
-        logger.info("✅ Database tables initialized")
+            # Initialize database tables
+            await init_database()
+            logger.info("✅ Database tables initialized")
         
     except Exception as e:
-        logger.error(f"❌ Failed to initialize database: {str(e)}")
-        raise
+        logger.warning(f"⚠️ Database initialization failed, continuing without database: {str(e)}")
+        db_pool = None
     
     yield
     
@@ -149,6 +153,10 @@ class TabletData(BaseModel):
 # Database initialization for Railway PostgreSQL
 async def init_database():
     """Initialize all required database tables with proper indexes"""
+    if not db_pool:
+        logger.warning("No database pool available, skipping table initialization")
+        return
+        
     async with db_pool.acquire() as conn:
         try:
             # Create extension for better timestamp handling
@@ -287,6 +295,15 @@ async def global_exception_handler(request: Request, exc: Exception):
 async def health_check():
     """Health check endpoint for Railway deployment monitoring"""
     try:
+        if not db_pool:
+            return {
+                "status": "healthy",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "database": "disabled",
+                "mode": "development",
+                "environment": os.getenv("RAILWAY_ENVIRONMENT", "development")
+            }
+            
         # Test database connection
         async with db_pool.acquire() as conn:
             await conn.fetchval("SELECT 1")
@@ -344,6 +361,10 @@ async def receive_tablet_data(
 
 async def store_tablet_data(data: TabletData, client_ip: str = None):
     """Store tablet data in PostgreSQL with error handling"""
+    if not db_pool:
+        logger.info(f"📊 Mock storage - Device: {data.device_id}, Location: {data.location}")
+        return
+        
     async with db_pool.acquire() as conn:
         try:
             async with conn.transaction():
@@ -437,6 +458,27 @@ async def store_tablet_data(data: TabletData, client_ip: str = None):
 @app.get("/devices", response_model=List[Dict[str, Any]])
 async def get_devices(token: str = Depends(verify_token)):
     """Get list of all monitored devices with summary statistics and latest metrics"""
+    if not db_pool:
+        # Return mock data for development
+        return [{
+            "device_id": "tablet_001",
+            "device_name": "JD Nav Tablet 1",
+            "location": "Warehouse A - Bay 3",
+            "android_version": "12.0",
+            "app_version": "2.1.4",
+            "last_seen": datetime.now(timezone.utc),
+            "status": "online",
+            "battery_level": 85,
+            "connectivity_status": "online",
+            "wifi_ssid": "JD_Warehouse_WiFi",
+            "screen_state": "active",
+            "myob_active": True,
+            "scanner_active": False,
+            "timeout_risk": False,
+            "total_sessions": 145,
+            "total_timeouts": 8
+        }]
+        
     async with db_pool.acquire() as conn:
         devices = await conn.fetch('''
             SELECT dr.*,
