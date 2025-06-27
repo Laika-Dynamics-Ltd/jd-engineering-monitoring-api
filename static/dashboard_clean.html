@@ -902,6 +902,77 @@
                 gap: 10px;
             }
         }
+        
+        /* Help Icon Styles */
+        .help-icon {
+            font-size: 11px;
+            color: #6b7280;
+            margin-left: 4px;
+            cursor: help;
+            transition: color 0.2s;
+        }
+        
+        .help-icon:hover {
+            color: #3b82f6;
+        }
+        
+        /* View Mode Styles */
+        body.executive-view .technical-section {
+            display: none !important;
+        }
+        
+        body.executive-view .charts-section,
+        body.executive-view .realtime-data {
+            display: none !important;
+        }
+        
+        body.technical-view #executiveSummary {
+            display: none !important;
+        }
+        
+        /* Debug Panel for Technical Users */
+        .debug-panel {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            display: none;
+        }
+        
+        body.technical-view .debug-panel {
+            display: block;
+        }
+        
+        /* Search Box */
+        .search-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 10px 40px 10px 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+        }
     </style>
 </head>
 <body>
@@ -916,45 +987,116 @@
                     <span>Live Data Stream Active</span>
                 </div>
             </div>
+            <!-- User Mode Toggle -->
+            <div style="position: absolute; top: 20px; right: 120px; display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2);">
+                <span style="font-size: 12px; color: white; font-weight: 500;">View Mode:</span>
+                <button id="executiveViewBtn" onclick="setViewMode('executive')" style="padding: 4px 12px; background: rgba(255,255,255,0.2); color: white; border: none; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                    <i class="fas fa-briefcase"></i> Executive
+                </button>
+                <button id="technicalViewBtn" onclick="setViewMode('technical')" style="padding: 4px 12px; background: transparent; color: white; border: none; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                    <i class="fas fa-code"></i> Technical
+                </button>
+            </div>
         </div>
     </div>
 
     <div class="container">
+        <!-- Executive Summary (for non-technical users) -->
+        <div id="executiveSummary" class="devices-section" style="background: #f0f9ff; border: 2px solid #3b82f6; margin-bottom: 30px; display: none;">
+            <div style="padding: 20px;">
+                <h2 style="font-size: 20px; font-weight: 700; margin: 0 0 15px 0; color: #1e40af;">
+                    <i class="fas fa-chart-pie"></i> Executive Summary
+                </h2>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+                    <div>
+                        <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 10px 0; color: #1f2937;">Current Business Impact</h3>
+                        <div id="execSummaryText" style="font-size: 14px; line-height: 1.6; color: #374151;">
+                            <p style="margin: 0 0 10px 0;">
+                                <strong>Operational Status:</strong> <span id="execOperationalStatus">Analyzing...</span>
+                            </p>
+                            <p style="margin: 0 0 10px 0;">
+                                <strong>Financial Impact:</strong> <span id="execFinancialImpact">Calculating...</span>
+                            </p>
+                            <p style="margin: 0 0 10px 0;">
+                                <strong>Key Issues:</strong> <span id="execKeyIssues">Identifying...</span>
+                            </p>
+                            <p style="margin: 0;">
+                                <strong>Recommended Action:</strong> <span id="execRecommendedAction" style="font-weight: 600; color: #1e40af;">Loading recommendations...</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                        <h4 style="font-size: 14px; font-weight: 600; margin: 0 0 12px 0; color: #1f2937;">Quick Metrics</h4>
+                        <div style="display: grid; gap: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 12px; color: #6b7280;">System Health:</span>
+                                <span id="execSystemHealth" style="font-size: 14px; font-weight: 600; color: #10b981;">Good</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 12px; color: #6b7280;">Cost Impact:</span>
+                                <span id="execCostImpact" style="font-size: 14px; font-weight: 600; color: #dc2626;">$0/day</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 12px; color: #6b7280;">Devices at Risk:</span>
+                                <span id="execDevicesAtRisk" style="font-size: 14px; font-weight: 600; color: #f59e0b;">0</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 12px; color: #6b7280;">Action Required:</span>
+                                <span id="execActionRequired" style="font-size: 14px; font-weight: 600; color: #3b82f6;">No</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Real-time Stats Overview -->
         <div class="stats-grid" id="statsGrid">
             <div class="stat-card">
                 <div class="icon"><i class="fas fa-tablet-alt"></i></div>
-                <div class="label">Total Devices</div>
+                <div class="label">Total Devices 
+                    <i class="fas fa-question-circle help-icon" title="Number of tablets currently being monitored"></i>
+                </div>
                 <div class="value" id="totalDevices">-</div>
                 <div class="trend">Monitoring Active</div>
             </div>
             <div class="stat-card">
                 <div class="icon"><i class="fas fa-wifi"></i></div>
-                <div class="label">Online Now</div>
+                <div class="label">Online Now
+                    <i class="fas fa-question-circle help-icon" title="Devices actively connected to the network"></i>
+                </div>
                 <div class="value" id="onlineDevices">-</div>
                 <div class="trend">Real-time</div>
             </div>
             <div class="stat-card">
                 <div class="icon"><i class="fas fa-battery-three-quarters"></i></div>
-                <div class="label">Avg Battery</div>
+                <div class="label">Avg Battery
+                    <i class="fas fa-question-circle help-icon" title="Average battery level across all devices. Below 20% may cause unexpected shutdowns."></i>
+                </div>
                 <div class="value" id="avgBattery">-</div>
                 <div class="trend">Last 5 min</div>
             </div>
             <div class="stat-card">
                 <div class="icon"><i class="fas fa-desktop"></i></div>
-                <div class="label">MYOB Active</div>
+                <div class="label">MYOB Active
+                    <i class="fas fa-question-circle help-icon" title="Number of devices with MYOB application currently running"></i>
+                </div>
                 <div class="value" id="myobActive">-</div>
                 <div class="trend">Sessions</div>
             </div>
             <div class="stat-card">
                 <div class="icon"><i class="fas fa-qrcode"></i></div>
-                <div class="label">Scanner Active</div>
+                <div class="label">Scanner Active
+                    <i class="fas fa-question-circle help-icon" title="Number of devices with barcode scanner application active"></i>
+                </div>
                 <div class="value" id="scannerActive">-</div>
                 <div class="trend">Devices</div>
             </div>
             <div class="stat-card">
                 <div class="icon"><i class="fas fa-clock"></i></div>
-                <div class="label">Timeout Risks</div>
+                <div class="label">Timeout Risks
+                    <i class="fas fa-question-circle help-icon" title="Devices idle for 5+ minutes that may lose their session"></i>
+                </div>
                 <div class="value" id="timeoutRisks">-</div>
                 <div class="trend">5+ min idle</div>
             </div>
@@ -1219,6 +1361,16 @@
                     <i class="fas fa-sync-alt"></i> Refresh
                 </button>
             </h3>
+            <!-- Search Box -->
+            <div class="search-container">
+                <input type="text" 
+                       class="search-box" 
+                       id="deviceSearch" 
+                       placeholder="Search devices by name, location, or status..." 
+                       onkeyup="filterDevices()"
+                       autocomplete="off">
+                <i class="fas fa-search search-icon"></i>
+            </div>
             <div class="device-grid" id="deviceGrid">
                 <div class="loading">
                     <div class="spinner"></div>
@@ -1296,6 +1448,120 @@
         let isUpdating = false;
         let updateInterval;
         let eventCounter = 0;
+        let currentViewMode = 'executive'; // Default to executive view
+        
+        // View Mode Management
+        function setViewMode(mode) {
+            currentViewMode = mode;
+            localStorage.setItem('dashboardViewMode', mode);
+            
+            // Update UI
+            document.body.className = mode + '-view';
+            
+            // Update button styles
+            const execBtn = document.getElementById('executiveViewBtn');
+            const techBtn = document.getElementById('technicalViewBtn');
+            
+            if (mode === 'executive') {
+                execBtn.style.background = 'rgba(255,255,255,0.2)';
+                techBtn.style.background = 'transparent';
+                document.getElementById('executiveSummary').style.display = 'block';
+                updateExecutiveSummary();
+            } else {
+                techBtn.style.background = 'rgba(255,255,255,0.2)';
+                execBtn.style.background = 'transparent';
+                document.getElementById('executiveSummary').style.display = 'none';
+            }
+        }
+        
+        // Search/Filter Functionality
+        function filterDevices() {
+            const searchTerm = document.getElementById('deviceSearch').value.toLowerCase();
+            const deviceCards = document.querySelectorAll('.device-card');
+            
+            deviceCards.forEach(card => {
+                const deviceName = card.querySelector('.device-name')?.textContent.toLowerCase() || '';
+                const deviceStatus = card.querySelector('.device-status')?.textContent.toLowerCase() || '';
+                const deviceLocation = card.getAttribute('data-location')?.toLowerCase() || '';
+                
+                if (deviceName.includes(searchTerm) || 
+                    deviceStatus.includes(searchTerm) || 
+                    deviceLocation.includes(searchTerm)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        // Update Executive Summary
+        function updateExecutiveSummary() {
+            if (currentViewMode !== 'executive') return;
+            
+            // Calculate business metrics
+            const onlineCount = devices.filter(d => d.status === 'online').length;
+            const offlineCount = devices.filter(d => d.status === 'offline').length;
+            const timeoutRiskCount = devices.filter(d => d.idle_time > 300).length; // 5 minutes
+            
+            // Update operational status
+            let operationalStatus = '';
+            let statusColor = '';
+            if (offlineCount === 0 && timeoutRiskCount === 0) {
+                operationalStatus = 'All systems operating normally. No issues detected.';
+                statusColor = '#10b981';
+            } else if (offlineCount > 2 || timeoutRiskCount > 3) {
+                operationalStatus = `Critical: ${offlineCount} devices offline, ${timeoutRiskCount} at risk of timeout.`;
+                statusColor = '#dc2626';
+            } else {
+                operationalStatus = `Minor issues: ${offlineCount} devices offline, ${timeoutRiskCount} timeout warnings.`;
+                statusColor = '#f59e0b';
+            }
+            
+            document.getElementById('execOperationalStatus').textContent = operationalStatus;
+            document.getElementById('execOperationalStatus').style.color = statusColor;
+            
+            // Update financial impact
+            const dailyCost = (offlineCount * 50) + (timeoutRiskCount * 25); // Simplified calculation
+            document.getElementById('execFinancialImpact').textContent = 
+                dailyCost > 0 ? `Estimated $${dailyCost} daily productivity loss` : 'No financial impact';
+            document.getElementById('execCostImpact').textContent = `$${dailyCost}/day`;
+            
+            // Update key issues
+            const issues = [];
+            if (offlineCount > 0) issues.push(`${offlineCount} devices offline`);
+            if (timeoutRiskCount > 0) issues.push(`${timeoutRiskCount} timeout risks`);
+            const lowBatteryCount = devices.filter(d => d.battery_level < 20).length;
+            if (lowBatteryCount > 0) issues.push(`${lowBatteryCount} low battery`);
+            
+            document.getElementById('execKeyIssues').textContent = 
+                issues.length > 0 ? issues.join(', ') : 'No issues identified';
+            
+            // Update recommended action
+            let action = '';
+            if (offlineCount > 2) {
+                action = 'URGENT: Check network connectivity for offline devices immediately.';
+            } else if (timeoutRiskCount > 3) {
+                action = 'Review timeout settings and ensure staff are actively using devices.';
+            } else if (lowBatteryCount > 0) {
+                action = 'Schedule device charging for low battery units.';
+            } else {
+                action = 'Continue normal monitoring. All systems healthy.';
+            }
+            
+            document.getElementById('execRecommendedAction').textContent = action;
+            
+            // Update quick metrics
+            document.getElementById('execSystemHealth').textContent = 
+                offlineCount === 0 ? 'Excellent' : offlineCount > 2 ? 'Poor' : 'Fair';
+            document.getElementById('execSystemHealth').style.color = 
+                offlineCount === 0 ? '#10b981' : offlineCount > 2 ? '#dc2626' : '#f59e0b';
+            
+            document.getElementById('execDevicesAtRisk').textContent = timeoutRiskCount + offlineCount;
+            document.getElementById('execActionRequired').textContent = 
+                (offlineCount > 0 || timeoutRiskCount > 2) ? 'Yes' : 'No';
+            document.getElementById('execActionRequired').style.color = 
+                (offlineCount > 0 || timeoutRiskCount > 2) ? '#dc2626' : '#10b981';
+        }
 
         // Chart configurations
         const chartConfigs = {
@@ -1507,7 +1773,7 @@
             const wifiBars = Math.ceil(wifiStrength / 25);
             
             return `
-                <div class="device-card" data-device-id="${device.device_id}">
+                <div class="device-card" data-device-id="${device.device_id}" data-location="${device.location || ''}">
                     <div class="device-header">
                         <div class="device-name">
                             <i class="fas fa-tablet-alt"></i>
@@ -1571,6 +1837,23 @@
                             <div class="metric-icon"><i class="fas fa-clock"></i></div>
                             <div class="metric-value">${Math.floor(Math.random() * 300)}s</div>
                             <div class="metric-label">Idle</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Debug Panel for Technical Users -->
+                    <div class="debug-panel technical-section">
+                        <div style="margin-bottom: 8px;"><strong>Technical Details:</strong></div>
+                        <div>Device ID: ${device.device_id}</div>
+                        <div>IP Address: ${device.ip_address || 'N/A'}</div>
+                        <div>Android Version: ${device.android_version || 'Unknown'}</div>
+                        <div>Last Update: ${new Date(device.timestamp).toLocaleString()}</div>
+                        <div>Memory: ${device.memory_usage ? (device.memory_usage / 1024 / 1024).toFixed(0) + ' MB' : 'N/A'}</div>
+                        <div>CPU: ${device.cpu_usage ? device.cpu_usage.toFixed(1) + '%' : 'N/A'}</div>
+                        <div style="margin-top: 8px;">
+                            <button onclick="exportDeviceData('${device.device_id}')" 
+                                    style="padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                                Export Logs
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -2789,10 +3072,171 @@
             }, 300000);
         });
         
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + Shift + E = Toggle Executive/Technical View
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'E') {
+                e.preventDefault();
+                const newMode = currentViewMode === 'executive' ? 'technical' : 'executive';
+                setViewMode(newMode);
+            }
+            
+            // Ctrl/Cmd + R = Refresh Data
+            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                e.preventDefault();
+                refreshData();
+            }
+            
+            // Ctrl/Cmd + F = Focus Search
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                document.getElementById('deviceSearch')?.focus();
+            }
+            
+            // Ctrl/Cmd + X = Export Data
+            if ((e.ctrlKey || e.metaKey) && e.key === 'x') {
+                e.preventDefault();
+                exportBusinessReport();
+            }
+            
+            // ? = Show Help
+            if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                const activeElement = document.activeElement;
+                if (activeElement.tagName !== 'INPUT' && activeElement.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    showKeyboardShortcuts();
+                }
+            }
+        });
+        
+        // Export Device Data Function
+        function exportDeviceData(deviceId) {
+            const device = devices.find(d => d.device_id === deviceId);
+            if (!device) return;
+            
+            const exportData = {
+                device_id: device.device_id,
+                device_name: device.device_name,
+                location: device.location,
+                status: device.status,
+                last_seen: new Date(device.timestamp),
+                battery_level: device.battery_level,
+                wifi_strength: device.wifi_strength,
+                android_version: device.android_version,
+                ip_address: device.ip_address,
+                memory_usage: device.memory_usage,
+                cpu_usage: device.cpu_usage,
+                session_data: {
+                    total_sessions: device.total_sessions,
+                    total_timeouts: device.total_timeouts,
+                    myob_active: device.myob_active,
+                    scanner_active: device.scanner_active,
+                    idle_time: device.idle_time
+                }
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `device_${deviceId}_${new Date().toISOString().split('T')[0]}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+        
+        // Initialize View Mode
+        function initializeViewMode() {
+            const savedMode = localStorage.getItem('dashboardViewMode') || 'executive';
+            setViewMode(savedMode);
+        }
+        
+        // Show Keyboard Shortcuts Help
+        function showKeyboardShortcuts() {
+            const shortcuts = `
+                <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                            background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); 
+                            z-index: 10000; max-width: 450px; border: 1px solid #e5e7eb;">
+                    <h3 style="margin-top: 0; color: #1f2937; font-size: 20px; margin-bottom: 20px;">
+                        <i class="fas fa-keyboard"></i> Keyboard Shortcuts
+                    </h3>
+                    <div style="display: grid; gap: 12px; font-size: 14px;">
+                        <div style="display: flex; justify-content: space-between; padding: 8px; background: #f9fafb; border-radius: 4px;">
+                            <kbd style="background: #1f2937; color: white; padding: 4px 8px; border-radius: 4px; font-family: monospace;">Ctrl+Shift+E</kbd>
+                            <span style="color: #374151;">Toggle Executive/Technical View</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 8px; background: #f9fafb; border-radius: 4px;">
+                            <kbd style="background: #1f2937; color: white; padding: 4px 8px; border-radius: 4px; font-family: monospace;">Ctrl+R</kbd>
+                            <span style="color: #374151;">Refresh Dashboard</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 8px; background: #f9fafb; border-radius: 4px;">
+                            <kbd style="background: #1f2937; color: white; padding: 4px 8px; border-radius: 4px; font-family: monospace;">Ctrl+F</kbd>
+                            <span style="color: #374151;">Focus Device Search</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 8px; background: #f9fafb; border-radius: 4px;">
+                            <kbd style="background: #1f2937; color: white; padding: 4px 8px; border-radius: 4px; font-family: monospace;">Ctrl+X</kbd>
+                            <span style="color: #374151;">Export Business Report</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 8px; background: #f9fafb; border-radius: 4px;">
+                            <kbd style="background: #1f2937; color: white; padding: 4px 8px; border-radius: 4px; font-family: monospace;">?</kbd>
+                            <span style="color: #374151;">Show This Help</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px; font-size: 12px; color: #6b7280;">
+                        <i class="fas fa-info-circle"></i> Pro tip: Right-click on the BI refresh indicator to change interval
+                    </div>
+                    <button onclick="this.parentElement.remove()" 
+                            style="margin-top: 20px; padding: 10px 20px; background: #3b82f6; color: white; 
+                                   border: none; border-radius: 6px; cursor: pointer; font-weight: 500;
+                                   transition: background 0.2s;"
+                            onmouseover="this.style.background='#2563eb'"
+                            onmouseout="this.style.background='#3b82f6'">
+                        Close
+                    </button>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', shortcuts);
+        }
+
+        // Initialize everything on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize view mode
+            initializeViewMode();
+            
+            // Initialize dashboard
+            initDashboard();
+            
+            // Update executive summary if in executive mode
+            if (currentViewMode === 'executive') {
+                updateExecutiveSummary();
+            }
+            
+            // Load business intelligence after a short delay
+            setTimeout(() => {
+                loadAdvancedBusinessIntelligence();
+                // Start auto-refresh timer after initial load
+                resetBIRefreshTimer();
+                // Set up right-click handler for interval change
+                changeBIInterval();
+            }, 2000);
+            
+            // Set up auto-refresh for other dashboard components (every 5 minutes)
+            setInterval(() => {
+                if (!isUpdating) {
+                    refreshData(); // Refresh other dashboard sections
+                    if (currentViewMode === 'executive') {
+                        updateExecutiveSummary();
+                    }
+                }
+            }, 300000);
+        });
+
         // Cleanup on page unload
         window.addEventListener('beforeunload', () => {
             if (updateInterval) clearInterval(updateInterval);
             if (timeoutPatternChart) timeoutPatternChart.destroy();
+            if (biRefreshTimer) clearInterval(biRefreshTimer);
         });
     </script>
 </body>
