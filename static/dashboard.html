@@ -5044,6 +5044,16 @@
             console.error('BI Error:', message);
         }
 
+        // Define loadDashboard function
+        async function loadDashboard() {
+            try {
+                await loadData();
+                console.log('✅ Dashboard loaded successfully');
+            } catch (error) {
+                console.error('❌ Dashboard load error:', error);
+            }
+        }
+
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Dashboard initializing...');

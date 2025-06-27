@@ -15,13 +15,16 @@ import logging
 from contextlib import asynccontextmanager
 import uvicorn
 from pathlib import Path
+<<<<<<< HEAD
 import openai
 import numpy as np
 from statistics import mean, median, stdev
+=======
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
+>>>>>>> setup/github-automation
 
 # Configure logging for Railway
 logging.basicConfig(
@@ -1255,10 +1258,26 @@ async def get_device_timeline(device_id: str, hours: int = 24, token: str = Depe
 async def dashboard():
     """Interactive dashboard endpoint - business-focused version"""
     try:
-        # Serve the enhanced dashboard_clean.html with Business Intelligence features at the top
+<<<<<<< HEAD
+        # Prioritize clean dashboard that works without API
         clean_path = Path("static/dashboard_clean.html")
+        business_path = Path("static/dashboard_business_focused.html")
+        enhanced_path = Path("static/dashboard_enhanced.html")
+        static_path = Path("static/dashboard.html")
+        
         if clean_path.exists():
             return FileResponse(clean_path, media_type="text/html")
+        elif business_path.exists():
+            return FileResponse(business_path, media_type="text/html")
+        elif enhanced_path.exists():
+            return FileResponse(enhanced_path, media_type="text/html")
+        elif static_path.exists():
+=======
+        # Serve the enhanced dashboard_clean.html with Business Intelligence features at the top
+        static_path = Path("static/dashboard_clean.html")
+        if static_path.exists():
+>>>>>>> setup/github-automation
+            return FileResponse(static_path, media_type="text/html")
         # Fallback to original dashboard.html if clean version doesn't exist
         elif Path("static/dashboard.html").exists():
             return FileResponse(Path("static/dashboard.html"), media_type="text/html")
@@ -1355,6 +1374,18 @@ async def get_myob_timeout_analysis(hours: int = 168, token: str = Depends(verif
     """Business intelligence analysis for MYOB session timeouts"""
     try:
         async with db_pool.acquire() as conn:
+<<<<<<< HEAD
+            # Simplified analysis using existing tables
+            device_count = await conn.fetchval("SELECT COUNT(*) FROM device_registry")
+            
+            # Mock business impact data for demonstration
+            business_impact = {
+                "productivity_loss_hours": 12.5,
+                "affected_employees": device_count or 0,
+                "daily_timeout_incidents": 3.2,
+                "efficiency_score": 85,
+                "risk_level": "MEDIUM"
+=======
             db_helper = await get_db_helper(conn)
             
             # Simplified MYOB analysis for SQLite compatibility
@@ -1370,16 +1401,14 @@ async def get_myob_timeout_analysis(hours: int = 168, token: str = Depends(verif
             
             result = await db_helper.fetchrow(analysis_query)
             
-            # Use result if available, otherwise provide defaults
-            device_count = result["affected_devices"] if result else 0
-            
-            # Enhanced business impact metrics
+            # Simplified business impact metrics
             business_impact = {
-                "productivity_loss_hours": 12.5 if device_count > 0 else 2.5,
-                "affected_employees": device_count,
-                "daily_timeout_incidents": 3.2,
-                "efficiency_score": 85,
-                "risk_level": "MEDIUM" if device_count > 5 else "LOW"
+                "productivity_loss_hours": 2.5,  # Estimated
+                "affected_employees": result["affected_devices"] or 0,
+                "daily_timeout_incidents": 3.2,  # Estimated
+                "efficiency_score": 85,  # Estimated good score
+                "risk_level": "LOW"
+>>>>>>> setup/github-automation
             }
             
             # Mock hourly patterns
@@ -1411,19 +1440,27 @@ async def get_myob_timeout_analysis(hours: int = 168, token: str = Depends(verif
                 "business_impact": business_impact,
                 "detailed_analysis": {
                     "summary": {
-                        "total_myob_sessions": result["total_sessions"] if result else 150,
+<<<<<<< HEAD
+                        "total_myob_sessions": 150,
                         "timeout_risk_sessions": 15,
                         "actual_timeouts": 8,
                         "avg_session_duration": 45.5,
-                        "affected_devices": device_count,
-                        "timeout_rate_percent": 5.3,
-                        "total_sessions": result["total_sessions"] if result else 0
+                        "affected_devices": len(device_impact),
+                        "timeout_rate_percent": 5.3
                     },
                     "hourly_patterns": hourly_patterns,
                     "device_impact": device_impact
                 },
                 "generated_at": datetime.now(timezone.utc).isoformat(),
                 "recommendations": generate_timeout_recommendations_simple(business_impact)
+=======
+                        "total_sessions": result["total_sessions"] or 0,
+                        "affected_devices": result["affected_devices"] or 0
+                    }
+                },
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "recommendations": ["Monitor MYOB session patterns", "Review timeout settings"]
+>>>>>>> setup/github-automation
             }
             
     except Exception as e:
@@ -1439,13 +1476,54 @@ async def get_ai_insights(focus: str = "timeout", hours: int = 168, token: str =
     """AI-powered insights and predictions for operational issues"""
     try:
         async with db_pool.acquire() as conn:
+<<<<<<< HEAD
+            # Get basic device count for realistic insights
+            device_count = await conn.fetchval("SELECT COUNT(*) FROM device_registry")
+            
+            # Generate realistic AI insights
+            ai_insights = {
+                "pattern_analysis": {
+                    "time_patterns": {
+                        "problem_hours": [
+                            {"hour": 14, "timeout_rate": 18.5},
+                            {"hour": 15, "timeout_rate": 12.3}
+                        ],
+                        "recommendation": "Focus monitoring and preventive measures during identified peak hours"
+                    }
+                },
+                "predictions": {
+                    "timeout_trend": {
+                        "current_rate": 5.3,
+                        "risk_level": "MEDIUM",
+                        "prediction": "Timeout incidents stable but monitor during peak hours",
+                        "confidence": "HIGH"
+                    }
+                },
+                "correlations": {
+                    "battery_myob": {
+                        "average_battery_during_myob": 67.8,
+                        "correlation_strength": "WEAK",
+                        "insight": "MYOB sessions occur at 67.8% average battery"
+                    },
+                    "timeout_factors": {
+                        "battery_at_timeout": 23.5,
+                        "wifi_signal_at_timeout": 72.0,
+                        "primary_factor": "BATTERY"
+                    }
+                },
+                "anomalies": [
+                    {
+                        "type": "LOW_BATTERY_PATTERN",
+                        "device_id": "sample_device",
+                        "average_battery": 18.5,
+                        "severity": "HIGH",
+                        "recommendation": "Replace battery or increase charging frequency"
+                    }
+                ] if device_count > 0 else []
+=======
             db_helper = await get_db_helper(conn)
             
-            # Get device count for insights
-            device_count_result = await db_helper.fetchval("SELECT COUNT(*) FROM device_registry")
-            device_count = device_count_result or 0
-            
-            # Gather data for AI analysis
+            # Simplified data gathering for AI analysis
             data_query = """
                 SELECT 
                     dr.device_id,
@@ -1465,12 +1543,8 @@ async def get_ai_insights(focus: str = "timeout", hours: int = 168, token: str =
             
             # Convert to analysis format
             data_points = []
-            battery_levels = []
-            timeout_count = 0
-            
             for row in results:
-                if row['battery_level'] is not None:
-                    battery_levels.append(row['battery_level'])
+                if row['battery_level'] is not None:  # Valid data point
                     data_points.append({
                         'device_id': row['device_id'],
                         'location': row['location'],
@@ -1478,59 +1552,18 @@ async def get_ai_insights(focus: str = "timeout", hours: int = 168, token: str =
                         'wifi_signal': abs(row['wifi_signal_strength']) if row['wifi_signal_strength'] else 70,
                         'connectivity_online': 1 if row['connectivity_status'] == 'online' else 0,
                         'myob_active': 1 if row['app_foreground'] and 'myob' in row['app_foreground'].lower() else 0,
-                        'timeout_occurred': 0,
-                        'hour': 12,
-                        'day_of_week': 3
+                        'timeout_occurred': 0,  # Simplified
+                        'hour': 12,  # Default noon
+                        'day_of_week': 3  # Default mid-week
                     })
-                    if row['battery_level'] < 20:
-                        timeout_count += 1
             
-            # Generate comprehensive AI insights based on real data
-            avg_battery = mean(battery_levels) if battery_levels else 70
-            
+            # Generate simplified AI insights
             ai_insights = {
-                "pattern_analysis": {
-                    "time_patterns": {
-                        "problem_hours": [
-                            {"hour": 14, "timeout_rate": 18.5},
-                            {"hour": 15, "timeout_rate": 12.3}
-                        ],
-                        "recommendation": "Focus monitoring and preventive measures during identified peak hours"
-                    }
-                },
-                "predictions": {
-                    "timeout_trend": {
-                        "current_rate": 5.3,
-                        "risk_level": "MEDIUM" if timeout_count > 2 else "LOW",
-                        "prediction": "Timeout incidents stable but monitor during peak hours",
-                        "confidence": "HIGH"
-                    }
-                },
-                "correlations": {
-                    "battery_myob": {
-                        "average_battery_during_myob": avg_battery,
-                        "correlation_strength": "WEAK",
-                        "insight": f"MYOB sessions occur at {avg_battery:.1f}% average battery"
-                    },
-                    "timeout_factors": {
-                        "battery_at_timeout": 23.5,
-                        "wifi_signal_at_timeout": 72.0,
-                        "primary_factor": "BATTERY"
-                    }
-                },
-                "anomalies": [
-                    {
-                        "type": "LOW_BATTERY_PATTERN",
-                        "device_id": "sample_device",
-                        "average_battery": 18.5,
-                        "severity": "HIGH",
-                        "recommendation": "Replace battery or increase charging frequency"
-                    }
-                ] if device_count > 0 else [],
-                "patterns_detected": ["Normal operation patterns", "Good battery health"] if avg_battery > 50 else ["Low battery health detected"],
-                "recommendations": ["Continue monitoring", "No immediate action needed"] if timeout_count == 0 else ["Review timeout patterns", "Check battery health"],
-                "risk_level": "MEDIUM" if timeout_count > 2 else "LOW",
+                "patterns_detected": ["Normal operation patterns", "Good battery health"],
+                "recommendations": ["Continue monitoring", "No immediate action needed"],
+                "risk_level": "LOW",
                 "confidence": 0.85
+>>>>>>> setup/github-automation
             }
             
             return {
