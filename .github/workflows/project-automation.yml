@@ -1,0 +1,164 @@
+name: Project Automation
+
+on:
+  push:
+    branches: ['*']
+  pull_request:
+    types: [opened, closed]
+
+permissions:
+  issues: write
+  pull-requests: write
+  repository-projects: write
+  contents: read
+
+jobs:
+  update-project:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Process Commit Messages
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const commits = context.payload.commits || [];
+            const processedIssues = new Set();
+            
+            // Keywords mapping
+            const keywordToColumn = {
+              'wip:': 'In Progress',
+              'working:': 'In Progress',
+              'feat:': 'In Progress',
+              'fix:': 'In Progress',
+              'test:': 'In Progress',
+              'docs:': 'In Progress',
+              'close:': 'Done',
+              'closes:': 'Done',
+              'closed:': 'Done',
+              'resolve:': 'Done',
+              'resolves:': 'Done',
+              'resolved:': 'Done',
+              'complete:': 'Done',
+              'completes:': 'Done',
+              'completed:': 'Done'
+            };
+            
+            for (const commit of commits) {
+              const message = commit.message.toLowerCase();
+              console.log(`Processing commit: ${message}`);
+              
+              // Extract issue numbers from commit message
+              const issueMatches = message.match(/#(\d+)/g);
+              if (!issueMatches) continue;
+              
+              // Determine target column based on keywords
+              let targetColumn = null;
+              for (const [keyword, column] of Object.entries(keywordToColumn)) {
+                if (message.startsWith(keyword)) {
+                  targetColumn = column;
+                  break;
+                }
+              }
+              
+              if (!targetColumn) continue;
+              
+              // Process each issue mentioned
+              for (const match of issueMatches) {
+                const issueNumber = parseInt(match.substring(1));
+                if (processedIssues.has(issueNumber)) continue;
+                processedIssues.add(issueNumber);
+                
+                try {
+                  // Get the issue
+                  const issue = await github.rest.issues.get({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber
+                  });
+                  
+                  // Update issue state if closing
+                  if (targetColumn === 'Done' && issue.data.state === 'open') {
+                    await github.rest.issues.update({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: issueNumber,
+                      state: 'closed'
+                    });
+                    console.log(`Closed issue #${issueNumber}`);
+                  }
+                  
+                  // Add comment to issue
+                  const commentBody = targetColumn === 'Done' 
+                    ? `🎉 Issue completed in commit ${commit.id.substring(0, 7)}: ${commit.message}`
+                    : `🚧 Work in progress in commit ${commit.id.substring(0, 7)}: ${commit.message}`;
+                  
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber,
+                    body: commentBody
+                  });
+                  
+                  console.log(`Updated issue #${issueNumber} - moved to ${targetColumn}`);
+                  
+                } catch (error) {
+                  console.error(`Failed to process issue #${issueNumber}:`, error.message);
+                }
+              }
+            }
+
+      - name: Link PR to Issues
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            if (!pr) return;
+            
+            // Extract issue numbers from PR title and body
+            const text = `${pr.title} ${pr.body || ''}`.toLowerCase();
+            const issueMatches = text.match(/#(\d+)/g);
+            
+            if (issueMatches && issueMatches.length > 0) {
+              const issueList = issueMatches.map(m => `- #${m.substring(1)}`).join('\n');
+              const comment = `### 🔗 Linked Issues\n\nThis PR references the following issues:\n${issueList}`;
+              
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: comment
+              });
+            }
+
+      - name: Auto-merge Dependabot PRs
+        if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            
+            // Add auto-merge label
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              labels: ['dependencies', 'auto-merge']
+            });
+            
+            // Enable auto-merge if checks pass
+            try {
+              await github.rest.pulls.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                merge_method: 'squash'
+              });
+              console.log('Auto-merged Dependabot PR');
+            } catch (error) {
+              console.log('Auto-merge pending checks:', error.message);
+            } 

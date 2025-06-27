@@ -1,0 +1,133 @@
+name: Issue Project Sync
+
+on:
+  issues:
+    types: [opened, labeled, unlabeled, closed, reopened]
+  workflow_dispatch:
+    inputs:
+      sync_all:
+        description: 'Sync all existing issues'
+        required: false
+        default: 'false'
+
+permissions:
+  issues: read
+  repository-projects: write
+
+jobs:
+  sync-to-project:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add Issue to Project
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Only process if issue was just opened or we're doing a full sync
+            const issue = context.payload.issue;
+            const syncAll = context.payload.inputs?.sync_all === 'true';
+            
+            if (!issue && !syncAll) {
+              console.log('No issue to process');
+              return;
+            }
+            
+            // Priority mapping for automatic column assignment
+            const priorityToColumn = {
+              'priority-critical': '🚧 In Progress',
+              'priority-high': '📋 Backlog',
+              'priority-medium': '📋 Backlog',
+              'priority-low': '📋 Backlog'
+            };
+            
+            // Process single issue or all issues
+            const issuesToProcess = [];
+            
+            if (syncAll) {
+              // Get all open issues
+              const allIssues = await github.paginate(github.rest.issues.listForRepo, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                per_page: 100
+              });
+              issuesToProcess.push(...allIssues);
+              console.log(`Syncing ${issuesToProcess.length} issues to project`);
+            } else {
+              issuesToProcess.push(issue);
+            }
+            
+            // Note: GitHub Projects v2 requires GraphQL API
+            // This is a simplified version - full implementation would use GraphQL
+            console.log(`Would add ${issuesToProcess.length} issues to project`);
+            
+            for (const issueToProcess of issuesToProcess) {
+              const labels = issueToProcess.labels.map(l => l.name);
+              let targetColumn = '📋 Backlog';
+              
+              // Check for priority labels
+              for (const label of labels) {
+                if (priorityToColumn[label]) {
+                  targetColumn = priorityToColumn[label];
+                  break;
+                }
+              }
+              
+              // If issue is closed, move to Done
+              if (issueToProcess.state === 'closed') {
+                targetColumn = '✅ Done';
+              }
+              
+              console.log(`Issue #${issueToProcess.number}: "${issueToProcess.title}" → ${targetColumn}`);
+            }
+
+      - name: Update Issue Labels
+        if: github.event.action == 'opened'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const labels = [];
+            
+            // Auto-label based on title and body content
+            const content = `${issue.title} ${issue.body || ''}`.toLowerCase();
+            
+            // Technology detection
+            if (content.includes('frontend') || content.includes('ui') || content.includes('dashboard')) {
+              labels.push('frontend');
+            }
+            if (content.includes('backend') || content.includes('api') || content.includes('server')) {
+              labels.push('backend');
+            }
+            if (content.includes('mobile') || content.includes('tablet') || content.includes('android')) {
+              labels.push('mobile');
+            }
+            if (content.includes('database') || content.includes('sql') || content.includes('postgres')) {
+              labels.push('database');
+            }
+            if (content.includes('performance') || content.includes('slow') || content.includes('optimize')) {
+              labels.push('performance');
+            }
+            if (content.includes('security') || content.includes('auth') || content.includes('vulnerability')) {
+              labels.push('security');
+            }
+            
+            // Business detection
+            if (content.includes('money') || content.includes('revenue') || content.includes('cost')) {
+              labels.push('monetization');
+            }
+            if (content.includes('user') || content.includes('ux') || content.includes('experience')) {
+              labels.push('user-experience');
+            }
+            if (content.includes('analytics') || content.includes('metrics') || content.includes('data')) {
+              labels.push('analytics');
+            }
+            
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: labels
+              });
+              console.log(`Auto-labeled issue #${issue.number} with: ${labels.join(', ')}`);
+            } 

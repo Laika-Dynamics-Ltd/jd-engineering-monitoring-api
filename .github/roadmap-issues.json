@@ -1,0 +1,62 @@
+[
+  {
+    "title": "🔴 CRITICAL: Fix Database Connection Timeout Issues",
+    "body": "## Problem Description\nThe monitoring API experiences frequent database connection timeouts, causing data loss and degraded user experience.\n\n## Acceptance Criteria\n- [ ] Database connections maintain stability for 24+ hours\n- [ ] Automatic reconnection on failure\n- [ ] Connection pooling implemented\n- [ ] Error handling prevents data loss\n\n## Definition of Done\n- All database operations have retry logic\n- Connection pool configured with optimal settings\n- Monitoring alerts for connection failures\n- Zero data loss during reconnection\n\n## Relevant Files\n- `main.py`\n- `production_config.py`\n\n**Time Estimate:** 1-2 days",
+    "labels": ["priority-critical", "backend", "database", "performance"],
+    "assignees": []
+  },
+  {
+    "title": "🔴 CRITICAL: Implement Real-time Error Recovery System",
+    "body": "## Problem Description\nWhen tablets lose connection or crash, there's no automatic recovery mechanism, requiring manual intervention.\n\n## Acceptance Criteria\n- [ ] Auto-reconnection after network loss\n- [ ] Graceful error handling\n- [ ] Session persistence across restarts\n- [ ] User notification system\n\n## Definition of Done\n- Tablets auto-recover from 95% of errors\n- Recovery time < 30 seconds\n- No manual intervention required\n- Error logs accessible via dashboard\n\n## Relevant Files\n- `scripts/tablet_client_bulletproof.py`\n- `static/dashboard_clean.html`\n\n**Time Estimate:** 2-3 days",
+    "labels": ["priority-critical", "mobile", "backend", "user-experience"],
+    "assignees": []
+  },
+  {
+    "title": "🟠 HIGH: Add Real-time Push Notifications for Critical Alerts",
+    "body": "## Problem Description\nStaff aren't immediately notified when critical issues occur, leading to delayed response times.\n\n## Acceptance Criteria\n- [ ] Push notifications for offline devices\n- [ ] Email alerts for critical failures\n- [ ] SMS integration for urgent issues\n- [ ] Alert customization per user role\n\n## Definition of Done\n- Notifications delivered < 5 seconds\n- Multiple channel support active\n- Alert preferences saved per user\n- Test coverage > 90%\n\n## Relevant Files\n- `main.py` (new endpoints)\n- `static/dashboard_clean.html`\n\n**Time Estimate:** 2-3 days",
+    "labels": ["priority-high", "backend", "frontend", "user-experience"],
+    "assignees": []
+  },
+  {
+    "title": "🟠 HIGH: Implement Advanced Analytics Dashboard",
+    "body": "## Problem Description\nCurrent analytics are basic and don't provide actionable business insights or predictive analytics.\n\n## Acceptance Criteria\n- [ ] Predictive failure analysis\n- [ ] Cost impact calculations\n- [ ] Trend visualization\n- [ ] Export functionality\n\n## Definition of Done\n- ML model predicts failures 80% accurately\n- ROI calculator integrated\n- Interactive charts implemented\n- PDF/Excel export working\n\n## Relevant Files\n- `main.py` (analytics endpoints)\n- `static/dashboard_clean.html`\n\n**Time Estimate:** 3-4 days",
+    "labels": ["priority-high", "frontend", "analytics", "monetization"],
+    "assignees": []
+  },
+  {
+    "title": "🟠 HIGH: Create Mobile-Optimized Dashboard",
+    "body": "## Problem Description\nDashboard isn't optimized for mobile devices, making field monitoring difficult.\n\n## Acceptance Criteria\n- [ ] Responsive design for all screen sizes\n- [ ] Touch-optimized controls\n- [ ] Progressive Web App features\n- [ ] Offline capability\n\n## Definition of Done\n- Works on iOS/Android browsers\n- Lighthouse mobile score > 90\n- Can be installed as PWA\n- Offline mode functional\n\n## Relevant Files\n- `static/dashboard_clean.html`\n- `static/` (new service worker)\n\n**Time Estimate:** 2-3 days",
+    "labels": ["priority-high", "frontend", "mobile", "ui/ux"],
+    "assignees": []
+  },
+  {
+    "title": "🟡 MEDIUM: Add User Authentication and Role Management",
+    "body": "## Problem Description\nNo authentication system exists, making it impossible to track who makes changes or limit access.\n\n## Acceptance Criteria\n- [ ] JWT-based authentication\n- [ ] Role-based access control\n- [ ] Audit logging\n- [ ] Password reset flow\n\n## Definition of Done\n- Login/logout functionality\n- 3 user roles configured\n- All actions logged with user ID\n- Secure password storage\n\n## Relevant Files\n- `main.py` (auth endpoints)\n- `static/dashboard_clean.html`\n\n**Time Estimate:** 3-4 days",
+    "labels": ["priority-medium", "backend", "security", "compliance"],
+    "assignees": []
+  },
+  {
+    "title": "🟡 MEDIUM: Implement Automated Testing Suite",
+    "body": "## Problem Description\nNo automated tests exist, making it risky to deploy changes and maintain quality.\n\n## Acceptance Criteria\n- [ ] Unit tests for all API endpoints\n- [ ] Integration tests for critical flows\n- [ ] E2E tests for dashboard\n- [ ] CI/CD pipeline integration\n\n## Definition of Done\n- Test coverage > 80%\n- All tests run in < 5 minutes\n- GitHub Actions configured\n- Pre-commit hooks active\n\n## Relevant Files\n- `tests/` (all test files)\n- `.github/workflows/`\n\n**Time Estimate:** 2-3 days",
+    "labels": ["priority-medium", "testing", "deployment", "backend"],
+    "assignees": []
+  },
+  {
+    "title": "🟡 MEDIUM: Add Data Export and Reporting Features",
+    "body": "## Problem Description\nUsers need to export data for external analysis and compliance reporting.\n\n## Acceptance Criteria\n- [ ] CSV/Excel export for all data\n- [ ] Scheduled report generation\n- [ ] Custom date range selection\n- [ ] Report templates\n\n## Definition of Done\n- Export completes in < 30 seconds\n- 5 report templates available\n- Email delivery option\n- Audit trail for exports\n\n## Relevant Files\n- `main.py` (export endpoints)\n- `static/dashboard_clean.html`\n\n**Time Estimate:** 2 days",
+    "labels": ["priority-medium", "backend", "compliance", "user-experience"],
+    "assignees": []
+  },
+  {
+    "title": "🟢 LOW: Implement Dark Mode Theme",
+    "body": "## Problem Description\nUsers working night shifts would benefit from a dark mode option to reduce eye strain.\n\n## Acceptance Criteria\n- [ ] Toggle switch in UI\n- [ ] All colors properly mapped\n- [ ] Preference persistence\n- [ ] Smooth transitions\n\n## Definition of Done\n- Dark mode covers all UI elements\n- No contrast issues\n- Saves preference in localStorage\n- Animation smooth\n\n## Relevant Files\n- `static/dashboard_clean.html`\n\n**Time Estimate:** 1 day",
+    "labels": ["priority-low", "frontend", "ui/ux", "user-experience"],
+    "assignees": []
+  },
+  {
+    "title": "🟢 LOW: Add Multi-language Support",
+    "body": "## Problem Description\nSystem only supports English, limiting adoption in international markets.\n\n## Acceptance Criteria\n- [ ] i18n framework integrated\n- [ ] Spanish translation\n- [ ] Language switcher UI\n- [ ] Date/time localization\n\n## Definition of Done\n- 2 languages fully supported\n- All UI text translatable\n- RTL support ready\n- Translation files documented\n\n## Relevant Files\n- `static/dashboard_clean.html`\n- `static/i18n/` (new)\n\n**Time Estimate:** 2-3 days",
+    "labels": ["priority-low", "frontend", "marketing", "user-experience"],
+    "assignees": []
+  }
+] 

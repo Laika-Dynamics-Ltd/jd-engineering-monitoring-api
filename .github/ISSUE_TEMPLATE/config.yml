@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 📖 Documentation
+    url: https://github.com/Laika-Dynamics-Lt/jd-engineering-monitoring-api/wiki
+    about: Check our documentation for answers to common questions
+  - name: 💬 Discussions
+    url: https://github.com/Laika-Dynamics-Lt/jd-engineering-monitoring-api/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: 🚨 Security Issue
+    url: https://github.com/Laika-Dynamics-Lt/jd-engineering-monitoring-api/security/policy
+    about: Please report security vulnerabilities privately 
