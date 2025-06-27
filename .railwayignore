@@ -1,0 +1,54 @@
+# Railway deployment optimization - exclude unnecessary files
+
+# Development files
+.git
+.gitignore
+README.md
+*.md
+.DS_Store
+
+# Testing and CI/CD
+.github/
+tests/
+test-results/
+playwright-report/
+*.test.js
+test_*.py
+*_test.py
+
+# Local development
+.env
+.env.local
+*.log
+node_modules/
+package-lock.json
+package.json
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.pytest_cache/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Backup files
+*.backup
+main.py.backup
+
+# Documentation and reports
+AUDIT_REPORT.md
+DATA_ACCURACY_ASSESSMENT.md
+DEPLOYMENT.md
+GITHUB_AUTOMATION_COMPLETE.md
+REAL_DATA_SUMMARY.md
+REAL_ISSUES_CREATED.md
+SYSTEM_REVIEW_2024.md
+DASHBOARD_ENHANCEMENTS.md 
