@@ -488,7 +488,7 @@ async def get_public_device_status():
                         ELSE 'offline'
                     END as status
                 FROM device_registry
-                WHERE is_active = 1
+                WHERE is_active = TRUE
                 ORDER BY last_seen DESC
                 LIMIT 20
             """)
@@ -700,7 +700,7 @@ async def get_devices(token: str = Depends(verify_token)):
                     last_seen,
                     is_active
                 FROM device_registry 
-                WHERE is_active = 1
+                WHERE is_active = TRUE
                 ORDER BY last_seen DESC
             ''')
             
@@ -2324,7 +2324,7 @@ async def get_enhanced_device_list(token: str = Depends(verify_token)):
                 LEFT JOIN device_metrics dm ON dr.device_id = dm.device_id
                 LEFT JOIN network_metrics nm ON dr.device_id = nm.device_id  
                 LEFT JOIN app_metrics am ON dr.device_id = am.device_id
-                WHERE dr.is_active = 1
+                WHERE dr.is_active = TRUE
                 ORDER BY dr.device_name, dr.device_id
             """)
             
