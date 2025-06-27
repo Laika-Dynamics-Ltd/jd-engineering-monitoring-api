@@ -2,8 +2,8 @@
 
 ## ⚠️ CRITICAL: Repository Mismatch Found!
 
-**Your GitHub Repository**: `laikadynamics/jd-engineering-monitoring-api`
-**Railway May Be Looking For**: `Laika-Dynamics-Ltd/jd-engineering-monitoring-api`
+**Your GitHub Repository**: `Laika-Dynamics-Ltd/jd-engineering-monitoring-api` ✅
+**Railway May Be Connected To**: `laikadynamics/jd-engineering-monitoring-api` (OLD)
 
 ### 📍 **Step-by-Step Fix:**
 
@@ -15,7 +15,7 @@
 6. **VERIFY Repository Connection**:
 
    **Expected Settings:**
-   - ✅ **Repository**: Should be `laikadynamics/jd-engineering-monitoring-api` 
+   - ✅ **Repository**: Should be `Laika-Dynamics-Ltd/jd-engineering-monitoring-api` 
    - ✅ **Branch**: Should be `main`
    - ⚠️ **Deploy Triggers**: Enable "Auto Deploy" toggle
    - ✅ **Root Directory**: Should be `/` (blank or root)
@@ -25,14 +25,14 @@
 **Option 1: Reconnect Repository**
 1. Click "Disconnect" in Source Repo section
 2. Click "Connect Repo" 
-3. Select: `laikadynamics/jd-engineering-monitoring-api`
+3. Select: `Laika-Dynamics-Ltd/jd-engineering-monitoring-api`
 4. Select branch: `main`
 5. Enable "Auto Deploy" toggle
 
 **Option 2: GitHub Integration Fix**
 1. Go to Railway Settings → "GitHub"
 2. Disconnect and reconnect your GitHub account
-3. Re-authorize access to `laikadynamics` organization
+3. Re-authorize access to `Laika-Dynamics-Ltd` organization
 4. Reconnect the repository
 
 ### 🎯 **The EXACT Toggle to Enable:**
@@ -52,7 +52,7 @@ If you don't see "Auto Deploy" in Source Repo, check:
 
 The setting should show:
 - ✅ Auto Deploy: **Enabled**
-- ✅ Repository: **laikadynamics/jd-engineering-monitoring-api**
+- ✅ Repository: **Laika-Dynamics-Ltd/jd-engineering-monitoring-api**
 - ✅ Branch: **main**
 - ✅ Every push to main will trigger automatic deployment
 
@@ -76,7 +76,7 @@ Try these Railway dashboard URLs directly:
 
 ### 📞 **Repository Name Verification:**
 
-Your local git shows: `laikadynamics/jd-engineering-monitoring-api`
+Your local git now shows: `Laika-Dynamics-Ltd/jd-engineering-monitoring-api`
 Make sure Railway is connected to the EXACT same repository name!
 
 **The setting name might be:**
