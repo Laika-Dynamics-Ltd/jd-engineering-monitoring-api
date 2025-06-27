@@ -72,10 +72,19 @@ jobs:
             let issues;
             
             try {
-              const roadmapData = fs.readFileSync('.github/roadmap-issues.json', 'utf8');
-              issues = JSON.parse(roadmapData);
+              // Try current-system-issues.json first for real issues
+              try {
+                const currentIssuesData = fs.readFileSync('.github/current-system-issues.json', 'utf8');
+                issues = JSON.parse(currentIssuesData);
+                console.log('Using current-system-issues.json for real issues');
+              } catch {
+                // Fall back to roadmap-issues.json
+                const roadmapData = fs.readFileSync('.github/roadmap-issues.json', 'utf8');
+                issues = JSON.parse(roadmapData);
+                console.log('Using roadmap-issues.json');
+              }
             } catch (error) {
-              console.log('No roadmap-issues.json found, using default issues');
+              console.log('No issues files found, using default issues');
               issues = [
                 {
                   title: "🔴 CRITICAL: Fix Database Connection Timeout Issues",
