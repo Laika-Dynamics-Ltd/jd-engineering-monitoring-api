@@ -1110,10 +1110,13 @@ async def get_device_timeline(device_id: str, hours: int = 24, token: str = Depe
 async def dashboard():
     """Interactive dashboard endpoint"""
     try:
-        # Try to serve the static dashboard file
-        static_path = Path("static/dashboard.html")
+        # Serve the enhanced dashboard_clean.html with Business Intelligence features at the top
+        static_path = Path("static/dashboard_clean.html")
         if static_path.exists():
             return FileResponse(static_path, media_type="text/html")
+        # Fallback to original dashboard.html if clean version doesn't exist
+        elif Path("static/dashboard.html").exists():
+            return FileResponse(Path("static/dashboard.html"), media_type="text/html")
         else:
             # Fallback HTML if static file doesn't exist
             html_content = """
