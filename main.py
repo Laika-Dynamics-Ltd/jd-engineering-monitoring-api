@@ -473,21 +473,23 @@ async def get_public_device_status():
             }
             
         async with db_pool.acquire() as conn:
-            # Simple device query
-            devices = await conn.fetch("""
-                SELECT DISTINCT ON (device_id)
+            db_helper = await get_db_helper(conn)
+            
+            # SQLite-compatible device query
+            devices = await db_helper.fetch("""
+                SELECT 
                     device_id,
                     device_name,
                     location,
                     last_seen,
                     CASE 
-                        WHEN last_seen > NOW() - INTERVAL '5 minutes' THEN 'online'
-                        WHEN last_seen > NOW() - INTERVAL '15 minutes' THEN 'warning'
+                        WHEN datetime(last_seen) > datetime('now', '-5 minutes') THEN 'online'
+                        WHEN datetime(last_seen) > datetime('now', '-15 minutes') THEN 'warning'
                         ELSE 'offline'
                     END as status
                 FROM device_registry
-                WHERE is_active = TRUE
-                ORDER BY device_id, last_seen DESC
+                WHERE is_active = 1
+                ORDER BY last_seen DESC
                 LIMIT 20
             """)
             
@@ -495,7 +497,15 @@ async def get_public_device_status():
             for device in devices:
                 last_seen = device['last_seen']
                 if last_seen:
-                    time_diff = datetime.now(timezone.utc) - last_seen.replace(tzinfo=timezone.utc)
+                    # Handle both string and datetime formats
+                    if isinstance(last_seen, str):
+                        # Parse SQLite datetime string
+                        last_seen_dt = datetime.fromisoformat(last_seen.replace('Z', '+00:00'))
+                    else:
+                        # Already a datetime object (PostgreSQL)
+                        last_seen_dt = last_seen.replace(tzinfo=timezone.utc)
+                    
+                    time_diff = datetime.now(timezone.utc) - last_seen_dt.replace(tzinfo=timezone.utc)
                     minutes_ago = int(time_diff.total_seconds() / 60)
                     last_seen_text = f"{minutes_ago}m ago" if minutes_ago < 60 else f"{int(minutes_ago/60)}h ago"
                 else:
@@ -520,8 +530,10 @@ async def get_public_device_status():
             }
             
     except Exception as e:
+        import traceback
         logger.error(f"Public device status error: {str(e)}")
-        # Return fallback data
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        # Return fallback data with error details
         return {
             "devices": [
                 {
@@ -537,7 +549,8 @@ async def get_public_device_status():
             "warning_count": 0,
             "offline_count": 1,
             "last_updated": datetime.now(timezone.utc).isoformat(),
-            "error": "Device data temporarily unavailable",
+            "error": f"Device data temporarily unavailable: {str(e)}",
+            "error_type": type(e).__name__,
             "demo_mode": True
         }
 
@@ -2288,51 +2301,30 @@ async def get_enhanced_device_list(token: str = Depends(verify_token)):
     """Get enhanced device list with real-time status and metrics"""
     try:
         async with db_pool.acquire() as conn:
-            # Get devices with latest metrics
-            devices = await conn.fetch("""
-                WITH latest_metrics AS (
-                    SELECT DISTINCT ON (device_id) 
-                        device_id,
-                        battery_level,
-                        timestamp as last_seen
-                    FROM device_metrics 
-                    ORDER BY device_id, timestamp DESC
-                ),
-                latest_network AS (
-                    SELECT DISTINCT ON (device_id)
-                        device_id,
-                        wifi_signal_strength,
-                        connectivity_status
-                    FROM network_metrics
-                    ORDER BY device_id, timestamp DESC
-                ),
-                latest_app AS (
-                    SELECT DISTINCT ON (device_id)
-                        device_id,
-                        screen_state,
-                        app_foreground
-                    FROM app_metrics
-                    ORDER BY device_id, timestamp DESC
-                )
+            db_helper = await get_db_helper(conn)
+            
+            # SQLite-compatible query to get devices with their latest metrics
+            devices = await db_helper.fetch("""
                 SELECT 
                     dr.device_id,
                     dr.device_name,
                     dr.location,
-                    lm.battery_level,
-                    lm.last_seen,
-                    ln.wifi_signal_strength,
-                    ln.connectivity_status,
-                    la.screen_state,
-                    la.app_foreground,
+                    dr.last_seen,
+                    dm.battery_level,
+                    nm.wifi_signal_strength,
+                    nm.connectivity_status,
+                    am.screen_state,
+                    am.app_foreground,
                     CASE 
-                        WHEN lm.last_seen > NOW() - INTERVAL '5 minutes' THEN 'online'
-                        WHEN lm.last_seen > NOW() - INTERVAL '15 minutes' THEN 'warning'
+                        WHEN datetime(dr.last_seen) > datetime('now', '-5 minutes') THEN 'online'
+                        WHEN datetime(dr.last_seen) > datetime('now', '-15 minutes') THEN 'warning'
                         ELSE 'offline'
                     END as device_status
                 FROM device_registry dr
-                LEFT JOIN latest_metrics lm ON dr.device_id = lm.device_id
-                LEFT JOIN latest_network ln ON dr.device_id = ln.device_id  
-                LEFT JOIN latest_app la ON dr.device_id = la.device_id
+                LEFT JOIN device_metrics dm ON dr.device_id = dm.device_id
+                LEFT JOIN network_metrics nm ON dr.device_id = nm.device_id  
+                LEFT JOIN app_metrics am ON dr.device_id = am.device_id
+                WHERE dr.is_active = 1
                 ORDER BY dr.device_name, dr.device_id
             """)
             
@@ -2341,11 +2333,21 @@ async def get_enhanced_device_list(token: str = Depends(verify_token)):
                 # Calculate time since last seen
                 last_seen = device['last_seen']
                 if last_seen:
-                    time_diff = datetime.now(timezone.utc) - last_seen.replace(tzinfo=timezone.utc)
+                    # Handle both string and datetime formats
+                    if isinstance(last_seen, str):
+                        # Parse SQLite datetime string
+                        last_seen_dt = datetime.fromisoformat(last_seen.replace('Z', '+00:00'))
+                    else:
+                        # Already a datetime object (PostgreSQL)
+                        last_seen_dt = last_seen.replace(tzinfo=timezone.utc)
+                    
+                    time_diff = datetime.now(timezone.utc) - last_seen_dt.replace(tzinfo=timezone.utc)
                     minutes_ago = int(time_diff.total_seconds() / 60)
                     last_seen_text = f"{minutes_ago}m ago" if minutes_ago < 60 else f"{int(minutes_ago/60)}h ago"
+                    last_seen_iso = last_seen_dt.isoformat()
                 else:
                     last_seen_text = "Never"
+                    last_seen_iso = None
                 
                 # Determine overall health score
                 health_score = 100
@@ -2369,11 +2371,11 @@ async def get_enhanced_device_list(token: str = Depends(verify_token)):
                     "connectivity_status": device['connectivity_status'] or "unknown",
                     "screen_state": device['screen_state'] or "unknown",
                     "app_foreground": device['app_foreground'] or "unknown",
-                    "last_seen": last_seen.isoformat() if last_seen else None,
+                    "last_seen": last_seen_iso,
                     "last_seen_text": last_seen_text,
                     "health_score": max(0, health_score),
-                    "myob_active": False,  # Placeholder
-                    "scanner_active": False  # Placeholder
+                    "myob_active": device['app_foreground'] and 'myob' in device['app_foreground'].lower() if device['app_foreground'] else False,
+                    "scanner_active": device['app_foreground'] and 'scanner' in device['app_foreground'].lower() if device['app_foreground'] else False
                 })
             
             return {
