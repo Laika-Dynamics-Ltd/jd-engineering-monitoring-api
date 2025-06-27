@@ -2619,7 +2619,7 @@
                         <div class="tab-indicator"></div>
                     </button>
                     <button class="nav-tab" onclick="switchTab('device-monitoring')" id="monitoring-tab">
-                        <i class="fas fa-tablet-alt"></i>
+                    <i class="fas fa-tablet-alt"></i>
                         <span>Device Monitoring</span>
                         <div class="tab-indicator"></div>
                     </button>
@@ -2669,9 +2669,9 @@
                         <div class="analytics-grid" id="analytics-summary-grid">
                             <!-- Analytics cards will be populated here -->
                         </div>
+                        </div>
                     </div>
-                </div>
-                
+                    
                 <!-- Executive Summary Dashboard -->
                 <div class="executive-summary">
                     <div class="summary-header">
@@ -2681,34 +2681,34 @@
                             <div class="ai-indicator active" id="aiIndicator">
                                 <i class="fas fa-robot"></i>
                                 <span>AI Analysis: ACTIVE</span>
-                            </div>
+                        </div>
                             <div class="ai-confidence-meter">
                                 <span>AI Confidence:</span>
                                 <div class="confidence-bar">
                                     <div class="confidence-fill" id="confidenceFill" style="width: 95%"></div>
-                                </div>
+                        </div>
                                 <span id="confidenceValue">95%</span>
                             </div>
                             <div class="analysis-timestamp">
                                 <i class="fas fa-clock"></i>
                                 <span id="lastAiAnalysis">Analyzing...</span>
-                            </div>
-                        </div>
                     </div>
-                    
+                </div>
+            </div>
+
                     <!-- AI Executive Summary Panel -->
                     <div class="ai-executive-panel">
                         <div class="ai-summary-header">
                             <h2><i class="fas fa-lightbulb"></i> AI Executive Summary</h2>
                             <div class="ai-model-badge">GPT-3.5 Turbo</div>
-                        </div>
+                </div>
                         <div class="ai-summary-content" id="aiExecutiveSummary">
                             <div class="ai-loading">
                                 <div class="ai-spinner"></div>
                                 <span>OpenAI is analyzing your data...</span>
                             </div>
+                            </div>
                         </div>
-                    </div>
                     
                     <!-- Key Performance Indicators -->
                     <div class="kpi-grid">
@@ -2724,29 +2724,29 @@
                                         <div class="kpi-label">Hours Lost/Week</div>
                                         <div class="kpi-trend" id="productivityTrend">
                                             <i class="fas fa-arrow-down"></i> -15%
-                                        </div>
-                                    </div>
+                        </div>
+                        </div>
                                     <div class="kpi-item">
                                         <div class="kpi-value" id="timeoutRate">--</div>
                                         <div class="kpi-label">Timeout Rate %</div>
                                         <div class="kpi-trend positive" id="timeoutTrend">
                                             <i class="fas fa-arrow-up"></i> +8%
-                                        </div>
-                                    </div>
-                                </div>
+                    </div>
+                            </div>
+                            </div>
                                 <div class="kpi-row">
                                     <div class="kpi-item">
                                         <div class="kpi-value" id="affectedEmployees">--</div>
                                         <div class="kpi-label">Affected Employees</div>
-                                    </div>
+                        </div>
                                     <div class="kpi-item">
                                         <div class="kpi-value" id="efficiencyScore">--</div>
                                         <div class="kpi-label">Efficiency Score</div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
-                        
+                        </div>
+                    </div>
+                    
                         <div class="kpi-card financial-impact">
                             <div class="kpi-header">
                                 <h3><i class="fas fa-dollar-sign"></i> Financial Impact</h3>
@@ -2756,24 +2756,24 @@
                                 <div class="financial-metric">
                                     <div class="metric-large" id="weeklyCost">$--</div>
                                     <div class="metric-label">Weekly Cost</div>
-                                </div>
+                            </div>
                                 <div class="financial-breakdown">
                                     <div class="breakdown-item">
                                         <span>Annual Projection:</span>
                                         <span class="breakdown-value" id="annualCost">$--</span>
-                                    </div>
+                        </div>
                                     <div class="breakdown-item">
                                         <span>Cost per Incident:</span>
                                         <span class="breakdown-value" id="costPerIncident">$--</span>
-                                    </div>
+                            </div>
                                     <div class="breakdown-item">
                                         <span>ROI of Solution:</span>
                                         <span class="breakdown-value positive">$--</span>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
-                        
+                                </div>
+                        </div>
+                    </div>
+                    
                         <div class="kpi-card operational-metrics">
                             <div class="kpi-header">
                                 <h3><i class="fas fa-cogs"></i> Operational Status</h3>
@@ -2783,31 +2783,31 @@
                                         <option value="168" selected>7D</option>
                                         <option value="720">30D</option>
                                     </select>
-                                </div>
+                            </div>
                             </div>
                             <div class="kpi-content">
                                 <div class="operational-grid">
                                     <div class="op-metric">
                                         <div class="op-value" id="dailyIncidents">--</div>
                                         <div class="op-label">Daily Incidents</div>
-                                    </div>
+                        </div>
                                     <div class="op-metric">
                                         <div class="op-value" id="avgSessionTime">--</div>
                                         <div class="op-label">Avg Session (min)</div>
-                                    </div>
+                            </div>
                                     <div class="op-metric">
                                         <div class="op-value" id="peakHourIncidents">--</div>
                                         <div class="op-label">Peak Hour Issues</div>
-                                    </div>
+                        </div>
                                     <div class="op-metric">
                                         <div class="op-value" id="recoveryTime">--</div>
                                         <div class="op-label">Avg Recovery (min)</div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
-                    
+                    </div>
+                </div>
+            </div>
+
                     <!-- Advanced Analytics Section -->
                     <div class="analytics-section">
                         <div class="analytics-grid">
@@ -2819,23 +2819,23 @@
                                         <button class="chart-btn active" onclick="switchChartView('hourly')">Hourly</button>
                                         <button class="chart-btn" onclick="switchChartView('daily')">Daily</button>
                                         <button class="chart-btn" onclick="switchChartView('weekly')">Weekly</button>
-                                    </div>
-                                </div>
+            </div>
+                    </div>
                                 <div class="chart-container large">
                                     <canvas id="timeoutPatternChart" width="800" height="300"></canvas>
-                                </div>
+                </div>
                                 <div class="chart-insights">
                                     <div class="insight-row">
                                         <div class="insight-item">
                                             <strong>Peak Risk Hours:</strong>
                                             <span id="peakHours">Analyzing...</span>
-                                        </div>
+                        </div>
                                         <div class="insight-item">
                                             <strong>Pattern Confidence:</strong>
                                             <span id="patternConfidence">85%</span>
-                                        </div>
-                                    </div>
-                                </div>
+                            </div>
+                            </div>
+                            </div>
                             </div>
                             
                             <!-- AI Insights & Predictions -->
@@ -2843,7 +2843,7 @@
                                 <div class="analytics-header">
                                     <h3><i class="fas fa-robot"></i> AI Insights & Predictions</h3>
                                     <div class="ai-confidence" id="aiConfidence">Confidence: HIGH</div>
-                                </div>
+                        </div>
                                 <div class="ai-content">
                                     <div class="prediction-panel">
                                         <h4><i class="fas fa-crystal-ball"></i> Predictive Analysis</h4>
@@ -2851,14 +2851,14 @@
                                             <div class="prediction-item">
                                                 <div class="prediction-label">Next 24H Risk Level:</div>
                                                 <div class="prediction-value medium">MEDIUM</div>
-                                            </div>
+                            </div>
                                             <div class="prediction-item">
                                                 <div class="prediction-label">Expected Incidents:</div>
                                                 <div class="prediction-value">2-3</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
+                            </div>
+                        </div>
+                    </div>
+                    
                                     <div class="correlation-panel">
                                         <h4><i class="fas fa-link"></i> Key Correlations</h4>
                                         <div id="correlations" class="correlation-content">
@@ -2866,19 +2866,19 @@
                                                 <div class="correlation-factor">Battery Level</div>
                                                 <div class="correlation-strength strong">Strong</div>
                                                 <div class="correlation-impact">72% correlation with timeouts</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
+                        </div>
+                        </div>
+                    </div>
+                    
                                     <div class="anomaly-panel">
                                         <h4><i class="fas fa-exclamation-circle"></i> Anomaly Detection</h4>
                                         <div id="anomalies" class="anomaly-content">
                                             <div class="no-anomalies">
                                                 <i class="fas fa-check-circle"></i>
                                                 <span>No critical anomalies detected</span>
-                                            </div>
-                                        </div>
-                                    </div>
+                        </div>
+                            </div>
+                            </div>
                                 </div>
                             </div>
                         </div>
@@ -2892,7 +2892,7 @@
                                 <button class="filter-btn active" onclick="filterRecommendations('all')">All</button>
                                 <button class="filter-btn" onclick="filterRecommendations('critical')">Critical</button>
                                 <button class="filter-btn" onclick="filterRecommendations('high')">High Priority</button>
-                            </div>
+                        </div>
                         </div>
                         <div class="recommendations-grid" id="recommendations">
                             <div class="loading-recommendations">
@@ -2913,7 +2913,7 @@
                                     <option value="medium">Medium Risk</option>
                                     <option value="low">Low Risk</option>
                                 </select>
-                            </div>
+                        </div>
                         </div>
                         <div class="performance-matrix enhanced" id="performanceMatrix">
                             <table class="matrix-table">
@@ -2938,9 +2938,9 @@
                             </table>
                         </div>
                     </div>
-                </div>
-            </div>
-
+                        </div>
+                    </div>
+                    
             <!-- Device Monitoring Tab -->
             <div id="device-monitoring" class="tab-content">
                 <div class="monitoring-header">
@@ -2965,9 +2965,9 @@
                             <select id="locationFilter" onchange="filterDevices()">
                                 <option value="all">All Locations</option>
                             </select>
+                            </div>
                         </div>
                     </div>
-                </div>
                 
                 <!-- Device Grid/List -->
                 <div id="devicesContainer" class="devices-grid">
@@ -4184,7 +4184,7 @@
             try {
                 // First, get comprehensive AI analysis from OpenAI
                 const aiResponse = await fetch(`${API_BASE}/analytics/ai/comprehensive-analysis?hours=${hours}`, {
-                    headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+                        headers: { 'Authorization': `Bearer ${API_TOKEN}` }
                 });
                 
                 let aiAnalysis = null;
@@ -4199,7 +4199,7 @@
                 
                 // Get standard analytics data
                 const analyticsResponse = await fetch(`${API_BASE}/analytics`, {
-                    headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+                        headers: { 'Authorization': `Bearer ${API_TOKEN}` }
                 });
                 
                 let analyticsData = {};
@@ -5114,7 +5114,7 @@
             
             // Load data for the selected tab
             if (tabName === 'business-intelligence') {
-                loadBusinessIntelligence();
+                    loadBusinessIntelligence();
             } else if (tabName === 'device-monitoring') {
                 loadDeviceMonitoring();
             } else if (tabName === 'analytics-charts') {
