@@ -25,23 +25,27 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application code and startup script
 COPY . .
+COPY start.sh .
 
 # Create static directory if it doesn't exist
 RUN mkdir -p static
+
+# Make startup script executable
+RUN chmod +x start.sh
 
 # Create non-root user for security
 RUN useradd --create-home --shell /bin/bash --uid 1000 app \
     && chown -R app:app /app
 USER app
 
-# Expose port (Railway will set PORT environment variable)
-EXPOSE $PORT
+# Expose port 8000 (Railway will set PORT environment variable)
+EXPOSE 8000
 
-# Simple health check without external dependencies
+# Health check using environment variable properly
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD python -c "import requests; requests.get(f'http://localhost:{os.environ.get(\"PORT\", 8000)}/health', timeout=5)" || exit 1
+    CMD python -c "import os, requests; requests.get(f'http://localhost:{os.environ.get(\"PORT\", 8000)}/health', timeout=5)" || exit 1
 
-# Start FastAPI with dynamic port from Railway
-CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}
+# Use startup script to handle PORT variable correctly
+CMD ["./start.sh"]
