@@ -1,19 +1,39 @@
 # 🚀 ENABLE RAILWAY AUTO-DEPLOYMENT - EXACT STEPS
 
-## ⚠️ CRITICAL: You must enable this setting in Railway Dashboard
+## ⚠️ CRITICAL: Repository Mismatch Found!
 
-### 📍 **Step-by-Step Instructions:**
+**Your GitHub Repository**: `laikadynamics/jd-engineering-monitoring-api`
+**Railway May Be Looking For**: `Laika-Dynamics-Ltd/jd-engineering-monitoring-api`
+
+### 📍 **Step-by-Step Fix:**
 
 1. **Open Railway Dashboard**: https://railway.app/dashboard
 2. **Find your project**: `jd-engineering-monitoring-api`
 3. **Click on the service**: `jd-engineering-monitoring-api` (the main service box)
 4. **Go to "Settings" tab** (top navigation)
 5. **Scroll to "Source Repo" section**
-6. **Look for these settings**:
-   - ✅ **Repository**: Should show `Laika-Dynamics-Ltd/jd-engineering-monitoring-api`
+6. **VERIFY Repository Connection**:
+
+   **Expected Settings:**
+   - ✅ **Repository**: Should be `laikadynamics/jd-engineering-monitoring-api` 
    - ✅ **Branch**: Should be `main`
    - ⚠️ **Deploy Triggers**: Enable "Auto Deploy" toggle
    - ✅ **Root Directory**: Should be `/` (blank or root)
+
+### 🔧 **If Repository is Wrong:**
+
+**Option 1: Reconnect Repository**
+1. Click "Disconnect" in Source Repo section
+2. Click "Connect Repo" 
+3. Select: `laikadynamics/jd-engineering-monitoring-api`
+4. Select branch: `main`
+5. Enable "Auto Deploy" toggle
+
+**Option 2: GitHub Integration Fix**
+1. Go to Railway Settings → "GitHub"
+2. Disconnect and reconnect your GitHub account
+3. Re-authorize access to `laikadynamics` organization
+4. Reconnect the repository
 
 ### 🎯 **The EXACT Toggle to Enable:**
 
@@ -32,12 +52,13 @@ If you don't see "Auto Deploy" in Source Repo, check:
 
 The setting should show:
 - ✅ Auto Deploy: **Enabled**
+- ✅ Repository: **laikadynamics/jd-engineering-monitoring-api**
 - ✅ Branch: **main**
 - ✅ Every push to main will trigger automatic deployment
 
 ### 🧪 **Test Auto-Deploy:**
 
-Once enabled, this push will deploy automatically (no approval):
+Once enabled, push this small change to test:
 
 ```bash
 # This file change will trigger auto-deployment
@@ -50,12 +71,15 @@ git push origin main
 ### 🚨 **If You Can't Find the Setting:**
 
 Try these Railway dashboard URLs directly:
-- Project Overview: https://railway.app/project/55da292e-db89-45c9-9a8f-a1de3fd5cc64
-- Service Settings: https://railway.app/project/55da292e-db89-45c9-9a8f-a1de3fd5cc64/service/805a848a-797a-4c3d-bf83-7079f3c37c80
+- Project Overview: https://railway.app/project/YOUR_PROJECT_ID
+- Service Settings: Check your Railway dashboard for the exact URLs
 
-### 📞 **Still Need Help?**
+### 📞 **Repository Name Verification:**
 
-The setting name might be:
+Your local git shows: `laikadynamics/jd-engineering-monitoring-api`
+Make sure Railway is connected to the EXACT same repository name!
+
+**The setting name might be:**
 - "Auto Deploy"
 - "Deploy on Push" 
 - "Automatic Deployments"
