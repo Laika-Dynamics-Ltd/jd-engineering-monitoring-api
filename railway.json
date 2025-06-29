@@ -1,22 +1,19 @@
 {
     "$schema": "https://railway.app/railway.schema.json",
     "build": {
-      "builder": "DOCKERFILE",
-      "buildCommand": "echo 'Building JD Engineering Monitoring API...'",
+      "builder": "NIXPACKS",
+      "buildCommand": "pip install -r requirements_simple.txt",
       "watchPatterns": [
-        "main.py",
-        "requirements.txt",
-        "Dockerfile",
-        "start.sh",
-        "static/**/*"
+        "main_simple.py",
+        "requirements_simple.txt"
       ]
     },
     "deploy": {
-      "startCommand": "uvicorn main_simple:app --host 0.0.0.0 --port $PORT",
+      "startCommand": "uvicorn main_simple:app --host 0.0.0.0 --port $PORT --log-level info",
       "restartPolicyType": "ON_FAILURE",
       "restartPolicyMaxRetries": 3,
       "healthcheckPath": "/health",
-      "healthcheckTimeout": 300,
+      "healthcheckTimeout": 30,
       "nixpacksPlan": "python-3.11"
     },
     "environments": {
