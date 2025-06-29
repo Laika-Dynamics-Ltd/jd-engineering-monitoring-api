@@ -1,0 +1,35 @@
+Hi Brad,
+
+Daily update for 30 June:
+
+Tablet Testing Requirements:
+
+Before proceeding with further security bypass script testing, I need to ensure our test environments are properly updated:
+
+• Both test tablets require latest TeamViewer and Android versions
+• This will ensure compatibility and accurate testing results for the security bypass implementation
+
+Access Request:
+
+Could you please let me know a convenient time this morning when I can connect to our test tablet? I'd like to:
+• Verify current software versions
+• Test and confirm the security bypass script functionality
+• Complete any necessary updates
+
+Additionally, are you happy for me to connect to the tablet in the plasma department for further testing this morning? This would help validate the solution across different deployment scenarios.
+
+Dashboard Status:
+• Recent improvements deployed successfully
+• Password login issue resolved (thanks for catching that spacing issue!)
+• Can you confirm dashboard access is working properly for you now?
+
+I'll aim to have all tablet testing completed by mid-morning and will provide an update on results.
+
+Cheers,
+
+Joe
+
+--
+Joe Sealey
+Software & Systems Engineer - Laika Dynamics Ltd 
+PH: 027 246 7824 
