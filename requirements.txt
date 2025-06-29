@@ -1,4 +1,4 @@
-# Core FastAPI dependencies
+# Core FastAPI dependencies - Railway optimized
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 gunicorn==21.2.0
@@ -31,3 +31,6 @@ openai==1.3.0
 
 # Streamlit (optional for Railway)
 streamlit==1.28.0
+
+# Production server for Railway
+psycopg2-binary==2.9.9

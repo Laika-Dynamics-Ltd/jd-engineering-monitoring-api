@@ -10,5 +10,5 @@ echo "🚀 Starting JD Engineering Monitoring API on port $PORT"
 echo "📊 Environment: ${RAILWAY_ENVIRONMENT:-development}"
 echo "🗄️ Database: ${DATABASE_URL:+Connected}"
 
-# Start uvicorn with proper port
-exec uvicorn main:app --host 0.0.0.0 --port "$PORT" --log-level info 
+# Start uvicorn with Railway-optimized settings
+exec uvicorn main:app --host 0.0.0.0 --port "$PORT" --log-level info --workers 1 --timeout-keep-alive 300
