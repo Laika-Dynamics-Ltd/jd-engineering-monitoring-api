@@ -4,8 +4,7 @@
       "builder": "NIXPACKS",
       "buildCommand": "pip install -r requirements_simple.txt",
       "watchPatterns": [
-        "main_simple.py",
-        "requirements_simple.txt"
+        "**/*"
       ]
     },
     "deploy": {
@@ -13,7 +12,7 @@
       "restartPolicyType": "ON_FAILURE",
       "restartPolicyMaxRetries": 3,
       "healthcheckPath": "/health",
-      "healthcheckTimeout": 30,
+      "healthcheckTimeout": 60,
       "nixpacksPlan": "python-3.11"
     },
     "environments": {
