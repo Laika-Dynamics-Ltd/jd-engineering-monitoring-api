@@ -682,44 +682,79 @@ async def store_tablet_data(data: TabletData, client_ip: str = None):
             
             # Store network metrics
             if data.network_metrics:
-                await db_helper.execute('''
-                    INSERT INTO network_metrics (device_id, wifi_signal_strength, wifi_ssid,
-                                               connectivity_status, network_type, ip_address,
-                                               dns_response_time, data_usage_mb, timestamp)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ''', data.device_id, data.network_metrics.wifi_signal_strength,
-                data.network_metrics.wifi_ssid, data.network_metrics.connectivity_status,
-                data.network_metrics.network_type, data.network_metrics.ip_address,
-                data.network_metrics.dns_response_time, data.network_metrics.data_usage_mb,
-                data.network_metrics.timestamp)
+                if db_helper.is_sqlite:
+                    await db_helper.execute('''
+                        INSERT INTO network_metrics (device_id, wifi_signal_strength, wifi_ssid,
+                                                   connectivity_status, network_type, ip_address,
+                                                   dns_response_time, data_usage_mb, timestamp)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', data.device_id, data.network_metrics.wifi_signal_strength,
+                    data.network_metrics.wifi_ssid, data.network_metrics.connectivity_status,
+                    data.network_metrics.network_type, data.network_metrics.ip_address,
+                    data.network_metrics.dns_response_time, data.network_metrics.data_usage_mb,
+                    data.network_metrics.timestamp)
+                else:
+                    await db_helper.execute('''
+                        INSERT INTO network_metrics (device_id, wifi_signal_strength, wifi_ssid,
+                                                   connectivity_status, network_type, ip_address,
+                                                   dns_response_time, data_usage_mb, timestamp)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                    ''', data.device_id, data.network_metrics.wifi_signal_strength,
+                    data.network_metrics.wifi_ssid, data.network_metrics.connectivity_status,
+                    data.network_metrics.network_type, data.network_metrics.ip_address,
+                    data.network_metrics.dns_response_time, data.network_metrics.data_usage_mb,
+                    data.network_metrics.timestamp)
             
             # Store app metrics
             if data.app_metrics:
-                await db_helper.execute('''
-                    INSERT INTO app_metrics (device_id, screen_state, app_foreground,
-                                           app_memory_usage, screen_timeout_setting,
-                                           last_user_interaction, notification_count, 
-                                           app_crashes, timestamp)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ''', data.device_id, data.app_metrics.screen_state,
-                data.app_metrics.app_foreground, data.app_metrics.app_memory_usage,
-                data.app_metrics.screen_timeout_setting, data.app_metrics.last_user_interaction,
-                data.app_metrics.notification_count, data.app_metrics.app_crashes,
-                data.app_metrics.timestamp)
+                if db_helper.is_sqlite:
+                    await db_helper.execute('''
+                        INSERT INTO app_metrics (device_id, screen_state, app_foreground,
+                                               app_memory_usage, screen_timeout_setting,
+                                               last_user_interaction, notification_count, 
+                                               app_crashes, timestamp)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', data.device_id, data.app_metrics.screen_state,
+                    data.app_metrics.app_foreground, data.app_metrics.app_memory_usage,
+                    data.app_metrics.screen_timeout_setting, data.app_metrics.last_user_interaction,
+                    data.app_metrics.notification_count, data.app_metrics.app_crashes,
+                    data.app_metrics.timestamp)
+                else:
+                    await db_helper.execute('''
+                        INSERT INTO app_metrics (device_id, screen_state, app_foreground,
+                                               app_memory_usage, screen_timeout_setting,
+                                               last_user_interaction, notification_count, 
+                                               app_crashes, timestamp)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                    ''', data.device_id, data.app_metrics.screen_state,
+                    data.app_metrics.app_foreground, data.app_metrics.app_memory_usage,
+                    data.app_metrics.screen_timeout_setting, data.app_metrics.last_user_interaction,
+                    data.app_metrics.notification_count, data.app_metrics.app_crashes,
+                    data.app_metrics.timestamp)
             
             # Store session events
             if data.session_events:
                 session_count = 0
                 timeout_count = 0
                 for event in data.session_events:
-                    await db_helper.execute('''
-                        INSERT INTO session_events (device_id, event_type, session_id,
-                                                  duration, error_message, user_id, 
-                                                  app_version, timestamp)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    ''', data.device_id, event.event_type, event.session_id,
-                    event.duration, event.error_message, event.user_id,
-                    event.app_version, event.timestamp)
+                    if db_helper.is_sqlite:
+                        await db_helper.execute('''
+                            INSERT INTO session_events (device_id, event_type, session_id,
+                                                      duration, error_message, user_id, 
+                                                      app_version, timestamp)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        ''', data.device_id, event.event_type, event.session_id,
+                        event.duration, event.error_message, event.user_id,
+                        event.app_version, event.timestamp)
+                    else:
+                        await db_helper.execute('''
+                            INSERT INTO session_events (device_id, event_type, session_id,
+                                                      duration, error_message, user_id, 
+                                                      app_version, timestamp)
+                            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                        ''', data.device_id, event.event_type, event.session_id,
+                        event.duration, event.error_message, event.user_id,
+                        event.app_version, event.timestamp)
                     
                     if event.event_type in ['login', 'session_start']:
                         session_count += 1
@@ -728,12 +763,20 @@ async def store_tablet_data(data: TabletData, client_ip: str = None):
                 
                 # Update device registry counters
                 if session_count > 0 or timeout_count > 0:
-                    await db_helper.execute('''
-                        UPDATE device_registry 
-                        SET total_sessions = COALESCE(total_sessions, 0) + ?,
-                            total_timeouts = COALESCE(total_timeouts, 0) + ?
-                        WHERE device_id = ?
-                    ''', session_count, timeout_count, data.device_id)
+                    if db_helper.is_sqlite:
+                        await db_helper.execute('''
+                            UPDATE device_registry 
+                            SET total_sessions = COALESCE(total_sessions, 0) + ?,
+                                total_timeouts = COALESCE(total_timeouts, 0) + ?
+                            WHERE device_id = ?
+                        ''', session_count, timeout_count, data.device_id)
+                    else:
+                        await db_helper.execute('''
+                            UPDATE device_registry 
+                            SET total_sessions = COALESCE(total_sessions, 0) + $1,
+                                total_timeouts = COALESCE(total_timeouts, 0) + $2
+                            WHERE device_id = $3
+                        ''', session_count, timeout_count, data.device_id)
             
             logger.info(f"✅ Successfully stored data for device {data.device_id}")
                 
