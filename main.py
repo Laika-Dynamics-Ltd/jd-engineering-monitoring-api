@@ -608,7 +608,13 @@ async def receive_tablet_data(
         logger.info(f"📱 Received data from device: {data.device_id} (IP: {client_ip})")
         
         # Process data in background to return quickly
-        background_tasks.add_task(store_tablet_data, data, client_ip)
+        # Store data immediately instead of in background
+    try:
+        await store_tablet_data(data, client_ip)
+    except Exception as e:
+        logger.error(f"Failed to store tablet data: {str(e)}")
+        # Still return success to client
+        pass
         
         return {
             "status": "success",
