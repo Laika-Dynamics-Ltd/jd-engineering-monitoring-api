@@ -75,8 +75,20 @@ class DatabaseHelper:
 
 async def get_db_helper(conn):
     """Get database helper with proper connection type detection"""
-    is_sqlite = hasattr(conn, 'execute') and not hasattr(conn, 'fetchval')
-    return DatabaseHelper(conn, is_sqlite)
+    # Check connection type more robustly
+    try:
+        # Try to detect asyncpg connection (PostgreSQL)
+        if hasattr(conn, '__module__') and 'asyncpg' in str(conn.__module__):
+            return DatabaseHelper(conn, is_sqlite=False)
+        # Check if it's a SQLite connection (aiosqlite)
+        elif hasattr(conn, 'execute') and hasattr(conn, 'fetchone') and not hasattr(conn, 'fetch'):
+            return DatabaseHelper(conn, is_sqlite=True)
+        # Default to PostgreSQL for Railway deployment
+        else:
+            return DatabaseHelper(conn, is_sqlite=False)
+    except Exception as e:
+        logger.warning(f"Connection type detection failed: {e}, defaulting to PostgreSQL")
+        return DatabaseHelper(conn, is_sqlite=False)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
