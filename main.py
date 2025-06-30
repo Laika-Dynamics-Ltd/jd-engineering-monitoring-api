@@ -46,6 +46,7 @@ class DatabaseHelper:
             row = await cursor.fetchone()
             return row[0] if row else None
         else:
+            # Direct asyncpg connection method
             return await self.conn.fetchval(query, *params)
     
     async def fetchrow(self, query, *params):
@@ -59,6 +60,7 @@ class DatabaseHelper:
                 return dict(zip(columns, row))
             return None
         else:
+            # Direct asyncpg connection method
             return await self.conn.fetchrow(query, *params)
     
     async def fetch(self, query, *params):
@@ -71,23 +73,30 @@ class DatabaseHelper:
                 return [dict(zip(columns, row)) for row in rows]
             return []
         else:
+            # Direct asyncpg connection method
             return await self.conn.fetch(query, *params)
 
 async def get_db_helper(conn):
-    """Get database helper with proper connection type detection"""
-    # Check connection type more robustly
+    """Get database helper with simplified connection type detection"""
     try:
-        # Try to detect asyncpg connection (PostgreSQL)
-        if hasattr(conn, '__module__') and 'asyncpg' in str(conn.__module__):
+        # Check if we have a DATABASE_URL environment variable
+        database_url = os.getenv("DATABASE_URL")
+        
+        if database_url and 'postgresql' in database_url:
+            # We're using PostgreSQL - return asyncpg helper
+            logger.debug("Using PostgreSQL connection helper")
             return DatabaseHelper(conn, is_sqlite=False)
-        # Check if it's a SQLite connection (aiosqlite)
         elif hasattr(conn, 'execute') and hasattr(conn, 'fetchone') and not hasattr(conn, 'fetch'):
+            # SQLite connection pattern
+            logger.debug("Using SQLite connection helper")
             return DatabaseHelper(conn, is_sqlite=True)
-        # Default to PostgreSQL for Railway deployment
         else:
+            # Default to PostgreSQL for asyncpg connections
+            logger.debug("Defaulting to PostgreSQL connection helper")
             return DatabaseHelper(conn, is_sqlite=False)
+            
     except Exception as e:
-        logger.warning(f"Connection type detection failed: {e}, defaulting to PostgreSQL")
+        logger.warning(f"Connection helper detection failed: {e}, using PostgreSQL")
         return DatabaseHelper(conn, is_sqlite=False)
 
 @asynccontextmanager
@@ -105,7 +114,8 @@ async def lifespan(app: FastAPI):
                 database_url,
                 min_size=2,
                 max_size=10,
-                command_timeout=60
+                command_timeout=60,
+                ssl='prefer'  # Handle SSL properly for Railway
             )
             logger.info("✅ PostgreSQL connection pool created successfully")
             await init_database()
@@ -816,19 +826,19 @@ async def get_device_metrics(device_id: str, hours: int = 24):
 async def debug_tables(token: str = Depends(verify_token)):
     """Debug endpoint to check table counts"""
     try:
-        async with db_pool.acquire() as conn:
-            device_count = await conn.fetchval("SELECT COUNT(*) FROM device_registry")
-            metrics_count = await conn.fetchval("SELECT COUNT(*) FROM device_metrics")
-            network_count = await conn.fetchval("SELECT COUNT(*) FROM network_metrics")
-            
-            return {
-                "device_registry_count": device_count,
-                "device_metrics_count": metrics_count,
-                "network_metrics_count": network_count,
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            }
+        database_url = os.getenv("DATABASE_URL")
+        is_postgres = database_url and 'postgresql' in database_url
+        
+        return {
+            "database_url_set": bool(database_url),
+            "is_postgres": is_postgres,
+            "db_pool_type": str(type(db_pool)),
+            "connection_test": "Starting test...",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": str(e), "error_type": type(e).__name__}
 
 @app.get("/debug/real-data")
 async def debug_real_data(token: str = Depends(verify_token)):
