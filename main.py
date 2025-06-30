@@ -608,13 +608,7 @@ async def receive_tablet_data(
         logger.info(f"📱 Received data from device: {data.device_id} (IP: {client_ip})")
         
         # Process data in background to return quickly
-        # Store data immediately instead of in background
-    try:
-        await store_tablet_data(data, client_ip)
-    except Exception as e:
-        logger.error(f"Failed to store tablet data: {str(e)}")
-        # Still return success to client
-        pass
+        background_tasks.add_task(store_tablet_data, data, client_ip)
         
         return {
             "status": "success",
@@ -643,23 +637,48 @@ async def store_tablet_data(data: TabletData, client_ip: str = None):
         try:
             db_helper = await get_db_helper(conn)
             
-            # Update or insert device registry (SQLite compatible)
-            await db_helper.execute('''
-                INSERT OR REPLACE INTO device_registry (device_id, device_name, location, android_version, app_version, last_seen, is_active)
-                VALUES (?, ?, ?, ?, ?, ?, 1)
-            ''', data.device_id, data.device_name, data.location, data.android_version, data.app_version, data.timestamp)
+            # Update or insert device registry
+            if db_helper.is_sqlite:
+                await db_helper.execute('''
+                    INSERT OR REPLACE INTO device_registry (device_id, device_name, location, android_version, app_version, last_seen, is_active)
+                    VALUES (?, ?, ?, ?, ?, ?, 1)
+                ''', data.device_id, data.device_name, data.location, data.android_version, data.app_version, data.timestamp)
+            else:
+                # PostgreSQL UPSERT
+                await db_helper.execute('''
+                    INSERT INTO device_registry (device_id, device_name, location, android_version, app_version, last_seen, is_active)
+                    VALUES ($1, $2, $3, $4, $5, $6, TRUE)
+                    ON CONFLICT (device_id) DO UPDATE SET
+                        device_name = EXCLUDED.device_name,
+                        location = EXCLUDED.location,
+                        android_version = EXCLUDED.android_version,
+                        app_version = EXCLUDED.app_version,
+                        last_seen = EXCLUDED.last_seen,
+                        is_active = TRUE
+                ''', data.device_id, data.device_name, data.location, data.android_version, data.app_version, data.timestamp)
             
             # Store device metrics
             if data.device_metrics:
-                await db_helper.execute('''
-                    INSERT INTO device_metrics (device_id, battery_level, battery_temperature, 
-                                              memory_available, memory_total, storage_available, 
-                                              cpu_usage, timestamp)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                ''', data.device_id, data.device_metrics.battery_level,
-                data.device_metrics.battery_temperature, data.device_metrics.memory_available,
-                data.device_metrics.memory_total, data.device_metrics.storage_available,
-                data.device_metrics.cpu_usage, data.device_metrics.timestamp)
+                if db_helper.is_sqlite:
+                    await db_helper.execute('''
+                        INSERT INTO device_metrics (device_id, battery_level, battery_temperature, 
+                                                  memory_available, memory_total, storage_available, 
+                                                  cpu_usage, timestamp)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', data.device_id, data.device_metrics.battery_level,
+                    data.device_metrics.battery_temperature, data.device_metrics.memory_available,
+                    data.device_metrics.memory_total, data.device_metrics.storage_available,
+                    data.device_metrics.cpu_usage, data.device_metrics.timestamp)
+                else:
+                    await db_helper.execute('''
+                        INSERT INTO device_metrics (device_id, battery_level, battery_temperature, 
+                                                  memory_available, memory_total, storage_available, 
+                                                  cpu_usage, timestamp)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    ''', data.device_id, data.device_metrics.battery_level,
+                    data.device_metrics.battery_temperature, data.device_metrics.memory_available,
+                    data.device_metrics.memory_total, data.device_metrics.storage_available,
+                    data.device_metrics.cpu_usage, data.device_metrics.timestamp)
             
             # Store network metrics
             if data.network_metrics:
