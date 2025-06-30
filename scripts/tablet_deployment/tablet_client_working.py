@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 import uuid
 
 # Configuration
-API_URL = "https://jd-engineering-monitoring-api-production.up.railway.app/tablet-metrics"
+API_URL = "https://jd-engineering-monitoring-api-production-5d93.up.railway.app/tablet-metrics"
 API_TOKEN = "ArFetiWcHH5bIbiiwuQupQalDJocJA436YMi00tCvmHZOI82Awp8qbceO681"
 DEVICE_ID = "tablet_electrical_dept"
 
