@@ -7,20 +7,21 @@ Android 15 introduced stricter security policies that block unattended remote ac
 
 ## 🛠️ **Method 1: Device Administrator Configuration**
 
-### Step 1: Enable TeamViewer as Device Administrator
+### Step 1: Enable TeamViewer Host as Device Administrator
 ```bash
 # On tablet via ADB or Termux:
-adb shell dpm set-device-owner com.teamviewer.quicksupport.android/.DeviceAdminReceiver
+adb shell dpm set-device-owner com.teamviewer.host/.DeviceAdminReceiver
 
 # Or via Settings UI:
-# Settings > Security > Device Administrators > Enable TeamViewer
+# Settings > Security > Device Administrators > Enable TeamViewer Host
 ```
 
 ### Step 2: Grant Special Permissions
-1. **Settings > Apps > TeamViewer > Permissions**
+1. **Settings > Apps > TeamViewer Host > Permissions**
 2. Enable all permissions:
    - ✅ Camera
    - ✅ Microphone  
+   - ✅ Location
    - ✅ Display over other apps
    - ✅ Accessibility Service
    - ✅ Device Administrator
@@ -29,7 +30,7 @@ adb shell dpm set-device-owner com.teamviewer.quicksupport.android/.DeviceAdminR
 ```bash
 # Via ADB:
 adb shell settings put secure accessibility_enabled 1
-adb shell settings put secure enabled_accessibility_services com.teamviewer.quicksupport.android/.AccessibilityService
+adb shell settings put secure enabled_accessibility_services com.teamviewer.host/.services.AccessibilityService
 ```
 
 ---
@@ -64,7 +65,7 @@ Settings > Developer Options > Disable:
 {
   "applications": [
     {
-      "packageName": "com.teamviewer.quicksupport.android",
+      "packageName": "com.teamviewer.host",
       "installType": "FORCE_INSTALLED",
       "lockTaskAllowed": true,
       "permissionGrants": [
@@ -75,13 +76,21 @@ Settings > Developer Options > Disable:
         {
           "permission": "android.permission.ACCESSIBILITY_SERVICE", 
           "policy": "GRANT"
+        },
+        {
+          "permission": "android.permission.ACCESS_FINE_LOCATION",
+          "policy": "GRANT"
+        },
+        {
+          "permission": "android.permission.RECORD_AUDIO",
+          "policy": "GRANT"
         }
       ]
     }
   ],
   "persistentPreferredActivities": [
     {
-      "receiverActivity": "com.teamviewer.quicksupport.android/.MainActivity",
+      "receiverActivity": "com.teamviewer.host/.ui.TvClientActivity",
       "actions": ["android.intent.action.MAIN"],
       "categories": ["android.intent.category.HOME"]
     }
@@ -178,11 +187,13 @@ am start -a android.settings.ACCESSIBILITY_SETTINGS
 # Manually enable TeamViewer accessibility
 
 # Auto-grant permissions
-pm grant com.teamviewer.quicksupport.android android.permission.SYSTEM_ALERT_WINDOW
-pm grant com.teamviewer.quicksupport.android android.permission.WRITE_SECURE_SETTINGS
+pm grant com.teamviewer.host android.permission.SYSTEM_ALERT_WINDOW
+pm grant com.teamviewer.host android.permission.WRITE_SECURE_SETTINGS
+pm grant com.teamviewer.host android.permission.ACCESS_FINE_LOCATION
+pm grant com.teamviewer.host android.permission.RECORD_AUDIO
 
-# Start TeamViewer in background
-am start com.teamviewer.quicksupport.android/.MainActivity
+# Start TeamViewer Host
+am start com.teamviewer.host/.ui.TvClientActivity
 ```
 
 ### Alternative ADB Method:
@@ -208,7 +219,7 @@ adb shell input keyevent 26  # Turn screen on
 ```bash
 # Re-enable security after testing:
 adb shell settings put secure accessibility_enabled 0
-adb shell dpm remove-active-admin com.teamviewer.quicksupport.android/.DeviceAdminReceiver
+adb shell dpm remove-active-admin com.teamviewer.host/.DeviceAdminReceiver
 ```
 
 ---
@@ -225,7 +236,7 @@ adb shell dpm remove-active-admin com.teamviewer.quicksupport.android/.DeviceAdm
 ### During Meeting Commands:
 ```bash
 # Check if bypass is working:
-am start com.teamviewer.quicksupport.android
+am start com.teamviewer.host/.ui.TvClientActivity
 
 # Verify monitoring is running:
 tail -f monitoring.log
@@ -240,12 +251,12 @@ curl https://jd-engineering-monitoring-api-production-5d93.up.railway.app/health
 
 ### If TeamViewer Fails:
 ```bash
-# Force restart TeamViewer:
-am force-stop com.teamviewer.quicksupport.android
-am start com.teamviewer.quicksupport.android/.MainActivity
+# Force restart TeamViewer Host:
+am force-stop com.teamviewer.host
+am start com.teamviewer.host/.ui.TvClientActivity
 
 # Reset permissions:
-pm reset-permissions com.teamviewer.quicksupport.android
+pm reset-permissions com.teamviewer.host
 # Then re-grant manually
 ```
 

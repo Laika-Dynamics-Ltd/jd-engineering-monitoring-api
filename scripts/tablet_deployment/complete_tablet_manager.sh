@@ -87,29 +87,33 @@ setup_teamviewer_bypass() {
     
     cat > "teamviewer_bypass.sh" << 'EOF'
 #!/data/data/com.termux/files/usr/bin/bash
-echo "🔓 Starting TeamViewer bypass..."
+echo "🔓 Starting TeamViewer HOST bypass..."
 
-# Grant permissions
-pm grant com.teamviewer.quicksupport.android android.permission.SYSTEM_ALERT_WINDOW 2>/dev/null
-pm grant com.teamviewer.quicksupport.android android.permission.WRITE_SECURE_SETTINGS 2>/dev/null
+# Grant permissions for TeamViewer HOST
+pm grant com.teamviewer.host android.permission.SYSTEM_ALERT_WINDOW 2>/dev/null
+pm grant com.teamviewer.host android.permission.WRITE_SECURE_SETTINGS 2>/dev/null
+pm grant com.teamviewer.host android.permission.ACCESS_FINE_LOCATION 2>/dev/null
+pm grant com.teamviewer.host android.permission.RECORD_AUDIO 2>/dev/null
 
-# Enable accessibility
+# Enable accessibility for TeamViewer HOST
 settings put secure accessibility_enabled 1 2>/dev/null
-settings put secure enabled_accessibility_services com.teamviewer.quicksupport.android/.AccessibilityService 2>/dev/null
+settings put secure enabled_accessibility_services com.teamviewer.host/.services.AccessibilityService 2>/dev/null
 
-# Disable security
+# Disable security prompts
 settings put global development_settings_enabled 1 2>/dev/null
 settings put global stay_on_while_plugged_in 7 2>/dev/null
+settings put secure lock_screen_allow_remote_input 1 2>/dev/null
 
-# Start TeamViewer
-am start com.teamviewer.quicksupport.android/.MainActivity 2>/dev/null
+# Start TeamViewer HOST
+am start com.teamviewer.host/.ui.TvClientActivity 2>/dev/null
 
 # Open accessibility settings
 sleep 2
 am start -a android.settings.ACCESSIBILITY_SETTINGS 2>/dev/null
 
-echo "✅ TeamViewer bypass applied!"
-echo "📱 Please enable TeamViewer in Accessibility Settings"
+echo "✅ TeamViewer HOST bypass applied!"
+echo "📱 Please enable 'TeamViewer Host' in Accessibility Settings"
+echo "🔍 Look for 'TeamViewer Host' (not QuickSupport) and turn it ON"
 EOF
 
     chmod +x teamviewer_bypass.sh
