@@ -203,10 +203,12 @@ security = HTTPBearer(auto_error=False)
 class DeviceMetrics(BaseModel):
     battery_level: Optional[int] = Field(None, ge=0, le=100, description="Battery percentage")
     battery_temperature: Optional[float] = Field(None, description="Battery temperature in Celsius")
+    battery_status: Optional[str] = Field(None, description="Battery status (charging, full, etc.)")
     memory_available: Optional[int] = Field(None, ge=0, description="Available memory in bytes")
     memory_total: Optional[int] = Field(None, ge=0, description="Total memory in bytes")
     storage_available: Optional[int] = Field(None, ge=0, description="Available storage in bytes")
     cpu_usage: Optional[float] = Field(None, ge=0, le=100, description="CPU usage percentage")
+    source: Optional[str] = Field(None, description="Data source (termux_api, fallback, etc.)")
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class NetworkMetrics(BaseModel):
@@ -217,6 +219,7 @@ class NetworkMetrics(BaseModel):
     ip_address: Optional[str] = Field(None, description="Device IP address")
     dns_response_time: Optional[float] = Field(None, ge=0, description="DNS response time in ms")
     data_usage_mb: Optional[float] = Field(None, ge=0, description="Data usage in MB")
+    source: Optional[str] = Field(None, description="Data source (termux_api, fallback, etc.)")
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class AppMetrics(BaseModel):
@@ -227,6 +230,12 @@ class AppMetrics(BaseModel):
     last_user_interaction: Optional[datetime] = None
     notification_count: Optional[int] = Field(None, ge=0)
     app_crashes: Optional[int] = Field(None, ge=0, description="App crashes in last hour")
+    # Additional fields from tablet client
+    myob_active: Optional[bool] = Field(None, description="Whether MYOB application is active")
+    scanner_active: Optional[bool] = Field(None, description="Whether scanner application is active")
+    recent_movement: Optional[bool] = Field(None, description="Recent device movement detected")
+    inactive_seconds: Optional[int] = Field(None, ge=0, description="Seconds since last user interaction")
+    source: Optional[str] = Field(None, description="Data source (ps_command, accelerometer, etc.)")
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class SessionEvent(BaseModel):
@@ -293,10 +302,12 @@ async def init_postgres_tables(conn):
             device_id VARCHAR(50) NOT NULL,
             battery_level INTEGER CHECK (battery_level >= 0 AND battery_level <= 100),
             battery_temperature FLOAT,
+            battery_status TEXT,
             memory_available BIGINT CHECK (memory_available >= 0),
             memory_total BIGINT CHECK (memory_total >= 0),
             storage_available BIGINT CHECK (storage_available >= 0),
             cpu_usage FLOAT CHECK (cpu_usage >= 0 AND cpu_usage <= 100),
+            source TEXT,
             timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             created_at TIMESTAMPTZ DEFAULT NOW()
         )
@@ -315,10 +326,12 @@ async def init_sqlite_tables(conn):
             device_id TEXT NOT NULL,
             battery_level INTEGER CHECK (battery_level >= 0 AND battery_level <= 100),
             battery_temperature REAL,
+            battery_status TEXT,
             memory_available INTEGER CHECK (memory_available >= 0),
             memory_total INTEGER CHECK (memory_total >= 0),
             storage_available INTEGER CHECK (storage_available >= 0),
             cpu_usage REAL CHECK (cpu_usage >= 0 AND cpu_usage <= 100),
+            source TEXT,
             timestamp TEXT NOT NULL DEFAULT (datetime('now')),
             created_at TEXT DEFAULT (datetime('now'))
         )
@@ -336,6 +349,7 @@ async def init_sqlite_tables(conn):
             ip_address TEXT,
             dns_response_time REAL CHECK (dns_response_time >= 0),
             data_usage_mb REAL CHECK (data_usage_mb >= 0),
+            source TEXT,
             timestamp TEXT NOT NULL DEFAULT (datetime('now')),
             created_at TEXT DEFAULT (datetime('now'))
         )
@@ -353,6 +367,11 @@ async def init_sqlite_tables(conn):
             last_user_interaction TEXT,
             notification_count INTEGER CHECK (notification_count >= 0),
             app_crashes INTEGER CHECK (app_crashes >= 0),
+            myob_active INTEGER,
+            scanner_active INTEGER,
+            recent_movement INTEGER,
+            inactive_seconds INTEGER CHECK (inactive_seconds >= 0),
+            source TEXT,
             timestamp TEXT NOT NULL DEFAULT (datetime('now')),
             created_at TEXT DEFAULT (datetime('now'))
         )
@@ -662,23 +681,25 @@ async def store_tablet_data(data: TabletData, client_ip: str = None):
                 if db_helper.is_sqlite:
                     await db_helper.execute('''
                         INSERT INTO device_metrics (device_id, battery_level, battery_temperature, 
-                                                  memory_available, memory_total, storage_available, 
-                                                  cpu_usage, timestamp)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                                                  battery_status, memory_available, memory_total, 
+                                                  storage_available, cpu_usage, source, timestamp)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ''', data.device_id, data.device_metrics.battery_level,
-                    data.device_metrics.battery_temperature, data.device_metrics.memory_available,
-                    data.device_metrics.memory_total, data.device_metrics.storage_available,
-                    data.device_metrics.cpu_usage, data.device_metrics.timestamp)
+                    data.device_metrics.battery_temperature, data.device_metrics.battery_status,
+                    data.device_metrics.memory_available, data.device_metrics.memory_total,
+                    data.device_metrics.storage_available, data.device_metrics.cpu_usage,
+                    data.device_metrics.source, data.device_metrics.timestamp)
                 else:
                     await db_helper.execute('''
                         INSERT INTO device_metrics (device_id, battery_level, battery_temperature, 
-                                                  memory_available, memory_total, storage_available, 
-                                                  cpu_usage, timestamp)
-                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                                                  battery_status, memory_available, memory_total, 
+                                                  storage_available, cpu_usage, source, timestamp)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
                     ''', data.device_id, data.device_metrics.battery_level,
-                    data.device_metrics.battery_temperature, data.device_metrics.memory_available,
-                    data.device_metrics.memory_total, data.device_metrics.storage_available,
-                    data.device_metrics.cpu_usage, data.device_metrics.timestamp)
+                    data.device_metrics.battery_temperature, data.device_metrics.battery_status,
+                    data.device_metrics.memory_available, data.device_metrics.memory_total,
+                    data.device_metrics.storage_available, data.device_metrics.cpu_usage,
+                    data.device_metrics.source, data.device_metrics.timestamp)
             
             # Store network metrics
             if data.network_metrics:
@@ -686,24 +707,24 @@ async def store_tablet_data(data: TabletData, client_ip: str = None):
                     await db_helper.execute('''
                         INSERT INTO network_metrics (device_id, wifi_signal_strength, wifi_ssid,
                                                    connectivity_status, network_type, ip_address,
-                                                   dns_response_time, data_usage_mb, timestamp)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                   dns_response_time, data_usage_mb, source, timestamp)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ''', data.device_id, data.network_metrics.wifi_signal_strength,
                     data.network_metrics.wifi_ssid, data.network_metrics.connectivity_status,
                     data.network_metrics.network_type, data.network_metrics.ip_address,
                     data.network_metrics.dns_response_time, data.network_metrics.data_usage_mb,
-                    data.network_metrics.timestamp)
+                    data.network_metrics.source, data.network_metrics.timestamp)
                 else:
                     await db_helper.execute('''
                         INSERT INTO network_metrics (device_id, wifi_signal_strength, wifi_ssid,
                                                    connectivity_status, network_type, ip_address,
-                                                   dns_response_time, data_usage_mb, timestamp)
-                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                                                   dns_response_time, data_usage_mb, source, timestamp)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
                     ''', data.device_id, data.network_metrics.wifi_signal_strength,
                     data.network_metrics.wifi_ssid, data.network_metrics.connectivity_status,
                     data.network_metrics.network_type, data.network_metrics.ip_address,
                     data.network_metrics.dns_response_time, data.network_metrics.data_usage_mb,
-                    data.network_metrics.timestamp)
+                    data.network_metrics.source, data.network_metrics.timestamp)
             
             # Store app metrics
             if data.app_metrics:
@@ -712,25 +733,31 @@ async def store_tablet_data(data: TabletData, client_ip: str = None):
                         INSERT INTO app_metrics (device_id, screen_state, app_foreground,
                                                app_memory_usage, screen_timeout_setting,
                                                last_user_interaction, notification_count, 
-                                               app_crashes, timestamp)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                               app_crashes, myob_active, scanner_active,
+                                               recent_movement, inactive_seconds, source, timestamp)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ''', data.device_id, data.app_metrics.screen_state,
                     data.app_metrics.app_foreground, data.app_metrics.app_memory_usage,
                     data.app_metrics.screen_timeout_setting, data.app_metrics.last_user_interaction,
                     data.app_metrics.notification_count, data.app_metrics.app_crashes,
-                    data.app_metrics.timestamp)
+                    data.app_metrics.myob_active, data.app_metrics.scanner_active,
+                    data.app_metrics.recent_movement, data.app_metrics.inactive_seconds,
+                    data.app_metrics.source, data.app_metrics.timestamp)
                 else:
                     await db_helper.execute('''
                         INSERT INTO app_metrics (device_id, screen_state, app_foreground,
                                                app_memory_usage, screen_timeout_setting,
                                                last_user_interaction, notification_count, 
-                                               app_crashes, timestamp)
-                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                                               app_crashes, myob_active, scanner_active,
+                                               recent_movement, inactive_seconds, source, timestamp)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
                     ''', data.device_id, data.app_metrics.screen_state,
                     data.app_metrics.app_foreground, data.app_metrics.app_memory_usage,
                     data.app_metrics.screen_timeout_setting, data.app_metrics.last_user_interaction,
                     data.app_metrics.notification_count, data.app_metrics.app_crashes,
-                    data.app_metrics.timestamp)
+                    data.app_metrics.myob_active, data.app_metrics.scanner_active,
+                    data.app_metrics.recent_movement, data.app_metrics.inactive_seconds,
+                    data.app_metrics.source, data.app_metrics.timestamp)
             
             # Store session events
             if data.session_events:
