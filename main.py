@@ -496,6 +496,170 @@ async def health_check():
             "environment": os.getenv("RAILWAY_ENVIRONMENT", "production")
         }
 
+# Add migration endpoint after the health check endpoint
+@app.post("/admin/migrate-database")
+async def migrate_database_schema(token: str = Depends(verify_token)):
+    """Migrate database schema to support new tablet client fields"""
+    if not db_pool:
+        raise HTTPException(status_code=500, detail="Database not available")
+    
+    try:
+        async with db_pool.acquire() as conn:
+            migration_log = []
+            
+            # Check current tables
+            tables_query = """
+            SELECT table_name FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            ORDER BY table_name;
+            """
+            
+            existing_tables = await conn.fetch(tables_query)
+            table_names = [row['table_name'] for row in existing_tables]
+            migration_log.append(f"Found existing tables: {table_names}")
+            
+            # Drop and recreate all tables with correct schema
+            migration_log.append("Dropping existing tables...")
+            
+            drop_tables = [
+                "DROP TABLE IF EXISTS session_events CASCADE",
+                "DROP TABLE IF EXISTS app_metrics CASCADE", 
+                "DROP TABLE IF EXISTS network_metrics CASCADE",
+                "DROP TABLE IF EXISTS device_metrics CASCADE",
+                "DROP TABLE IF EXISTS device_registry CASCADE"
+            ]
+            
+            for sql in drop_tables:
+                await conn.execute(sql)
+                migration_log.append(f"Executed: {sql}")
+            
+            migration_log.append("Creating tables with correct schema...")
+            
+            # Create device_metrics table
+            await conn.execute('''
+                CREATE TABLE device_metrics (
+                    id BIGSERIAL PRIMARY KEY,
+                    device_id VARCHAR(50) NOT NULL,
+                    battery_level INTEGER CHECK (battery_level >= 0 AND battery_level <= 100),
+                    battery_temperature FLOAT,
+                    battery_status TEXT,
+                    memory_available BIGINT CHECK (memory_available >= 0),
+                    memory_total BIGINT CHECK (memory_total >= 0),
+                    storage_available BIGINT CHECK (storage_available >= 0),
+                    cpu_usage FLOAT CHECK (cpu_usage >= 0 AND cpu_usage <= 100),
+                    source TEXT,
+                    timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    created_at TIMESTAMPTZ DEFAULT NOW()
+                )
+            ''')
+            migration_log.append("Created device_metrics table")
+            
+            # Create network_metrics table
+            await conn.execute('''
+                CREATE TABLE network_metrics (
+                    id BIGSERIAL PRIMARY KEY,
+                    device_id VARCHAR(50) NOT NULL,
+                    wifi_signal_strength INTEGER CHECK (wifi_signal_strength >= -100 AND wifi_signal_strength <= 0),
+                    wifi_ssid VARCHAR(100),
+                    connectivity_status VARCHAR(20) NOT NULL CHECK (connectivity_status IN ('online', 'offline', 'limited', 'unknown')),
+                    network_type VARCHAR(50),
+                    ip_address TEXT,
+                    dns_response_time FLOAT CHECK (dns_response_time >= 0),
+                    data_usage_mb FLOAT CHECK (data_usage_mb >= 0),
+                    source TEXT,
+                    timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    created_at TIMESTAMPTZ DEFAULT NOW()
+                )
+            ''')
+            migration_log.append("Created network_metrics table")
+            
+            # Create app_metrics table
+            await conn.execute('''
+                CREATE TABLE app_metrics (
+                    id BIGSERIAL PRIMARY KEY,
+                    device_id VARCHAR(50) NOT NULL,
+                    screen_state VARCHAR(20) NOT NULL CHECK (screen_state IN ('active', 'locked', 'dimmed', 'off')),
+                    app_foreground VARCHAR(200),
+                    app_memory_usage BIGINT CHECK (app_memory_usage >= 0),
+                    screen_timeout_setting INTEGER CHECK (screen_timeout_setting >= 0),
+                    last_user_interaction TIMESTAMPTZ,
+                    notification_count INTEGER CHECK (notification_count >= 0),
+                    app_crashes INTEGER CHECK (app_crashes >= 0),
+                    myob_active BOOLEAN,
+                    scanner_active BOOLEAN,
+                    recent_movement BOOLEAN,
+                    inactive_seconds INTEGER CHECK (inactive_seconds >= 0),
+                    source TEXT,
+                    timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    created_at TIMESTAMPTZ DEFAULT NOW()
+                )
+            ''')
+            migration_log.append("Created app_metrics table")
+            
+            # Create session_events table
+            await conn.execute('''
+                CREATE TABLE session_events (
+                    id BIGSERIAL PRIMARY KEY,
+                    device_id VARCHAR(50) NOT NULL,
+                    event_type VARCHAR(20) NOT NULL CHECK (event_type IN ('login', 'logout', 'timeout', 'error', 'reconnect', 'session_start', 'session_end')),
+                    session_id VARCHAR(100),
+                    duration INTEGER CHECK (duration >= 0),
+                    error_message VARCHAR(500),
+                    user_id VARCHAR(100),
+                    app_version VARCHAR(50),
+                    timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    created_at TIMESTAMPTZ DEFAULT NOW()
+                )
+            ''')
+            migration_log.append("Created session_events table")
+            
+            # Create device_registry table
+            await conn.execute('''
+                CREATE TABLE device_registry (
+                    id BIGSERIAL PRIMARY KEY,
+                    device_id VARCHAR(50) UNIQUE NOT NULL,
+                    device_name VARCHAR(100),
+                    location VARCHAR(100),
+                    android_version VARCHAR(50),
+                    app_version VARCHAR(50),
+                    first_seen TIMESTAMPTZ DEFAULT NOW(),
+                    last_seen TIMESTAMPTZ DEFAULT NOW(),
+                    is_active BOOLEAN DEFAULT TRUE,
+                    created_at TIMESTAMPTZ DEFAULT NOW(),
+                    updated_at TIMESTAMPTZ DEFAULT NOW()
+                )
+            ''')
+            migration_log.append("Created device_registry table")
+            
+            # Create indexes for performance
+            indexes = [
+                "CREATE INDEX idx_device_metrics_device_id ON device_metrics(device_id)",
+                "CREATE INDEX idx_device_metrics_timestamp ON device_metrics(timestamp)",
+                "CREATE INDEX idx_network_metrics_device_id ON network_metrics(device_id)",
+                "CREATE INDEX idx_network_metrics_timestamp ON network_metrics(timestamp)",
+                "CREATE INDEX idx_app_metrics_device_id ON app_metrics(device_id)",
+                "CREATE INDEX idx_app_metrics_timestamp ON app_metrics(timestamp)",
+                "CREATE INDEX idx_session_events_device_id ON session_events(device_id)",
+                "CREATE INDEX idx_session_events_timestamp ON session_events(timestamp)",
+            ]
+            
+            for sql in indexes:
+                await conn.execute(sql)
+            
+            migration_log.append("Created all indexes")
+            migration_log.append("Database migration completed successfully!")
+            
+            return {
+                "status": "success",
+                "message": "Database schema migrated successfully",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "migration_log": migration_log
+            }
+            
+    except Exception as e:
+        logger.error(f"Migration failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Migration failed: {str(e)}")
+
 # Public device status endpoint (no auth required for dashboard)
 @app.get("/public/device-status")
 async def get_public_device_status():
