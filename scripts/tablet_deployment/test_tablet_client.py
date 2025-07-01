@@ -203,65 +203,49 @@ class TestTabletMonitor:
             process_data = self.check_test_processes()
             activity_data = self.detect_activity()
             
-            # Generate test session events
-            events = []
-            if process_data.get("teamviewer_active"):
-                events.append({
-                    "event_type": "session_start",
-                    "session_id": self.session_id,
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "error_message": "TeamViewer test session detected"
-                })
-            
-            if activity_data.get("inactive_seconds", 0) > 60:  # 1 minute for testing
-                events.append({
-                    "event_type": "timeout",
-                    "session_id": self.session_id,
-                    "duration": activity_data.get("inactive_seconds", 0),
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "error_message": f"Test timeout - {activity_data.get('inactive_seconds', 0)}s inactive"
-                })
-            
-            # Create comprehensive payload
+            # Create simplified payload matching successful manual test
             payload = {
                 "device_id": self.device_id,
-                "device_name": f"Test Tablet - {self.device_id}",
+                "device_name": "Test Tablet Manual",  # Match successful manual test
                 "location": LOCATION,
-                "android_version": "Android 15 (Test)",
-                "app_version": "test_monitor_1.0",
                 "timestamp": datetime.now(timezone.utc).isoformat(),
-                "device_metrics": battery_data,
-                "network_metrics": wifi_data,
+                "device_metrics": {
+                    "battery_level": battery_data.get("battery_level", 85),
+                    "battery_temperature": battery_data.get("battery_temperature", 28.0),
+                    "battery_status": battery_data.get("battery_status", "not_charging"),
+                    "source": "test"
+                },
+                "network_metrics": {
+                    "connectivity_status": wifi_data.get("connectivity_status", "online"),
+                    "wifi_signal_strength": wifi_data.get("wifi_signal_strength", -45),
+                    "wifi_ssid": wifi_data.get("wifi_ssid", "TestNet"),
+                    "source": "test"
+                },
                 "app_metrics": {
                     "screen_state": "active" if activity_data.get("recent_movement") else "idle",
-                    "app_foreground": "teamviewer" if process_data.get("teamviewer_active") else ("settings" if process_data.get("android_settings_active") else "unknown"),
-                    "last_user_interaction": self.last_interaction.isoformat(),
-                    **process_data,
-                    **activity_data
+                    "myob_active": process_data.get("teamviewer_active", False),  # Map teamviewer to myob for testing
+                    "scanner_active": process_data.get("android_settings_active", False),
+                    "recent_movement": activity_data.get("recent_movement", True),
+                    "inactive_seconds": activity_data.get("inactive_seconds", 0),
+                    "source": "test"
                 },
-                "session_events": events,
-                "raw_logs": [
-                    f"TEST MODE: TeamViewer: {process_data.get('teamviewer_active', False)}",
-                    f"TEST MODE: Settings: {process_data.get('android_settings_active', False)}",
-                    f"TEST MODE: Inactive: {activity_data.get('inactive_seconds', 0)}s",
-                    f"TEST MODE: Battery: {battery_data.get('battery_level', 0)}%",
-                    f"TEST MODE: WiFi: {wifi_data.get('wifi_signal_strength', 0)}dBm"
-                ]
+                "session_events": [],
+                "raw_logs": ["Test data"]
             }
             
             return payload
             
         except Exception as e:
             print(f"❌ Data collection error: {e}")
-            # Return minimal valid payload on error
+            # Return minimal valid payload on error (matching manual test)
             return {
                 "device_id": self.device_id,
-                "device_name": f"Test Tablet - {self.device_id}",
+                "device_name": "Test Tablet Manual",
                 "location": LOCATION,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
-                "device_metrics": {"battery_level": 50, "battery_temperature": 25.0},
-                "network_metrics": {"connectivity_status": "unknown"},
-                "app_metrics": {"screen_state": "unknown"},
+                "device_metrics": {"battery_level": 85, "battery_temperature": 28.0, "battery_status": "not_charging", "source": "test"},
+                "network_metrics": {"connectivity_status": "online", "wifi_signal_strength": -45, "wifi_ssid": "TestNet", "source": "test"},
+                "app_metrics": {"screen_state": "active", "myob_active": False, "scanner_active": False, "recent_movement": True, "inactive_seconds": 0, "source": "test"},
                 "session_events": [],
                 "raw_logs": [f"ERROR: {str(e)}"]
             }
