@@ -298,7 +298,7 @@ class ElectricalTabletMonitor:
                 "device_metrics": battery_data,
                 "network_metrics": wifi_data,
                 "app_metrics": {
-                    "screen_state": "active" if activity_data.get("recent_movement") else "idle",
+                    "screen_state": "active" if activity_data.get("recent_movement") else "dimmed",  # Use valid enum value
                     "app_foreground": (
                         "myob" if myob_data.get("myob_active") else
                         ("scanner" if scanner_data.get("scanner_active") else "unknown")

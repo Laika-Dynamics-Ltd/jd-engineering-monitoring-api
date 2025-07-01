@@ -65,7 +65,7 @@ install_dependencies() {
 }
 
 download_monitoring_scripts() {
-    log "📥 Downloading monitoring scripts..."
+    log "📥 Setting up monitoring scripts..."
     
     if [ "$TABLET_TYPE" = "test" ]; then
         SCRIPT_NAME="test_tablet_client.py"
@@ -73,9 +73,17 @@ download_monitoring_scripts() {
         SCRIPT_NAME="electrical_tablet_client.py"
     fi
     
+    # Check if local script exists (with fixes)
+    if [ -f "$SCRIPT_NAME" ]; then
+        log "✅ Using local $SCRIPT_NAME (with validation fixes)"
+        chmod +x "$SCRIPT_NAME"
+        return 0
+    fi
+    
+    # Fallback to GitHub download
     if curl -L -s "$GITHUB_RAW_URL/$SCRIPT_NAME" -o "$SCRIPT_NAME"; then
         chmod +x "$SCRIPT_NAME"
-        log "✅ Downloaded $SCRIPT_NAME"
+        log "⚠️  Downloaded $SCRIPT_NAME from GitHub (may need validation fixes)"
     else
         error "❌ Failed to download $SCRIPT_NAME"
         return 1
