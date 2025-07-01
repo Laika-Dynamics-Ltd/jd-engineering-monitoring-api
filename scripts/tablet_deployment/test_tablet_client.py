@@ -222,7 +222,7 @@ class TestTabletMonitor:
                     "source": "test"
                 },
                 "app_metrics": {
-                    "screen_state": "active" if activity_data.get("recent_movement") else "idle",
+                    "screen_state": "active" if activity_data.get("recent_movement") else "dimmed",  # Use valid enum value
                     "myob_active": process_data.get("teamviewer_active", False),  # Map teamviewer to myob for testing
                     "scanner_active": process_data.get("android_settings_active", False),
                     "recent_movement": activity_data.get("recent_movement", True),
@@ -257,6 +257,11 @@ class TestTabletMonitor:
             "Content-Type": "application/json"
         }
         
+        # Debug: Print the exact payload being sent
+        print("🔍 PAYLOAD DEBUG:")
+        print(json.dumps(payload, indent=2, default=str))
+        print("=" * 50)
+        
         for attempt in range(1, MAX_RETRIES + 1):
             try:
                 response = requests.post(API_URL, headers=headers, json=payload, timeout=TIMEOUT)
@@ -275,6 +280,11 @@ class TestTabletMonitor:
                     
                 else:
                     print(f"⚠️  Attempt {attempt}/{MAX_RETRIES} failed: HTTP {response.status_code}")
+                    try:
+                        error_detail = response.json()
+                        print(f"📋 Error details: {json.dumps(error_detail, indent=2)}")
+                    except:
+                        print(f"📋 Error response: {response.text}")
                     if attempt == MAX_RETRIES:
                         self.consecutive_failures += 1
                         
