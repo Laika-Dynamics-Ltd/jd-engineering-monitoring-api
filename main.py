@@ -1129,12 +1129,14 @@ async def debug_real_data(token: str = Depends(verify_token)):
             # Test the data preparation
             data_summary = prepare_data_for_ai_analysis(analytics_data)
             
-            # Get device registry data directly
+            # Get device registry data with metrics
             devices = await conn.fetch("""
-                SELECT device_id, device_name, battery_level, connectivity_status, 
-                       myob_active, timeout_risk, last_seen, is_active
-                FROM device_registry 
-                ORDER BY last_seen DESC
+                SELECT dr.device_id, dr.device_name, dr.last_seen, dr.is_active,
+                       dm.battery_level, nm.connectivity_status
+                FROM device_registry dr
+                LEFT JOIN device_metrics dm ON dr.device_id = dm.device_id
+                LEFT JOIN network_metrics nm ON dr.device_id = nm.device_id
+                ORDER BY dr.last_seen DESC
             """)
             
             return {
