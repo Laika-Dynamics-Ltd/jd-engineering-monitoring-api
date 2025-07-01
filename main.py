@@ -75,6 +75,15 @@ class DatabaseHelper:
         else:
             # Direct asyncpg connection method
             return await self.conn.fetch(query, *params)
+    
+    async def execute(self, query, *params):
+        """Execute INSERT/UPDATE/DELETE queries"""
+        if self.is_sqlite:
+            await self.conn.execute(query, params)
+            await self.conn.commit()
+        else:
+            # Direct asyncpg connection method
+            await self.conn.execute(query, *params)
 
 async def get_db_helper(conn):
     """Get database helper with simplified connection type detection"""
