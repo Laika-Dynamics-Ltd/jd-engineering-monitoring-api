@@ -2921,7 +2921,7 @@
                                     <tr>
                                         <th>Device</th>
                                         <th>Location</th>
-                                        <th>MYOB Sessions</th>
+                                        <th>MYOB Status</th>
                                         <th>Timeout Rate</th>
                                         <th>Risk Score</th>
                                         <th>Last Activity</th>
@@ -4967,10 +4967,10 @@
                     <tr>
                         <td>${device.device_name || device.device_id}</td>
                         <td>${device.location || 'Not specified'}</td>
-                        <td>${device.myob_sessions || 0}</td>
+                        <td>${device.myob_active ? 'Active' : 'Inactive'}</td>
                         <td>${timeoutRate.toFixed(1)}%</td>
                         <td><span class="risk-badge ${riskLevel}">${riskText}</span></td>
-                        <td>${new Date(device.last_activity).toLocaleString()}</td>
+                        <td>${device.last_seen ? new Date(device.last_seen).toLocaleString() : 'Never'}</td>
                         <td>
                             <button class="action-btn" onclick="viewDeviceDetails('${device.device_id}')">
                                 View Details
@@ -5302,23 +5302,23 @@
                             </div>
                             <div class="metric-item">
                                 <span class="metric-label">Battery Temp</span>
-                                <span class="metric-value">${device.battery_temperature?.toFixed(1) || 'N/A'}°C</span>
+                                <span class="metric-value">${device.battery_temperature && device.battery_temperature > 0 ? device.battery_temperature.toFixed(1) + '°C' : 'N/A'}</span>
                             </div>
                             <div class="metric-item">
                                 <span class="metric-label">WiFi Signal</span>
-                                <span class="metric-value">${device.wifi_signal_strength || 'N/A'} dBm</span>
+                                <span class="metric-value">${device.wifi_signal_strength && device.wifi_signal_strength !== 0 ? device.wifi_signal_strength + ' dBm' : 'N/A'}</span>
                             </div>
                             <div class="metric-item">
                                 <span class="metric-label">WiFi SSID</span>
-                                <span class="metric-value">${device.wifi_ssid || 'Unknown'}</span>
+                                <span class="metric-value">${device.wifi_ssid && device.wifi_ssid.trim() !== '' ? device.wifi_ssid : 'Unknown'}</span>
                             </div>
                             <div class="metric-item">
                                 <span class="metric-label">Screen State</span>
-                                <span class="metric-value">${device.screen_state || 'Unknown'}</span>
+                                <span class="metric-value">${device.screen_state && device.screen_state !== 'unknown' ? device.screen_state : 'Unknown'}</span>
                             </div>
                             <div class="metric-item">
                                 <span class="metric-label">App Foreground</span>
-                                <span class="metric-value">${device.app_foreground || 'Unknown'}</span>
+                                <span class="metric-value">${device.app_foreground && device.app_foreground !== 'unknown' ? device.app_foreground : 'Unknown'}</span>
                             </div>
                             <div class="metric-item">
                                 <span class="metric-label">MYOB Active</span>
@@ -5329,12 +5329,12 @@
                                 <span class="metric-value">${device.scanner_active ? 'Yes' : 'No'}</span>
                             </div>
                             <div class="metric-item">
-                                <span class="metric-label">Total Sessions</span>
-                                <span class="metric-value">${device.total_sessions || 0}</span>
+                                <span class="metric-label">Android Version</span>
+                                <span class="metric-value">${device.android_version || 'Unknown'}</span>
                             </div>
                             <div class="metric-item">
-                                <span class="metric-label">Total Timeouts</span>
-                                <span class="metric-value">${device.total_timeouts || 0}</span>
+                                <span class="metric-label">App Version</span>
+                                <span class="metric-value">${device.app_version || 'Unknown'}</span>
                             </div>
                         </div>
                         
@@ -5863,8 +5863,8 @@
                         <td>${device.location || 'Workshop Floor'}</td>
                         <td>
                             <div class="session-info">
-                                <strong>${device.myob_sessions || 0}</strong>
-                                <div class="session-detail">sessions today</div>
+                                <strong>${device.myob_active ? 'Active' : 'Inactive'}</strong>
+                                <div class="session-detail">MYOB status</div>
                             </div>
                         </td>
                         <td>
@@ -5884,7 +5884,7 @@
                         </td>
                         <td>
                             <div class="activity-info">
-                                <strong>${new Date(device.last_activity || Date.now()).toLocaleString()}</strong>
+                                <strong>${device.last_seen ? new Date(device.last_seen).toLocaleString() : 'Never'}</strong>
                                 <div class="activity-detail">
                                     Battery: ${device.battery_level || 0}%
                                 </div>
@@ -6053,8 +6053,8 @@
                                     <i class="fas fa-desktop"></i>
                                 </div>
                                 <div class="metric-info">
-                                    <div class="metric-value">${device.myob_sessions || 0}</div>
-                                    <div class="metric-label">MYOB Sessions</div>
+                                    <div class="metric-value">${device.myob_active ? 'Active' : 'Inactive'}</div>
+                                    <div class="metric-label">MYOB Status</div>
                                 </div>
                             </div>
                             
@@ -6073,7 +6073,7 @@
                     <div class="device-footer">
                         <div class="last-seen">
                             <i class="fas fa-clock"></i>
-                            Last seen: ${formatLastSeen(device.last_activity)}
+                            Last seen: ${formatLastSeen(device.last_seen)}
                         </div>
                         <div class="risk-indicator ${getRiskLevel(calculateRiskScore(device))}">
                             ${getRiskText(getRiskLevel(calculateRiskScore(device)))} RISK
