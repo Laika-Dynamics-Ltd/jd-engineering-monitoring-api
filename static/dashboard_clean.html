@@ -1719,7 +1719,9 @@
         // Fetch devices data
         async function fetchDevices() {
             try {
-                const response = await fetch('/devices');
+                const response = await fetch('/devices', {
+                    headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+                });
                 if (!response.ok) throw new Error('Failed to fetch devices');
                 return await response.json();
             } catch (error) {
@@ -1732,7 +1734,9 @@
         // Fetch device metrics
         async function fetchDeviceMetrics(deviceId, hours = 1) {
             try {
-                const response = await fetch(`/devices/${deviceId}/metrics?hours=${hours}`);
+                const response = await fetch(`/devices/${deviceId}/metrics?hours=${hours}`, {
+                    headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+                });
                 if (!response.ok) throw new Error('Failed to fetch metrics');
                 return await response.json();
             } catch (error) {
