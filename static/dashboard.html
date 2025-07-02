@@ -2154,6 +2154,29 @@
             color: #475569;
         }
         
+        .device-info {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            border: 1px solid #f1f5f9;
+        }
+        
+        .info-row {
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #475569;
+        }
+        
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .info-row strong {
+            color: #1e293b;
+            font-weight: 600;
+        }
+        
         .device-metrics {
             display: flex;
             flex-direction: column;
@@ -6004,15 +6027,35 @@
             });
         }
         
+        // Helper function to determine actual device status
+        function getActualDeviceStatus(device) {
+            if (!device.last_seen) return 'offline';
+            
+            const lastSeen = new Date(device.last_seen);
+            const now = new Date();
+            const diffMinutes = Math.floor((now - lastSeen) / (1000 * 60));
+            
+            // Consider online if last seen within 5 minutes and is_active is true
+            if (diffMinutes <= 5 && device.is_active) {
+                return 'online';
+            }
+            
+            return 'offline';
+        }
+
         // Display device grid
         function displayDeviceGrid(devices) {
             const container = document.getElementById('devicesContainer');
-            container.innerHTML = devices.map(device => `
+            container.innerHTML = devices.map(device => {
+                const actualStatus = getActualDeviceStatus(device);
+                const statusClass = actualStatus === 'online' ? 'online' : 'offline';
+                
+                return `
                 <div class="device-card enhanced">
                     <div class="device-header">
                         <div class="device-title">
                             <h3>${device.device_name || device.device_id}</h3>
-                            <span class="device-status ${device.status || 'offline'}">${(device.status || 'offline').toUpperCase()}</span>
+                            <span class="device-status ${statusClass}">${actualStatus.toUpperCase()}</span>
                         </div>
                         <div class="device-actions">
                             <button class="device-btn" onclick="refreshDevice('${device.device_id}')">
@@ -6021,6 +6064,18 @@
                             <button class="device-btn" onclick="viewDeviceDetails('${device.device_id}')">
                                 <i class="fas fa-cog"></i>
                             </button>
+                        </div>
+                    </div>
+                    
+                    <div class="device-info">
+                        <div class="info-row">
+                            <strong>Location:</strong> ${device.location || 'Unknown'}
+                        </div>
+                        <div class="info-row">
+                            <strong>Last Seen:</strong> ${formatLastSeen(device.last_seen)}
+                        </div>
+                        <div class="info-row">
+                            <strong>Sessions:</strong> ${device.myob_active ? 'Active' : 'Inactive'} | <strong>Timeouts:</strong> ${device.timeout_risk ? 'Risk' : 'Normal'}
                         </div>
                     </div>
                     
@@ -6080,7 +6135,8 @@
                         </div>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
         
         // Display demo device grid
